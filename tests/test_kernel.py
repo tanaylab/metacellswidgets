@@ -73,11 +73,13 @@ def test_main_thread_jobs_run_directly_on_the_main_thread() -> None:
 
 
 @pytest.fixture(name="kernel", scope="module")
-def kernel_fixture() -> Iterator[Tuple[Any, Any]]:
+def kernel_fixture(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Tuple[Any, Any]]:
     """
-    A kernel running this Python, which sees this checkout, and a client connected to it.
+    A kernel running this Python, which sees this checkout, and a client connected to it. They talk over local (IPC)
+    sockets in a temporary directory, since the kernel warns about unencrypted TCP.
     """
-    manager = KernelManager(kernel_name="python3")
+    sockets = tmp_path_factory.mktemp("kernel") / "sockets"
+    manager = KernelManager(kernel_name="python3", transport="ipc", ip=str(sockets))
     kernel_spec = manager.kernel_spec
     assert kernel_spec is not None
     kernel_spec.argv = [sys.executable, "-m", "ipykernel_launcher", "-f", "{connection_file}"]  # NOT F-STRING
