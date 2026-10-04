@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=77.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "metacellswidgets"
+version = "0.1.0"
+description = "Interactive figures of a metacells repository in Jupyter notebooks"
+authors = [
+    { name = "Oren Ben-Kiki", email = "oren@ben-kiki.org" },
+]
+readme = "README.rst"
+license = "MIT"
+license-files = ["LICENSE.rst"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+requires-python = ">= 3.11"
+dependencies = [
+    "anywidget",
+    "dafpy",
+    "ipykernel>=7.3,<8",
+    "ipywidgets",
+    "metacellsgraphspy",
+    "numpy",
+    "plotly",
+    "somegraphspy",
+    "traitlets",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "bumpversion",
+    "flake8",
+    "isort",
+    "jedi",
+    "mypy",
+    "mypy_extensions",
+    "pylint",
+    "pytest",
+    "pytest-cov",
+    "sphinx",
+    "sphinx_rtd_theme",
+    "twine",
+]
+test = [
+    "jedi",
+    "pytest",
+    "pytest-cov",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/tanaylab/metacellswidgets"
+"Bug Tracker" = "https://github.com/tanaylab/metacellswidgets/issues"
+
+[tool.setuptools.packages.find]
+exclude = ["htmlcov"]
+
+[tool.setuptools.package-data]
+metacellswidgets = ["py.typed"]
