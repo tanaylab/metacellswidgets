@@ -10,3 +10,7 @@ so running the notebook again gives the same figure and the same selection.
 __author__ = "Oren Ben-Kiki"
 __email__ = "oren@ben-kiki.org"
 __version__ = "0.1.0"
+
+# pylint: disable=wildcard-import,unused-wildcard-import
+
+from .kernel import *
