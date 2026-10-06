@@ -6,3 +6,4 @@ API
 .. toctree::
 
   properties
+  sources

@@ -81,19 +81,30 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenSet</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TypeVar</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">VectorDataSinks</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_literal_text</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceWidgets</span>
 
 <span class="n">__all__</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"Eltype"</span><span class="p">,</span>
     <span class="s2">"Property"</span><span class="p">,</span>
     <span class="s2">"Shape"</span><span class="p">,</span>
     <span class="s2">"Slot"</span><span class="p">,</span>
+    <span class="s2">"implements"</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -197,6 +208,41 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">eltype</span> <span class="ow">in</span> <span class="n">_SLOT_ELTYPES</span><span class="p">[</span><span class="n">slot</span><span class="p">]</span></div>
 
 
+<div class="viewcode-block" id="Property.exists">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Property.exists">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">exists</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="s2">"SourceWidgets"</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Whether the ``source`` has the property for the entries of the ``axis``. Each kind of data source implements</span>
+<span class="sd">        this for the properties it supports; for any other, the property does not exist.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="Property.fill">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Property.fill">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="s2">"SourceWidgets"</span><span class="p">,</span> <span class="n">sinks</span><span class="p">:</span> <span class="n">VectorDataSinks</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Fill the ``sinks`` of a graph with the property's value for each entry of the ``axis`` of the ``source``. Each</span>
+<span class="sd">        kind of data source implements this for the properties it supports; for any other, this is an error.</span>
+<span class="sd">        """</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.fill is not implemented for: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Property.editor">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Property.editor">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="s2">"SourceWidgets"</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">"Property"</span><span class="p">]</span>  <span class="c1"># pylint: disable=unused-argument</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Widget</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        A widget for editing the property's arguments for the ``axis`` of the ``source``, starting from the</span>
+<span class="sd">        ``current`` property (if any). Its ``value`` is the property, or ``None`` while the arguments are incomplete.</span>
+<span class="sd">        A property without arguments has no editor.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
 <div class="viewcode-block" id="Property.arguments">
 <a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Property.arguments">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
@@ -229,6 +275,31 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span></div>
+
+
+
+<span class="n">_Function</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"_Function"</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="implements">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.implements">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">implements</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">_Function</span><span class="p">],</span> <span class="n">_Function</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Register the decorated function as the implementation of a property's ``method`` for a ``kind`` of data source,</span>
+<span class="sd">    e.g. ``@implements(GeneExpression.fill, DafWidgets)``. The ``method`` is a ``functools.singledispatchmethod`` of the</span>
+<span class="sd">    property, dispatching on the data source. The function takes the same arguments as the method, including ``self``</span>
+<span class="sd">    (or ``cls`` for a class method).</span>
+<span class="sd">    """</span>
+    <span class="c1"># ``singledispatchmethod`` has a typed ``register``, but reading it through the class gives a function whose</span>
+    <span class="c1"># ``register`` the type stubs don't declare.</span>
+    <span class="n">register</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="s2">"register"</span><span class="p">)</span>
+    <span class="n">is_class_method</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">register</span><span class="o">.</span><span class="vm">__self__</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="nb">classmethod</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">decorate</span><span class="p">(</span><span class="n">function</span><span class="p">:</span> <span class="n">_Function</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Function</span><span class="p">:</span>
+        <span class="n">register</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="nb">classmethod</span><span class="p">(</span><span class="n">function</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_class_method</span> <span class="k">else</span> <span class="n">function</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">function</span>
+
+    <span class="k">return</span> <span class="n">decorate</span></div>
 
 </pre></div>
 

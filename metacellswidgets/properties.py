@@ -8,19 +8,30 @@ a property, and how to fill a graph from it, is implemented separately for each 
 
 import inspect
 from enum import Enum
+from typing import TYPE_CHECKING
 from typing import Any
+from typing import Callable
 from typing import Dict
 from typing import FrozenSet
 from typing import List
 from typing import Mapping
+from typing import Optional
+from typing import TypeVar
+
+from ipywidgets import Widget  # type: ignore
+from somegraphspy import VectorDataSinks
 
 from .rewrite import _literal_text
+
+if TYPE_CHECKING:
+    from .sources import SourceWidgets
 
 __all__: List[str] = [
     "Eltype",
     "Property",
     "Shape",
     "Slot",
+    "implements",
 ]
 
 
@@ -110,6 +121,32 @@ class Property:
         """
         return cls.eltype in _SLOT_ELTYPES[slot]
 
+    @classmethod
+    def exists(cls, source: "SourceWidgets", axis: str) -> bool:  # pylint: disable=unused-argument
+        """
+        Whether the ``source`` has the property for the entries of the ``axis``. Each kind of data source implements
+        this for the properties it supports; for any other, the property does not exist.
+        """
+        return False
+
+    def fill(self, source: "SourceWidgets", sinks: VectorDataSinks, axis: str) -> None:
+        """
+        Fill the ``sinks`` of a graph with the property's value for each entry of the ``axis`` of the ``source``. Each
+        kind of data source implements this for the properties it supports; for any other, this is an error.
+        """
+        raise TypeError(f"{type(self).__name__}.fill is not implemented for: {type(source).__name__}")
+
+    @classmethod
+    def editor(
+        cls, source: "SourceWidgets", axis: str, current: Optional["Property"]  # pylint: disable=unused-argument
+    ) -> Optional[Widget]:
+        """
+        A widget for editing the property's arguments for the ``axis`` of the ``source``, starting from the
+        ``current`` property (if any). Its ``value`` is the property, or ``None`` while the arguments are incomplete.
+        A property without arguments has no editor.
+        """
+        return None
+
     def arguments(self) -> Dict[str, Any]:
         """
         The values of the property's arguments, by the names of the parameters of its ``__init__``.
@@ -136,3 +173,25 @@ class Property:
 
     def __hash__(self) -> int:
         return hash((type(self), tuple(self.arguments().items())))
+
+
+_Function = TypeVar("_Function", bound=Callable[..., Any])
+
+
+def implements(method: Callable[..., Any], kind: type) -> Callable[[_Function], _Function]:
+    """
+    Register the decorated function as the implementation of a property's ``method`` for a ``kind`` of data source,
+    e.g. ``@implements(GeneExpression.fill, DafWidgets)``. The ``method`` is a ``functools.singledispatchmethod`` of the
+    property, dispatching on the data source. The function takes the same arguments as the method, including ``self``
+    (or ``cls`` for a class method).
+    """
+    # ``singledispatchmethod`` has a typed ``register``, but reading it through the class gives a function whose
+    # ``register`` the type stubs don't declare.
+    register = getattr(method, "register")
+    is_class_method = isinstance(register.__self__.func, classmethod)
+
+    def decorate(function: _Function) -> _Function:
+        register(kind, classmethod(function) if is_class_method else function)
+        return function
+
+    return decorate
