@@ -9,3 +9,4 @@ API
   sources
   editors
   daf_widgets
+  anndata_widgets

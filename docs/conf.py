@@ -47,7 +47,7 @@ nitpick_ignore = [
 ]
 # The types of the packages this one builds on are documented there, not here.
 nitpick_ignore_regex = [
-    (r'py:class', r'(dafpy|ipywidgets|metacellsgraphspy|pandas|somegraphspy)\..*'),
+    (r'py:class', r'(anndata|dafpy|ipywidgets|metacellsgraphspy|pandas|somegraphspy)\..*'),
 ]
 
 # Add any paths that contain templates here, relative to this directory.

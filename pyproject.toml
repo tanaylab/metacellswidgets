@@ -19,6 +19,7 @@ classifiers = [
 ]
 requires-python = ">= 3.11"
 dependencies = [
+    "anndata",
     "anywidget",
     "dafpy",
     "ipykernel>=7.3,<8",

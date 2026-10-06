@@ -10,6 +10,7 @@ from typing import ClassVar
 from typing import Dict
 from typing import List
 from typing import Sequence
+from typing import Set
 from typing import Type
 
 from .properties import Property
@@ -50,6 +51,18 @@ class SourceWidgets:
                 )
             registered.append(property_class)
             own.append(property_class)
+
+    @classmethod
+    def registered_axes(cls) -> List[str]:
+        """
+        The axes of this kind of data source with any registered properties, including those of its base classes,
+        sorted.
+        """
+        axes: Set[str] = set()
+        for kind in cls.__mro__:
+            if issubclass(kind, SourceWidgets):
+                axes.update(kind._properties_per_axis)
+        return sorted(axes)
 
     @classmethod
     def registered_properties(cls, axis: str) -> List[Type[Property]]:
