@@ -1,0 +1,1329 @@
+
+
+
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en" data-content_root="./">
+
+<head>
+  
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+<title>properties &mdash; MetacellsWidgets 0.1.0 documentation
+</title>
+      
+<link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      
+<link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      
+<script src="_static/jquery.js?v=5d32c60e">
+</script>
+      
+<script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c">
+</script>
+      
+<script src="_static/documentation_options.js?v=01f34227">
+</script>
+      
+<script src="_static/doctools.js?v=fd6eb6e6">
+</script>
+      
+<script src="_static/sphinx_highlight.js?v=6ffebe34">
+</script>
+    
+<script src="_static/js/theme.js">
+</script>
+    
+<link rel="index" title="Index" href="genindex.html" />
+    
+<link rel="search" title="Search" href="search.html" />
+    
+<link rel="prev" title="API" href="API.html" /> 
+
+</head>
+
+
+<body class="wy-body-for-nav"> 
+  
+<div class="wy-grid-for-nav">
+    
+<nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      
+<div class="wy-side-scroll">
+        
+<div class="wy-side-nav-search" >
+
+          
+          
+          
+<a href="index.html" class="icon icon-home">
+            MetacellsWidgets
+          
+</a>
+
+<div role="search">
+  
+<form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    
+<input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    
+<input type="hidden" name="check_keywords" value="yes" />
+    
+<input type="hidden" name="area" value="default" />
+  
+</form>
+
+</div>
+        
+</div>
+<div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              
+<ul>
+
+<li class="toctree-l1">
+<a class="reference internal" href="readme.html">README
+</a>
+</li>
+
+</ul>
+
+<ul class="current">
+
+<li class="toctree-l1 current">
+<a class="reference internal" href="API.html">API
+</a>
+<ul class="current">
+
+<li class="toctree-l2 current">
+<a class="current reference internal" href="#">properties
+</a>
+<ul>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.properties.Eltype">
+<code class="docutils literal notranslate">
+<span class="pre">Eltype
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Eltype.NUMBER">
+<code class="docutils literal notranslate">
+<span class="pre">Eltype.NUMBER
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Eltype.CATEGORICAL">
+<code class="docutils literal notranslate">
+<span class="pre">Eltype.CATEGORICAL
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Eltype.BOOLEAN">
+<code class="docutils literal notranslate">
+<span class="pre">Eltype.BOOLEAN
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Eltype.ARRANGEMENT">
+<code class="docutils literal notranslate">
+<span class="pre">Eltype.ARRANGEMENT
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.properties.Property">
+<code class="docutils literal notranslate">
+<span class="pre">Property
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Property.eltype">
+<code class="docutils literal notranslate">
+<span class="pre">Property.eltype
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Property.shape">
+<code class="docutils literal notranslate">
+<span class="pre">Property.shape
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Property.suits">
+<code class="docutils literal notranslate">
+<span class="pre">Property.suits()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Property.arguments">
+<code class="docutils literal notranslate">
+<span class="pre">Property.arguments()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Property.code">
+<code class="docutils literal notranslate">
+<span class="pre">Property.code()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.properties.Shape">
+<code class="docutils literal notranslate">
+<span class="pre">Shape
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Shape.VECTOR">
+<code class="docutils literal notranslate">
+<span class="pre">Shape.VECTOR
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Shape.MATRIX">
+<code class="docutils literal notranslate">
+<span class="pre">Shape.MATRIX
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.properties.Slot">
+<code class="docutils literal notranslate">
+<span class="pre">Slot
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Slot.COORDINATES">
+<code class="docutils literal notranslate">
+<span class="pre">Slot.COORDINATES
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Slot.SIZES">
+<code class="docutils literal notranslate">
+<span class="pre">Slot.SIZES
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Slot.COLORS">
+<code class="docutils literal notranslate">
+<span class="pre">Slot.COLORS
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Slot.GROUPS">
+<code class="docutils literal notranslate">
+<span class="pre">Slot.GROUPS
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Slot.MASK">
+<code class="docutils literal notranslate">
+<span class="pre">Slot.MASK
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Slot.HOVERS">
+<code class="docutils literal notranslate">
+<span class="pre">Slot.HOVERS
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+</ul>
+
+</li>
+
+</ul>
+
+</li>
+
+</ul>
+
+        
+</div>
+      
+</div>
+    
+</nav>
+
+    
+<section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+<nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          
+<i data-toggle="wy-nav-top" class="fa fa-bars">
+</i>
+          
+<a href="index.html">MetacellsWidgets
+</a>
+      
+</nav>
+
+      
+<div class="wy-nav-content">
+        
+<div class="rst-content">
+          
+<div role="navigation" aria-label="Page navigation">
+  
+<ul class="wy-breadcrumbs">
+      
+<li>
+<a href="index.html" class="icon icon-home" aria-label="Home">
+</a>
+</li>
+          
+<li class="breadcrumb-item">
+<a href="API.html">API
+</a>
+</li>
+      
+<li class="breadcrumb-item active">properties
+</li>
+      
+<li class="wy-breadcrumbs-aside">
+            
+<a href="_sources/properties.rst.txt" rel="nofollow"> View page source
+</a>
+      
+</li>
+  
+</ul>
+  
+<hr/>
+
+</div>
+          
+<div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           
+<div itemprop="articleBody">
+             
+  
+<section id="module-metacellswidgets.properties">
+
+<span id="properties">
+</span>
+<h1>properties
+<a class="headerlink" href="#module-metacellswidgets.properties" title="Link to this heading">
+</a>
+</h1>
+
+<p>Properties: the data a form can show in a slot of a graph, such as the colors or the sizes of its points.
+</p>
+
+<p>A property is a class. Its instance holds the values of its arguments, e.g. 
+<code class="docutils literal notranslate">
+<span class="pre">GeneExpression(&quot;Foxa1&quot;)
+</span>
+</code>. Each property
+says what kind of values it produces (its 
+<code class="docutils literal notranslate">
+<span class="pre">eltype
+</span>
+</code>), and that decides which slots it suits. Whether a data source has
+a property, and how to fill a graph from it, is implemented separately for each kind of data source.
+</p>
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Eltype">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.properties.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">Eltype
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">values
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/properties.html#Eltype">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.properties.Eltype" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The kind of values a property produces.
+</p>
+
+<dl class="py attribute">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Eltype.NUMBER">
+
+<span class="sig-name descname">
+<span class="pre">NUMBER
+</span>
+</span>
+<span class="property">
+<span class="w"> 
+</span>
+<span class="p">
+<span class="pre">=
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="pre">'number'
+</span>
+</span>
+<a class="headerlink" href="#metacellswidgets.properties.Eltype.NUMBER" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Numbers, integer or not, such as UMI counts or gene fractions.
+</p>
+
+</dd>
+</dl>
+
+
+<dl class="py attribute">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Eltype.CATEGORICAL">
+
+<span class="sig-name descname">
+<span class="pre">CATEGORICAL
+</span>
+</span>
+<span class="property">
+<span class="w"> 
+</span>
+<span class="p">
+<span class="pre">=
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="pre">'categorical'
+</span>
+</span>
+<a class="headerlink" href="#metacellswidgets.properties.Eltype.CATEGORICAL" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Names of categories, such as cell types.
+</p>
+
+</dd>
+</dl>
+
+
+<dl class="py attribute">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Eltype.BOOLEAN">
+
+<span class="sig-name descname">
+<span class="pre">BOOLEAN
+</span>
+</span>
+<span class="property">
+<span class="w"> 
+</span>
+<span class="p">
+<span class="pre">=
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="pre">'boolean'
+</span>
+</span>
+<a class="headerlink" href="#metacellswidgets.properties.Eltype.BOOLEAN" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Boolean flags, such as a mask.
+</p>
+
+</dd>
+</dl>
+
+
+<dl class="py attribute">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Eltype.ARRANGEMENT">
+
+<span class="sig-name descname">
+<span class="pre">ARRANGEMENT
+</span>
+</span>
+<span class="property">
+<span class="w"> 
+</span>
+<span class="p">
+<span class="pre">=
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="pre">'arrangement'
+</span>
+</span>
+<a class="headerlink" href="#metacellswidgets.properties.Eltype.ARRANGEMENT" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Numbers which say how to lay out entries (which go together, and in what order), such as a global flow order.
+</p>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Property">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.properties.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">Property
+</span>
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/properties.html#Property">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.properties.Property" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The base class of all properties.
+</p>
+
+<p>A property’s 
+<code class="docutils literal notranslate">
+<span class="pre">__init__
+</span>
+</code> takes the values of its arguments, and stores each in an attribute of the same name. This
+is what lets a form write the property back into the code of its cell.
+</p>
+
+<dl class="py attribute">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Property.eltype">
+
+<span class="sig-name descname">
+<span class="pre">eltype
+</span>
+</span>
+<span class="property">
+<span class="p">
+<span class="pre">:
+</span>
+</span>
+<span class="w"> 
+</span>
+<a class="reference internal" href="#metacellswidgets.properties.Eltype" title="metacellswidgets.properties.Eltype">
+<span class="pre">Eltype
+</span>
+</a>
+</span>
+<a class="headerlink" href="#metacellswidgets.properties.Property.eltype" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The kind of values the property produces.
+</p>
+
+</dd>
+</dl>
+
+
+<dl class="py attribute">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Property.shape">
+
+<span class="sig-name descname">
+<span class="pre">shape
+</span>
+</span>
+<span class="property">
+<span class="p">
+<span class="pre">:
+</span>
+</span>
+<span class="w"> 
+</span>
+<a class="reference internal" href="#metacellswidgets.properties.Shape" title="metacellswidgets.properties.Shape">
+<span class="pre">Shape
+</span>
+</a>
+</span>
+<a class="headerlink" href="#metacellswidgets.properties.Property.shape" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The shape of the values the property produces.
+</p>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Property.suits">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">suits
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">slot
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/properties.html#Property.suits">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.properties.Property.suits" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Whether the property can fill the 
+<code class="docutils literal notranslate">
+<span class="pre">slot
+</span>
+</code>, which depends on its 
+<code class="docutils literal notranslate">
+<span class="pre">eltype
+</span>
+</code>.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>slot
+</strong> (
+<a class="reference internal" href="#metacellswidgets.properties.Slot" title="metacellswidgets.properties.Slot">
+<em>Slot
+</em>
+</a>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>bool
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Property.arguments">
+
+<span class="sig-name descname">
+<span class="pre">arguments
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/properties.html#Property.arguments">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.properties.Property.arguments" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The values of the property’s arguments, by the names of the parameters of its 
+<code class="docutils literal notranslate">
+<span class="pre">__init__
+</span>
+</code>.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<em>Dict
+</em>[str, 
+<em>Any
+</em>]
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Property.code">
+
+<span class="sig-name descname">
+<span class="pre">code
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">callee
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/properties.html#Property.code">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.properties.Property.code" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The code which creates the property, calling its class by the 
+<code class="docutils literal notranslate">
+<span class="pre">callee
+</span>
+</code> name (e.g., 
+<code class="docutils literal notranslate">
+<span class="pre">mw.GeneExpression
+</span>
+</code>).
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>callee
+</strong> (
+<em>str
+</em>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>str
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Shape">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.properties.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">Shape
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">values
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/properties.html#Shape">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.properties.Shape" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The shape of the values a property produces.
+</p>
+
+<dl class="py attribute">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Shape.VECTOR">
+
+<span class="sig-name descname">
+<span class="pre">VECTOR
+</span>
+</span>
+<span class="property">
+<span class="w"> 
+</span>
+<span class="p">
+<span class="pre">=
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="pre">'vector'
+</span>
+</span>
+<a class="headerlink" href="#metacellswidgets.properties.Shape.VECTOR" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>A value per entry of an axis.
+</p>
+
+</dd>
+</dl>
+
+
+<dl class="py attribute">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Shape.MATRIX">
+
+<span class="sig-name descname">
+<span class="pre">MATRIX
+</span>
+</span>
+<span class="property">
+<span class="w"> 
+</span>
+<span class="p">
+<span class="pre">=
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="pre">'matrix'
+</span>
+</span>
+<a class="headerlink" href="#metacellswidgets.properties.Shape.MATRIX" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>A value per pair of entries of two axes.
+</p>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Slot">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.properties.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">Slot
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">values
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/properties.html#Slot">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.properties.Slot" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>A place in a graph that a property can fill.
+</p>
+
+<dl class="py attribute">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Slot.COORDINATES">
+
+<span class="sig-name descname">
+<span class="pre">COORDINATES
+</span>
+</span>
+<span class="property">
+<span class="w"> 
+</span>
+<span class="p">
+<span class="pre">=
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="pre">'coordinates'
+</span>
+</span>
+<a class="headerlink" href="#metacellswidgets.properties.Slot.COORDINATES" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The coordinates of points along an axis of the graph.
+</p>
+
+</dd>
+</dl>
+
+
+<dl class="py attribute">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Slot.SIZES">
+
+<span class="sig-name descname">
+<span class="pre">SIZES
+</span>
+</span>
+<span class="property">
+<span class="w"> 
+</span>
+<span class="p">
+<span class="pre">=
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="pre">'sizes'
+</span>
+</span>
+<a class="headerlink" href="#metacellswidgets.properties.Slot.SIZES" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The sizes of points.
+</p>
+
+</dd>
+</dl>
+
+
+<dl class="py attribute">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Slot.COLORS">
+
+<span class="sig-name descname">
+<span class="pre">COLORS
+</span>
+</span>
+<span class="property">
+<span class="w"> 
+</span>
+<span class="p">
+<span class="pre">=
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="pre">'colors'
+</span>
+</span>
+<a class="headerlink" href="#metacellswidgets.properties.Slot.COLORS" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The colors of points, or of an annotation strip.
+</p>
+
+</dd>
+</dl>
+
+
+<dl class="py attribute">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Slot.GROUPS">
+
+<span class="sig-name descname">
+<span class="pre">GROUPS
+</span>
+</span>
+<span class="property">
+<span class="w"> 
+</span>
+<span class="p">
+<span class="pre">=
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="pre">'groups'
+</span>
+</span>
+<a class="headerlink" href="#metacellswidgets.properties.Slot.GROUPS" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Which entries are laid out together, and in what order.
+</p>
+
+</dd>
+</dl>
+
+
+<dl class="py attribute">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Slot.MASK">
+
+<span class="sig-name descname">
+<span class="pre">MASK
+</span>
+</span>
+<span class="property">
+<span class="w"> 
+</span>
+<span class="p">
+<span class="pre">=
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="pre">'mask'
+</span>
+</span>
+<a class="headerlink" href="#metacellswidgets.properties.Slot.MASK" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Which entries are shown.
+</p>
+
+</dd>
+</dl>
+
+
+<dl class="py attribute">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Slot.HOVERS">
+
+<span class="sig-name descname">
+<span class="pre">HOVERS
+</span>
+</span>
+<span class="property">
+<span class="w"> 
+</span>
+<span class="p">
+<span class="pre">=
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="pre">'hovers'
+</span>
+</span>
+<a class="headerlink" href="#metacellswidgets.properties.Slot.HOVERS" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Lines added to the hover text of entries.
+</p>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+</section>
+
+
+           
+</div>
+          
+</div>
+          
+<footer>
+<div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        
+<a href="API.html" class="btn btn-neutral float-left" title="API" accesskey="p" rel="prev">
+<span class="fa fa-arrow-circle-left" aria-hidden="true">
+</span> Previous
+</a>
+    
+</div>
+
+  
+<hr/>
+
+  
+<div role="contentinfo">
+    
+<p>&#169; Copyright 2026 Weizmann Institute of Science.
+</p>
+  
+</div>
+
+  Built with 
+<a href="https://www.sphinx-doc.org/">Sphinx
+</a> using a
+    
+<a href="https://github.com/readthedocs/sphinx_rtd_theme">theme
+</a>
+    provided by 
+<a href="https://readthedocs.org">Read the Docs
+</a>.
+   
+
+
+</footer>
+        
+</div>
+      
+</div>
+    
+</section>
+  
+</div>
+  
+<script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  
+</script> 
+
+
+</body>
+
+</html>

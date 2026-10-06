@@ -1,0 +1,262 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>metacellswidgets.properties &mdash; MetacellsWidgets 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MetacellsWidgets
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">README</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../API.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MetacellsWidgets</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">metacellswidgets.properties</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for metacellswidgets.properties</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""</span>
+<span class="sd">Properties: the data a form can show in a slot of a graph, such as the colors or the sizes of its points.</span>
+
+<span class="sd">A property is a class. Its instance holds the values of its arguments, e.g. ``GeneExpression("Foxa1")``. Each property</span>
+<span class="sd">says what kind of values it produces (its ``eltype``), and that decides which slots it suits. Whether a data source has</span>
+<span class="sd">a property, and how to fill a graph from it, is implemented separately for each kind of data source.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenSet</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_literal_text</span>
+
+<span class="n">__all__</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"Eltype"</span><span class="p">,</span>
+    <span class="s2">"Property"</span><span class="p">,</span>
+    <span class="s2">"Shape"</span><span class="p">,</span>
+    <span class="s2">"Slot"</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="Eltype">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Eltype">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Eltype</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The kind of values a property produces.</span>
+<span class="sd">    """</span>
+
+    <span class="c1">#: Numbers, integer or not, such as UMI counts or gene fractions.</span>
+    <span class="n">NUMBER</span> <span class="o">=</span> <span class="s2">"number"</span>
+
+    <span class="c1">#: Names of categories, such as cell types.</span>
+    <span class="n">CATEGORICAL</span> <span class="o">=</span> <span class="s2">"categorical"</span>
+
+    <span class="c1">#: Boolean flags, such as a mask.</span>
+    <span class="n">BOOLEAN</span> <span class="o">=</span> <span class="s2">"boolean"</span>
+
+    <span class="c1">#: Numbers which say how to lay out entries (which go together, and in what order), such as a global flow order.</span>
+    <span class="n">ARRANGEMENT</span> <span class="o">=</span> <span class="s2">"arrangement"</span></div>
+
+
+
+<div class="viewcode-block" id="Shape">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Shape">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Shape</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The shape of the values a property produces.</span>
+<span class="sd">    """</span>
+
+    <span class="c1">#: A value per entry of an axis.</span>
+    <span class="n">VECTOR</span> <span class="o">=</span> <span class="s2">"vector"</span>
+
+    <span class="c1">#: A value per pair of entries of two axes.</span>
+    <span class="n">MATRIX</span> <span class="o">=</span> <span class="s2">"matrix"</span></div>
+
+
+
+<div class="viewcode-block" id="Slot">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Slot">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Slot</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    A place in a graph that a property can fill.</span>
+<span class="sd">    """</span>
+
+    <span class="c1">#: The coordinates of points along an axis of the graph.</span>
+    <span class="n">COORDINATES</span> <span class="o">=</span> <span class="s2">"coordinates"</span>
+
+    <span class="c1">#: The sizes of points.</span>
+    <span class="n">SIZES</span> <span class="o">=</span> <span class="s2">"sizes"</span>
+
+    <span class="c1">#: The colors of points, or of an annotation strip.</span>
+    <span class="n">COLORS</span> <span class="o">=</span> <span class="s2">"colors"</span>
+
+    <span class="c1">#: Which entries are laid out together, and in what order.</span>
+    <span class="n">GROUPS</span> <span class="o">=</span> <span class="s2">"groups"</span>
+
+    <span class="c1">#: Which entries are shown.</span>
+    <span class="n">MASK</span> <span class="o">=</span> <span class="s2">"mask"</span>
+
+    <span class="c1">#: Lines added to the hover text of entries.</span>
+    <span class="n">HOVERS</span> <span class="o">=</span> <span class="s2">"hovers"</span></div>
+
+
+
+<span class="c1"># The kinds of values each slot can show.</span>
+<span class="n">_SLOT_ELTYPES</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">Slot</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">Eltype</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">Slot</span><span class="o">.</span><span class="n">COORDINATES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span><span class="p">]),</span>
+    <span class="n">Slot</span><span class="o">.</span><span class="n">SIZES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span><span class="p">]),</span>
+    <span class="n">Slot</span><span class="o">.</span><span class="n">COLORS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">]),</span>
+    <span class="n">Slot</span><span class="o">.</span><span class="n">GROUPS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">Eltype</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">ARRANGEMENT</span><span class="p">]),</span>
+    <span class="n">Slot</span><span class="o">.</span><span class="n">MASK</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">Eltype</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">]),</span>
+    <span class="n">Slot</span><span class="o">.</span><span class="n">HOVERS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">ARRANGEMENT</span><span class="p">]),</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="Property">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Property">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Property</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The base class of all properties.</span>
+
+<span class="sd">    A property's ``__init__`` takes the values of its arguments, and stores each in an attribute of the same name. This</span>
+<span class="sd">    is what lets a form write the property back into the code of its cell.</span>
+<span class="sd">    """</span>
+
+    <span class="c1">#: The kind of values the property produces.</span>
+    <span class="n">eltype</span><span class="p">:</span> <span class="n">Eltype</span>
+
+    <span class="c1">#: The shape of the values the property produces.</span>
+    <span class="n">shape</span><span class="p">:</span> <span class="n">Shape</span>
+
+<div class="viewcode-block" id="Property.suits">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Property.suits">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">suits</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">slot</span><span class="p">:</span> <span class="n">Slot</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Whether the property can fill the ``slot``, which depends on its ``eltype``.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">eltype</span> <span class="ow">in</span> <span class="n">_SLOT_ELTYPES</span><span class="p">[</span><span class="n">slot</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Property.arguments">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Property.arguments">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The values of the property's arguments, by the names of the parameters of its ``__init__``.</span>
+<span class="sd">        """</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">parameter</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">parameters</span>
+            <span class="k">if</span> <span class="n">parameter</span><span class="o">.</span><span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">VAR_POSITIONAL</span><span class="p">,</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">VAR_KEYWORD</span><span class="p">)</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="Property.code">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Property.code">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callee</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The code which creates the property, calling its class by the ``callee`` name (e.g., ``mw.GeneExpression``).</span>
+<span class="sd">        """</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">_literal_text</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">callee</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">code</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Property</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026 Weizmann Institute of Science.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -14,4 +14,5 @@ __version__ = "0.1.0"
 # pylint: disable=wildcard-import,unused-wildcard-import
 
 from .kernel import *
+from .properties import *
 from .rewrite import *
