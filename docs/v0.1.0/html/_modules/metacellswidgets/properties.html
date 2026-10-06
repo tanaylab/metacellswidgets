@@ -79,6 +79,7 @@
 <span class="sd">a property, and how to fill a graph from it, is implemented separately for each kind of data source.</span>
 <span class="sd">"""</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
@@ -100,10 +101,21 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceWidgets</span>
 
 <span class="n">__all__</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"Block"</span><span class="p">,</span>
+    <span class="s2">"BooleanMask"</span><span class="p">,</span>
     <span class="s2">"Eltype"</span><span class="p">,</span>
+    <span class="s2">"GeneExpression"</span><span class="p">,</span>
+    <span class="s2">"GlobalFlowOrder"</span><span class="p">,</span>
+    <span class="s2">"MeanCellsPerMetacell"</span><span class="p">,</span>
+    <span class="s2">"MeanTotalUMIsPerCell"</span><span class="p">,</span>
+    <span class="s2">"MeanTotalUMIsPerMetacell"</span><span class="p">,</span>
+    <span class="s2">"NCells"</span><span class="p">,</span>
+    <span class="s2">"NMetacells"</span><span class="p">,</span>
     <span class="s2">"Property"</span><span class="p">,</span>
     <span class="s2">"Shape"</span><span class="p">,</span>
     <span class="s2">"Slot"</span><span class="p">,</span>
+    <span class="s2">"TotalUMIs"</span><span class="p">,</span>
+    <span class="s2">"Type"</span><span class="p">,</span>
     <span class="s2">"implements"</span><span class="p">,</span>
 <span class="p">]</span>
 
@@ -198,6 +210,14 @@
     <span class="c1">#: The shape of the values the property produces.</span>
     <span class="n">shape</span><span class="p">:</span> <span class="n">Shape</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># Each property gets dispatchers of its own for the methods each kind of data source implements, so that</span>
+        <span class="c1"># registering a kind's implementation of one property doesn't affect any other.</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"exists"</span><span class="p">,</span> <span class="s2">"fill"</span><span class="p">,</span> <span class="s2">"editor"</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">functools</span><span class="o">.</span><span class="n">singledispatchmethod</span><span class="p">(</span><span class="n">Property</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">name</span><span class="p">]))</span>
+
 <div class="viewcode-block" id="Property.suits">
 <a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Property.suits">[docs]</a>
     <span class="nd">@classmethod</span>
@@ -275,6 +295,144 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span></div>
+
+
+
+<div class="viewcode-block" id="Type">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Type">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Type</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The type of each entry, such as the cell type of each metacell, shown in the colors of its type.</span>
+<span class="sd">    """</span>
+
+    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">CATEGORICAL</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
+
+
+
+<div class="viewcode-block" id="Block">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Block">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Block</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The block each entry belongs to.</span>
+<span class="sd">    """</span>
+
+    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">CATEGORICAL</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
+
+
+
+<div class="viewcode-block" id="GeneExpression">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.GeneExpression">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GeneExpression</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The expression level (linear fraction) of the ``gene`` in each entry, shown in log base 2.</span>
+<span class="sd">    """</span>
+
+    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gene</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gene</span> <span class="o">=</span> <span class="n">gene</span></div>
+
+
+
+<div class="viewcode-block" id="TotalUMIs">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.TotalUMIs">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TotalUMIs</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The total number of UMIs of each entry.</span>
+<span class="sd">    """</span>
+
+    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
+
+
+
+<div class="viewcode-block" id="NCells">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.NCells">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">NCells</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The number of cells of each entry.</span>
+<span class="sd">    """</span>
+
+    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
+
+
+
+<div class="viewcode-block" id="NMetacells">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.NMetacells">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">NMetacells</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The number of metacells of each entry.</span>
+<span class="sd">    """</span>
+
+    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
+
+
+
+<div class="viewcode-block" id="MeanCellsPerMetacell">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.MeanCellsPerMetacell">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MeanCellsPerMetacell</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The mean number of cells per metacell of each entry.</span>
+<span class="sd">    """</span>
+
+    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
+
+
+
+<div class="viewcode-block" id="MeanTotalUMIsPerMetacell">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.MeanTotalUMIsPerMetacell">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MeanTotalUMIsPerMetacell</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The mean total number of UMIs per metacell of each entry.</span>
+<span class="sd">    """</span>
+
+    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
+
+
+
+<div class="viewcode-block" id="MeanTotalUMIsPerCell">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.MeanTotalUMIsPerCell">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MeanTotalUMIsPerCell</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The mean total number of UMIs per cell of each entry.</span>
+<span class="sd">    """</span>
+
+    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
+
+
+
+<div class="viewcode-block" id="BooleanMask">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.BooleanMask">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BooleanMask</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The Boolean mask property with the ``name`` of each entry.</span>
+<span class="sd">    """</span>
+
+    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">BOOLEAN</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span></div>
+
+
+
+<div class="viewcode-block" id="GlobalFlowOrder">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.GlobalFlowOrder">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GlobalFlowOrder</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The position of the type of each entry in the global flow order of the types.</span>
+<span class="sd">    """</span>
+
+    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">ARRANGEMENT</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
 
 
 

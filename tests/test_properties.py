@@ -2,8 +2,11 @@
 Test the property base.
 """
 
+from typing import Any
+
 import pytest
 
+import metacellswidgets as mw
 from metacellswidgets.properties import Eltype
 from metacellswidgets.properties import Property
 from metacellswidgets.properties import Shape
@@ -99,3 +102,36 @@ def test_slots_of_eltype(eltype: Eltype, slots: set) -> None:
 
     _Toy.eltype = eltype
     assert {slot for slot in Slot if _Toy.suits(slot)} == slots
+
+
+@pytest.mark.parametrize(
+    "prop, code, eltype",
+    [
+        (mw.Type(), "mw.Type()", Eltype.CATEGORICAL),
+        (mw.Block(), "mw.Block()", Eltype.CATEGORICAL),
+        (mw.GeneExpression("Foxa1"), "mw.GeneExpression(gene='Foxa1')", Eltype.NUMBER),
+        (mw.TotalUMIs(), "mw.TotalUMIs()", Eltype.NUMBER),
+        (mw.NCells(), "mw.NCells()", Eltype.NUMBER),
+        (mw.NMetacells(), "mw.NMetacells()", Eltype.NUMBER),
+        (mw.MeanCellsPerMetacell(), "mw.MeanCellsPerMetacell()", Eltype.NUMBER),
+        (mw.MeanTotalUMIsPerMetacell(), "mw.MeanTotalUMIsPerMetacell()", Eltype.NUMBER),
+        (mw.MeanTotalUMIsPerCell(), "mw.MeanTotalUMIsPerCell()", Eltype.NUMBER),
+        (mw.BooleanMask("is_doublet"), "mw.BooleanMask(name='is_doublet')", Eltype.BOOLEAN),
+        (mw.GlobalFlowOrder(), "mw.GlobalFlowOrder()", Eltype.ARRANGEMENT),
+    ],
+)
+def test_builtin_properties(prop: Property, code: str, eltype: Eltype) -> None:
+    """
+    Each built-in property writes its code, says what it produces, and has no implementation until a kind gives one.
+    """
+    assert prop.code(f"mw.{type(prop).__name__}") == code
+    assert type(prop).eltype == eltype
+    assert type(prop).shape == Shape.VECTOR
+
+    class _Unknown(mw.SourceWidgets):
+        pass
+
+    sinks: Any = []
+    assert not type(prop).exists(_Unknown(), "metacell")
+    with pytest.raises(TypeError, match=f"{type(prop).__name__}.fill is not implemented for: _Unknown"):
+        prop.fill(_Unknown(), sinks, "metacell")

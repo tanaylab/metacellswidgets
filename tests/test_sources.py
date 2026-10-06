@@ -2,7 +2,6 @@
 Test the base of the kinds of data sources.
 """
 
-import functools
 from typing import Any
 from typing import List
 from typing import Set
@@ -32,86 +31,74 @@ class _MoreToys(_Toys):
     """
 
 
-class _Kind(Property):
+class _Category(Property):
     """
-    A categorical property.
+    The category of each entry.
     """
 
     eltype = Eltype.CATEGORICAL
     shape = Shape.VECTOR
 
-    @functools.singledispatchmethod
-    @classmethod
-    def exists(cls, source: SourceWidgets, axis: str) -> bool:  # pylint: disable=unused-argument
-        return False
 
-    @functools.singledispatchmethod
-    def fill(self, source: SourceWidgets, sinks: Any, axis: str) -> None:  # pylint: disable=unused-argument
-        raise TypeError(type(source).__name__)
-
-
-class _Level(Property):
+class _Amount(Property):
     """
-    A numeric property.
+    The amount of each entry.
     """
 
     eltype = Eltype.NUMBER
     shape = Shape.VECTOR
 
-    @functools.singledispatchmethod
-    @classmethod
-    def exists(cls, source: SourceWidgets, axis: str) -> bool:  # pylint: disable=unused-argument
-        return False
+
+@implements(_Category.exists, _Toys)
+def _toys_have_category(_cls: type, source: _Toys, axis: str) -> bool:
+    return f"category of {axis}" in source.names
 
 
-@implements(_Kind.exists, _Toys)
-def _toys_have_kind(_cls: type, source: _Toys, axis: str) -> bool:
-    return f"kind of {axis}" in source.names
+@implements(_Category.fill, _Toys)
+def _toys_fill_category(_self: _Category, source: _Toys, sinks: List[str], axis: str) -> None:
+    sinks.append(f"category of {axis} from {len(source.names)} names")
 
 
-@implements(_Kind.fill, _Toys)
-def _toys_fill_kind(_self: _Kind, source: _Toys, sinks: List[str], axis: str) -> None:
-    sinks.append(f"kind of {axis} from {len(source.names)} names")
+@implements(_Amount.exists, _Toys)
+def _toys_have_amount(_cls: type, source: _Toys, axis: str) -> bool:
+    return f"amount of {axis}" in source.names
 
 
-@implements(_Level.exists, _Toys)
-def _toys_have_level(_cls: type, source: _Toys, axis: str) -> bool:
-    return f"level of {axis}" in source.names
-
-
-_Toys.register_properties(axis="cell", properties=[_Kind, _Level])
-_MoreToys.register_properties(axis="gene", properties=[_Level])
+_Toys.register_properties(axis="cell", properties=[_Category, _Amount])
+_MoreToys.register_properties(axis="gene", properties=[_Amount])
 
 
 def test_registered_properties() -> None:
     """
     A kind offers the properties registered for it and for its base classes.
     """
-    assert _Toys.registered_properties("cell") == [_Kind, _Level]
+    assert _Toys.registered_properties("cell") == [_Category, _Amount]
     assert not _Toys.registered_properties("gene")
-    assert _MoreToys.registered_properties("cell") == [_Kind, _Level]
-    assert _MoreToys.registered_properties("gene") == [_Level]
+    assert _MoreToys.registered_properties("cell") == [_Category, _Amount]
+    assert _MoreToys.registered_properties("gene") == [_Amount]
 
 
 def test_register_twice() -> None:
     """
     Registering a property twice for the same axis is an error, even through a base class.
     """
-    with pytest.raises(ValueError, match="the property: _Kind is already registered for the axis: cell of: _MoreToys"):
-        _MoreToys.register_properties(axis="cell", properties=[_Kind])
+    with pytest.raises(
+        ValueError, match="the property: _Category is already registered for the axis: cell of: _MoreToys"
+    ):
+        _MoreToys.register_properties(axis="cell", properties=[_Category])
 
 
 def test_properties() -> None:
     """
     A slot offers the registered properties which suit it and which the data source has.
     """
-    toys = _Toys({"kind of cell", "level of cell"})
-    assert toys.properties(axis="cell", slot=Slot.COLORS) == [_Kind, _Level]
-    assert toys.properties(axis="cell", slot=Slot.SIZES) == [_Level]
-    assert toys.properties(axis="cell", slot=Slot.GROUPS) == [_Kind]
+    toys = _Toys({"category of cell", "amount of cell"})
+    assert toys.properties(axis="cell", slot=Slot.COLORS) == [_Category, _Amount]
+    assert toys.properties(axis="cell", slot=Slot.SIZES) == [_Amount]
+    assert toys.properties(axis="cell", slot=Slot.GROUPS) == [_Category]
     assert not toys.properties(axis="cell", slot=Slot.MASK)
 
-    assert _Toys({"kind of cell"}).properties(axis="cell", slot=Slot.COLORS) == [_Kind]
+    assert _Toys({"category of cell"}).properties(axis="cell", slot=Slot.COLORS) == [_Category]
     assert not _Toys(set()).properties(axis="cell", slot=Slot.COLORS)
 
 
@@ -119,9 +106,19 @@ def test_fill() -> None:
     """
     Filling dispatches on the kind of the data source.
     """
-    sinks: List[str] = []
-    _Kind().fill(_Toys({"kind of cell"}), sinks, "cell")
-    assert sinks == ["kind of cell from 1 names"]
+    sinks: Any = []
+    _Category().fill(_Toys({"category of cell"}), sinks, "cell")
+    assert sinks == ["category of cell from 1 names"]
+
+
+def test_dispatchers_are_per_property() -> None:
+    """
+    Registering a kind's implementation of one property doesn't implement any other property for that kind.
+    """
+    assert _Category.__dict__["fill"] is not _Amount.__dict__["fill"]
+    sinks: Any = []
+    with pytest.raises(TypeError, match="_Amount.fill is not implemented for: _Toys"):
+        _Amount().fill(_Toys({"amount of cell"}), sinks, "cell")
 
 
 def test_unimplemented() -> None:
@@ -132,7 +129,8 @@ def test_unimplemented() -> None:
     class _Others(SourceWidgets):
         pass
 
-    assert not _Kind.exists(_Others(), "cell")
+    sinks: Any = []
+    assert not _Category.exists(_Others(), "cell")
     with pytest.raises(TypeError, match="_Others"):
-        _Kind().fill(_Others(), [], "cell")
-    assert _Kind.editor(_Others(), "cell", None) is None
+        _Category().fill(_Others(), sinks, "cell")
+    assert _Category.editor(_Others(), "cell", None) is None

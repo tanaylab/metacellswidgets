@@ -6,6 +6,7 @@ says what kind of values it produces (its ``eltype``), and that decides which sl
 a property, and how to fill a graph from it, is implemented separately for each kind of data source.
 """
 
+import functools
 import inspect
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -27,10 +28,21 @@ if TYPE_CHECKING:
     from .sources import SourceWidgets
 
 __all__: List[str] = [
+    "Block",
+    "BooleanMask",
     "Eltype",
+    "GeneExpression",
+    "GlobalFlowOrder",
+    "MeanCellsPerMetacell",
+    "MeanTotalUMIsPerCell",
+    "MeanTotalUMIsPerMetacell",
+    "NCells",
+    "NMetacells",
     "Property",
     "Shape",
     "Slot",
+    "TotalUMIs",
+    "Type",
     "implements",
 ]
 
@@ -114,6 +126,14 @@ class Property:
     #: The shape of the values the property produces.
     shape: Shape
 
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        super().__init_subclass__(**kwargs)
+        # Each property gets dispatchers of its own for the methods each kind of data source implements, so that
+        # registering a kind's implementation of one property doesn't affect any other.
+        for name in ("exists", "fill", "editor"):
+            if name not in cls.__dict__:
+                setattr(cls, name, functools.singledispatchmethod(Property.__dict__[name]))
+
     @classmethod
     def suits(cls, slot: Slot) -> bool:
         """
@@ -173,6 +193,111 @@ class Property:
 
     def __hash__(self) -> int:
         return hash((type(self), tuple(self.arguments().items())))
+
+
+class Type(Property):
+    """
+    The type of each entry, such as the cell type of each metacell, shown in the colors of its type.
+    """
+
+    eltype = Eltype.CATEGORICAL
+    shape = Shape.VECTOR
+
+
+class Block(Property):
+    """
+    The block each entry belongs to.
+    """
+
+    eltype = Eltype.CATEGORICAL
+    shape = Shape.VECTOR
+
+
+class GeneExpression(Property):
+    """
+    The expression level (linear fraction) of the ``gene`` in each entry, shown in log base 2.
+    """
+
+    eltype = Eltype.NUMBER
+    shape = Shape.VECTOR
+
+    def __init__(self, gene: str) -> None:
+        self.gene = gene
+
+
+class TotalUMIs(Property):
+    """
+    The total number of UMIs of each entry.
+    """
+
+    eltype = Eltype.NUMBER
+    shape = Shape.VECTOR
+
+
+class NCells(Property):
+    """
+    The number of cells of each entry.
+    """
+
+    eltype = Eltype.NUMBER
+    shape = Shape.VECTOR
+
+
+class NMetacells(Property):
+    """
+    The number of metacells of each entry.
+    """
+
+    eltype = Eltype.NUMBER
+    shape = Shape.VECTOR
+
+
+class MeanCellsPerMetacell(Property):
+    """
+    The mean number of cells per metacell of each entry.
+    """
+
+    eltype = Eltype.NUMBER
+    shape = Shape.VECTOR
+
+
+class MeanTotalUMIsPerMetacell(Property):
+    """
+    The mean total number of UMIs per metacell of each entry.
+    """
+
+    eltype = Eltype.NUMBER
+    shape = Shape.VECTOR
+
+
+class MeanTotalUMIsPerCell(Property):
+    """
+    The mean total number of UMIs per cell of each entry.
+    """
+
+    eltype = Eltype.NUMBER
+    shape = Shape.VECTOR
+
+
+class BooleanMask(Property):
+    """
+    The Boolean mask property with the ``name`` of each entry.
+    """
+
+    eltype = Eltype.BOOLEAN
+    shape = Shape.VECTOR
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+
+class GlobalFlowOrder(Property):
+    """
+    The position of the type of each entry in the global flow order of the types.
+    """
+
+    eltype = Eltype.ARRANGEMENT
+    shape = Shape.VECTOR
 
 
 _Function = TypeVar("_Function", bound=Callable[..., Any])
