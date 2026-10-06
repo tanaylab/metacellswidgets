@@ -7,4 +7,5 @@ API
 
   properties
   sources
+  editors
   daf_widgets

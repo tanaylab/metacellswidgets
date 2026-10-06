@@ -4,6 +4,7 @@ The ``Daf`` kind of data source: a single ``Daf`` data set of metacells.
 
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Tuple
 
 import metacellsgraphspy as mg
@@ -11,6 +12,9 @@ import numpy as np
 from dafpy import DafReader
 from somegraphspy import VectorDataSinks
 
+from .editors import ArgumentEditor
+from .editors import GenePicker
+from .editors import NamePicker
 from .properties import Block
 from .properties import BooleanMask
 from .properties import GeneExpression
@@ -126,6 +130,13 @@ def _fill_gene_expression(self: GeneExpression, source: DafWidgets, sinks: Vecto
     mg.fill_gene_expression(sinks, source.daf, axis=axis, gene=self.gene)
 
 
+@implements(GeneExpression.editor, DafWidgets)
+def _gene_expression_editor(
+    _cls: type, source: DafWidgets, _axis: str, current: Optional[GeneExpression]
+) -> ArgumentEditor:
+    return ArgumentEditor(GenePicker(source, None if current is None else current.gene), GeneExpression)
+
+
 @implements(TotalUMIs.exists, DafWidgets)
 def _has_total_umis(_cls: type, source: DafWidgets, axis: str) -> bool:
     return source._has_vectors(axis, "total_UMIs")
@@ -200,6 +211,12 @@ def _has_boolean_mask(_cls: type, source: DafWidgets, axis: str) -> bool:
 @implements(BooleanMask.fill, DafWidgets)
 def _fill_boolean_mask(self: BooleanMask, source: DafWidgets, sinks: VectorDataSinks, axis: str) -> None:
     mg.fill_boolean_annotation(sinks, source.daf, axis=axis, property=self.name)
+
+
+@implements(BooleanMask.editor, DafWidgets)
+def _boolean_mask_editor(_cls: type, source: DafWidgets, axis: str, current: Optional[BooleanMask]) -> ArgumentEditor:
+    current_name = None if current is None else current.name
+    return ArgumentEditor(NamePicker(source.boolean_vectors(axis), current_name), BooleanMask)
 
 
 @implements(GlobalFlowOrder.exists, DafWidgets)

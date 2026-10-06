@@ -162,6 +162,26 @@ def test_gene_choices() -> None:
     assert mw.DafWidgets(_sparse_daf()).gene_choices() == [("A", "A"), ("B", "B")]
 
 
+def test_editors() -> None:
+    """
+    The properties with arguments have editors, starting with the current property; the others have none.
+    """
+    source = mw.DafWidgets(_full_daf())
+
+    editor = mw.GeneExpression.editor(source, "metacell", mw.GeneExpression("D"))
+    assert editor is not None
+    assert editor.value == mw.GeneExpression("D")
+
+    editor = mw.BooleanMask.editor(source, "metacell", None)
+    assert editor is not None
+    assert editor.value is None
+    editor = mw.BooleanMask.editor(source, "metacell", mw.BooleanMask("is_doublet"))
+    assert editor is not None
+    assert editor.value == mw.BooleanMask("is_doublet")
+
+    assert mw.Type.editor(source, "metacell", None) is None
+
+
 def test_boolean_vectors() -> None:
     """
     The Boolean vectors of an axis are found by their element type.
