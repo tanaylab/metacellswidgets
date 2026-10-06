@@ -7,3 +7,4 @@ API
 
   properties
   sources
+  daf_widgets

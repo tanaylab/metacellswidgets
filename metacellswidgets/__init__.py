@@ -13,6 +13,7 @@ __version__ = "0.1.0"
 
 # pylint: disable=wildcard-import,unused-wildcard-import
 
+from .daf_widgets import *
 from .kernel import *
 from .properties import *
 from .rewrite import *
