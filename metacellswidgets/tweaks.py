@@ -88,7 +88,7 @@ __all__: List[str] = [
 class Tweak(Arguments):
     """
     The base class of all tweaks. Its instance holds the values of its arguments (see
-    :py:class:`~metacellswidgets.common.Arguments`).
+    :py:class:`~metacellswidgets.common.Arguments`). A tweak class must derive directly from this class.
     """
 
     def __init_subclass__(cls, **kwargs: Any) -> None:

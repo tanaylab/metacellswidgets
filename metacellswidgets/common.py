@@ -75,7 +75,11 @@ class Arguments:
 def _give_own_dispatchers(cls: type, base: type, names: Sequence[str]) -> None:
     # Give a subclass ``cls`` dispatchers of its own for the methods with the ``names`` of the ``base`` class, so that
     # registering an implementation of the methods of one subclass doesn't affect any other. The base's methods are the
-    # implementations for any type which has none registered. A method the subclass defines itself is kept as is.
+    # implementations for any type which has none registered. A method the subclass defines itself is kept as is. The
+    # subclass must derive directly from the base, since it wouldn't see the implementations registered for any class
+    # between them.
+    if base not in cls.__bases__:
+        raise TypeError(f"the class: {cls.__qualname__} must derive directly from: {base.__name__}")
     for name in names:
         if name not in cls.__dict__:
             setattr(cls, name, functools.singledispatchmethod(base.__dict__[name]))

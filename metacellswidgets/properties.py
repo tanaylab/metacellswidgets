@@ -110,7 +110,7 @@ _SLOT_ELTYPES: Mapping[Slot, FrozenSet[Eltype]] = {
 class Property(Arguments):
     """
     The base class of all properties. Its instance holds the values of its arguments (see
-    :py:class:`~metacellswidgets.common.Arguments`).
+    :py:class:`~metacellswidgets.common.Arguments`). A property class must derive directly from this class.
     """
 
     #: The kind of values the property produces.

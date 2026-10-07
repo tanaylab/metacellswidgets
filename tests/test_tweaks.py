@@ -89,6 +89,16 @@ def test_tweak_base() -> None:
     assert isinstance(_Width.editor(mw.DafWidgets(_full_daf()), None), Widget)
 
 
+def test_tweak_derives_directly() -> None:
+    """
+    A tweak class must derive directly from ``Tweak``.
+    """
+    with pytest.raises(TypeError, match="must derive directly from: Tweak"):
+
+        class _Wider(_Width):
+            pass
+
+
 def test_tweak_code() -> None:
     """
     A tweak is written into the code of a cell by its arguments, and compares by them.

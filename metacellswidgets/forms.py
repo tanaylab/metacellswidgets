@@ -62,7 +62,8 @@ __all__: List[str] = [
 class GraphForm(Arguments):
     """
     The base class of the forms of graphs. It holds the data ``source`` the graph is drawn from, and the values of the
-    graph's arguments (see :py:class:`~metacellswidgets.common.Arguments`).
+    graph's arguments (see :py:class:`~metacellswidgets.common.Arguments`). A graph class must derive directly from this
+    class.
     """
 
     # The data source is written into the code of the cell as the receiver of the call (e.g. ``source.gene_gene(...)``),

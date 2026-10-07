@@ -84,6 +84,16 @@ def test_equality() -> None:
         hash(_Kind())
 
 
+def test_property_derives_directly() -> None:
+    """
+    A property class must derive directly from ``Property``.
+    """
+    with pytest.raises(TypeError, match="must derive directly from: Property"):
+
+        class _Kinder(_Kind):
+            pass
+
+
 @pytest.mark.parametrize(
     "eltype, slots",
     [

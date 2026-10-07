@@ -163,7 +163,7 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">Tweak</span><span class="p">(</span><span class="n">Arguments</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The base class of all tweaks. Its instance holds the values of its arguments (see</span>
-<span class="sd">    :py:class:`~metacellswidgets.common.Arguments`).</span>
+<span class="sd">    :py:class:`~metacellswidgets.common.Arguments`). A tweak class must derive directly from this class.</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
