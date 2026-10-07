@@ -9,6 +9,7 @@ Each kind also offers its graphs as methods, e.g. ``DafWidgets(daf).gene_gene(..
 """
 
 import inspect
+import sys
 from typing import Any
 from typing import Callable
 from typing import ClassVar
@@ -27,6 +28,7 @@ from typing import overload
 
 from .properties import Property
 from .properties import Slot
+from .rewrite import _cell_site
 
 __all__: List[str] = [
     "SourceWidgets",
@@ -61,7 +63,11 @@ class _GraphConstructor(Generic[_Parameters, _Graph]):
         graph_class = self.graph_class
 
         def construct(*args: _Parameters.args, **kwargs: _Parameters.kwargs) -> _Graph:
-            return graph_class(source, *args, **kwargs)
+            # Where in the running cell this was called, so that an interactive display can rewrite this call.
+            call_site = _cell_site(sys._getframe(1))  # pylint: disable=protected-access
+            graph = graph_class(source, *args, **kwargs)
+            setattr(graph, "_call_site", call_site)
+            return graph
 
         # So that completion and help show the graph's parameters and documentation.
         parameters = list(inspect.signature(graph_class).parameters.values())[1:]

@@ -8,6 +8,8 @@ from typing import ClassVar
 from typing import Dict
 from typing import FrozenSet
 from typing import List
+from typing import Mapping
+from typing import Optional
 
 from .rewrite import _literal_text
 
@@ -39,11 +41,12 @@ class Arguments:
             and parameter.name not in self._not_arguments
         }
 
-    def code(self, callee: str) -> str:
+    def code(self, callee: str, namespace: Optional[Mapping[str, Any]] = None) -> str:
         """
         The code which creates the object with its arguments, calling the ``callee`` (e.g., ``mw.GeneExpression``).
+        Arguments which are themselves such objects name their classes as the ``namespace`` (of the cell) does.
         """
-        arguments = [f"{name}={_literal_text(name, value)}" for name, value in self.arguments().items()]
+        arguments = [f"{name}={_literal_text(name, value, namespace)}" for name, value in self.arguments().items()]
         return f"{callee}({', '.join(arguments)})"
 
     def __repr__(self) -> str:

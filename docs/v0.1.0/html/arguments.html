@@ -364,6 +364,20 @@ is what lets a form write the object back into the code of its cell.
 <span class="pre">callee
 </span>
 </span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">namespace
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
 </em>
 <span class="sig-paren">)
 </span>
@@ -387,6 +401,11 @@ is what lets a form write the object back into the code of its cell.
 <span class="pre">mw.GeneExpression
 </span>
 </code>).
+Arguments which are themselves such objects name their classes as the 
+<code class="docutils literal notranslate">
+<span class="pre">namespace
+</span>
+</code> (of the cell) does.
 </p>
 
 <dl class="field-list simple">
@@ -397,12 +416,41 @@ is what lets a form write the object back into the code of its cell.
 </dt>
 
 <dd class="field-odd">
+<ul class="simple">
+
+<li>
 <p>
 <strong>callee
 </strong> (
 <em>str
 </em>)
 </p>
+</li>
+
+<li>
+<p>
+<strong>namespace
+</strong> (
+<em>Mapping
+</em>
+<em>[
+</em>
+<em>str
+</em>
+<em>, 
+</em>
+<em>Any
+</em>
+<em>] 
+</em>
+<em>| 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
 
 </dd>
 

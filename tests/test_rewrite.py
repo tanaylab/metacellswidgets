@@ -13,6 +13,7 @@ from typing import Optional
 import numpy as np
 import pytest
 
+import metacellswidgets
 from metacellswidgets.rewrite import _call_position
 from metacellswidgets.rewrite import _Position
 from metacellswidgets.rewrite import _rewritten_cell
@@ -204,3 +205,35 @@ def test_non_literal_value_is_refused() -> None:
     source = "form = mw.form(daf)\nform.display(interactive=True)\n"
     with pytest.raises(TypeError, match="can't be written as a Python literal"):
         _rewrite(source, {"x_gene": np.float32(1.5)})
+
+
+def test_properties_through_module() -> None:
+    """
+    Properties are written by their code, naming their classes through the name the notebook bound to their module.
+    """
+    source = "form = mw.form(daf)\nform.display(interactive=True)\n"
+    keywords = {"colors": metacellswidgets.GeneExpression("A"), "sizes": metacellswidgets.NCells()}
+    namespace = {"_": metacellswidgets.GeneExpression, "mw": metacellswidgets}
+    assert _rewrite(source, keywords, namespace=namespace) == (
+        "form = mw.form(daf, colors=mw.GeneExpression(gene='A'), sizes=mw.NCells())\nform.display(interactive=False)\n"
+    )
+
+
+def test_properties_through_class() -> None:
+    """
+    A class the notebook bound to a name is written by that name.
+    """
+    source = "form = mw.form(daf)\nform.display(interactive=True)\n"
+    namespace = {"GeneExpression": metacellswidgets.GeneExpression, "mw": metacellswidgets}
+    assert _rewrite(source, {"colors": metacellswidgets.GeneExpression("A")}, namespace=namespace) == (
+        "form = mw.form(daf, colors=GeneExpression(gene='A'))\nform.display(interactive=False)\n"
+    )
+
+
+def test_properties_without_name() -> None:
+    """
+    A property whose class the notebook has no name for can't be written into the cell.
+    """
+    source = "form = mw.form(daf)\nform.display(interactive=True)\n"
+    with pytest.raises(RuntimeError, match="no name for it .e.g. use: import metacellswidgets as"):
+        _rewrite(source, {"colors": metacellswidgets.Type()}, namespace={"_": metacellswidgets})

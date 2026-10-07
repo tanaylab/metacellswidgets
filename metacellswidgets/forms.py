@@ -9,12 +9,14 @@ from typing import Any
 from typing import ClassVar
 from typing import FrozenSet
 from typing import List
+from typing import Optional
 
 from IPython.display import display as display_in_cell
 from somegraphspy import Graph
 
 from .arguments import Arguments
 from .properties import _give_own_dispatchers
+from .rewrite import _CallSite
 from .sources import SourceWidgets
 
 __all__: List[str] = [
@@ -31,6 +33,10 @@ class GraphForm(Arguments):
     # The data source is written into the code of the cell as the receiver of the call (e.g. ``source.gene_gene(...)``),
     # not as an argument.
     _not_arguments: ClassVar[FrozenSet[str]] = frozenset(["source"])
+
+    # Where in its cell the form was created, if it was created by a method of a kind of data source from the top level
+    # of the running cell. Set by ``graph_constructor``.
+    _call_site: Optional[_CallSite] = None
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)

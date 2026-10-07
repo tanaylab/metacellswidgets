@@ -14,6 +14,7 @@ UTF-8 bytes, as both ``ast`` and ``co_positions`` report them.
 import ast
 from dataclasses import dataclass
 from types import FrameType
+from types import ModuleType
 from typing import Any
 from typing import List
 from typing import Mapping
@@ -131,8 +132,30 @@ def _segment(source: str, node: ast.AST) -> str:
     return text
 
 
-def _literal_text(name: str, value: Any) -> str:
-    # The code of a value, which must read back as the same value.
+def _callee_of(cls: type, namespace: Mapping[str, Any]) -> str:
+    # The code naming the class in the namespace of the cell: a name bound to the class, or to a module which has it
+    # (e.g. ``mw.GeneExpression``). Names starting with ``_`` are skipped, since IPython binds them to recent outputs.
+    names = [name for name in namespace if not name.startswith("_")]
+    for name in names:
+        if namespace[name] is cls:
+            return name
+    for name in names:
+        value = namespace[name]
+        if isinstance(value, ModuleType) and getattr(value, cls.__name__, None) is cls:
+            return f"{name}.{cls.__name__}"
+    package = cls.__module__.split(".")[0]
+    raise RuntimeError(
+        f"can't write the class: {cls.__name__} into the code of the cell, "
+        f"because the notebook has no name for it (e.g. use: import {package} as ...)"
+    )
+
+
+def _literal_text(name: str, value: Any, namespace: Optional[Mapping[str, Any]] = None) -> str:
+    # The code of a value, which must read back as the same value. An object with a ``code`` method (e.g. a property)
+    # is written by it, naming its class as the namespace does.
+    code = getattr(value, "code", None)
+    if callable(code) and namespace is not None:
+        return code(_callee_of(type(value), namespace), namespace)
     text = repr(value)
     try:
         is_literal = ast.literal_eval(text) == value
@@ -151,10 +174,12 @@ def _rewritten_cell(
     display_position: _Position,
     is_interactive: bool,
     form_callee: Optional[str] = None,
+    namespace: Optional[Mapping[str, Any]] = None,
 ) -> str:
     # The code of the cell with the form call's keyword arguments set to ``form_keywords`` (leaving out those which are
     # ``None``), its callee replaced by ``form_callee`` (if given), and the display call's ``interactive`` set to
-    # ``is_interactive``. The form call may be on another line than the display call, or chained to it.
+    # ``is_interactive``. The form call may be on another line than the display call, or chained to it. Values with a
+    # ``code`` method (e.g. properties) name their classes as the cell's ``namespace`` does.
     tree = ast.parse(source)
     form_call = _top_level_call(tree, form_position, "form")
     display_call = _top_level_call(tree, display_position, "display")
@@ -163,7 +188,7 @@ def _rewritten_cell(
         form_callee = _segment(source, form_call.func)
     form_arguments = [_segment(source, argument) for argument in form_call.args]
     form_arguments += [
-        f"{name}={_literal_text(name, value)}" for name, value in form_keywords.items() if value is not None
+        f"{name}={_literal_text(name, value, namespace)}" for name, value in form_keywords.items() if value is not None
     ]
     form_text = f"{form_callee}({', '.join(form_arguments)})"
 
