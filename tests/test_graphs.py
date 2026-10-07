@@ -22,6 +22,14 @@ def test_gene_gene_arguments() -> None:
     assert form.arguments() == {"axis": "metacell", "x_gene": "A", "y_gene": "B", "colors": mw.Type(), "sizes": None}
 
 
+def test_gene_gene_repr() -> None:
+    """
+    The ``repr`` of a form writes its properties with their bare class names.
+    """
+    form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B", sizes=mw.TotalUMIs())
+    assert repr(form) == "GeneGene(axis='metacell', x_gene='A', y_gene='B', colors=None, sizes=TotalUMIs())"
+
+
 def test_gene_gene_of_daf() -> None:
     """
     The graph of a ``Daf`` data set, with its points colored and sized.

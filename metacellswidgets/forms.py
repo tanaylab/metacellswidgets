@@ -44,6 +44,7 @@ from .arguments import Arguments
 from .kernel import _MainThreadJobs
 from .kernel import _owned_subshell_id
 from .kernel import _route_to_subshell
+from .kernel import _routing_new_widgets
 from .properties import _give_own_dispatchers
 from .rewrite import _CallSite
 from .rewrite import _cell_site
@@ -215,7 +216,8 @@ class GraphForm(Arguments):
                 with errors:
                     traceback.print_exc()
 
-        jobs.serve(is_done, on_poll)
+        with _routing_new_widgets(_owned_subshell_id()):
+            jobs.serve(is_done, on_poll)
 
         shell = get_ipython()
         shell.set_next_input(

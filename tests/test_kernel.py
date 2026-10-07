@@ -11,6 +11,7 @@ import sys
 import threading
 import time
 from typing import Any
+from typing import Callable
 from typing import Dict
 from typing import Iterator
 from typing import List
@@ -172,29 +173,53 @@ def test_widget_messages_reach_a_blocked_cell(kernel: Tuple[Any, Any]) -> None:
     assert job_thread == "MainThread"
 
 
-def _opened_widgets(client: Any, message_id: str, count: int, timeout: float = 300) -> List[Dict[str, Any]]:
-    # The states (with their comm ids) of the first ``count`` widgets the execution opened which match the wanted ones:
-    # the gene comboboxes and the "Done" button.
+def _is_gene_picker(state: Dict[str, Any]) -> bool:
+    # Whether the widget state is of the combobox of a gene picker.
+    return state.get("_model_name") == "ComboboxModel" and state.get("placeholder") == "Gene"
+
+
+def _is_done_button(state: Dict[str, Any]) -> bool:
+    # Whether the widget state is of the "Done" button.
+    return state.get("_model_name") == "ButtonModel" and state.get("description") == "Done"
+
+
+def _is_property_choice(state: Dict[str, Any]) -> bool:
+    # Whether the widget state is of the dropdown of a property picker. It is opened with no options, which are set
+    # right after (unlike the axis picker's dropdown).
+    return state.get("_model_name") == "DropdownModel" and not state.get("_options_labels")
+
+
+def _opened_widgets(
+    client: Any, is_wanted: Callable[[Dict[str, Any]], bool], count: int, timeout: float = 300
+) -> List[Dict[str, Any]]:
+    # The states (with their comm ids) of the next ``count`` widgets the kernel opens which are wanted, in the order they
+    # are opened. Widgets an editor creates while its cell blocks are opened by the main thread on behalf of a widget
+    # message, so the message which opened them isn't checked.
     widgets: List[Dict[str, Any]] = []
     deadline = time.time() + timeout
     while len(widgets) < count:
         message = client.get_iopub_msg(timeout=max(deadline - time.time(), 0.1))
-        if message["parent_header"].get("msg_id") != message_id or message["msg_type"] != "comm_open":
-            if message["msg_type"] == "error":
-                raise AssertionError(message["content"]["ename"] + ": " + message["content"]["evalue"])
-            continue
-        state = message["content"]["data"].get("state", {})
-        is_gene = state.get("_model_name") == "ComboboxModel" and state.get("placeholder") == "Gene"
-        is_done = state.get("_model_name") == "ButtonModel" and state.get("description") == "Done"
-        if is_gene or is_done:
-            widgets.append(dict(state, comm_id=message["content"]["comm_id"]))
+        if message["msg_type"] == "error":
+            raise AssertionError(message["content"]["ename"] + ": " + message["content"]["evalue"])
+        if message["msg_type"] == "comm_open":
+            state = message["content"]["data"].get("state", {})
+            if is_wanted(state):
+                widgets.append(dict(state, comm_id=message["content"]["comm_id"]))
     return widgets
+
+
+def _send_state(client: Any, widget: Dict[str, Any], state: Dict[str, Any]) -> None:
+    # Change the state of a widget, as the browser does.
+    message = {"comm_id": widget["comm_id"], "data": {"method": "update", "state": state, "buffer_paths": []}}
+    client.shell_channel.send(client.session.msg("comm_msg", message))
+    time.sleep(1)
 
 
 def test_interactive_display_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
     """
-    An interactive form blocks its cell; after editing a gene and clicking "Done", the cell is rewritten with the
-    edited arguments, keeping the receiver of the form's call.
+    An interactive form blocks its cell; after editing a gene, coloring by the expression of another gene (whose picker
+    is created while the cell blocks), and clicking "Done", the cell is rewritten with the edited arguments, keeping
+    the receiver of the form's call.
     """
     _, client = kernel
     _execute(
@@ -211,17 +236,19 @@ def test_interactive_display_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
 
     cell = "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.display(interactive=True)\n"
     message_id = client.execute(cell)
-    widgets = _opened_widgets(client, message_id, 3)
-    done = next(widget for widget in widgets if widget["_model_name"] == "ButtonModel")
-    _x_gene, y_gene = [widget for widget in widgets if widget["_model_name"] == "ComboboxModel"]
+    widgets = _opened_widgets(
+        client, lambda state: _is_done_button(state) or _is_gene_picker(state) or _is_property_choice(state), 5
+    )
+    done = next(widget for widget in widgets if _is_done_button(widget))
+    _x_gene, y_gene = [widget for widget in widgets if _is_gene_picker(widget)]
+    colors, _sizes = [widget for widget in widgets if _is_property_choice(widget)]
 
     time.sleep(1)
-    update = client.session.msg(
-        "comm_msg",
-        {"comm_id": y_gene["comm_id"], "data": {"method": "update", "state": {"value": "D"}, "buffer_paths": []}},
-    )
-    client.shell_channel.send(update)
-    time.sleep(1)
+    _send_state(client, y_gene, {"value": "D"})
+    # The only property of the metacells which may color them is the gene expression, after the empty choice.
+    _send_state(client, colors, {"index": 1})
+    colors_gene = _opened_widgets(client, _is_gene_picker, 1)[0]
+    _send_state(client, colors_gene, {"value": "D"})
     click = client.session.msg(
         "comm_msg", {"comm_id": done["comm_id"], "data": {"method": "custom", "content": {"event": "click"}}}
     )
@@ -236,6 +263,7 @@ def test_interactive_display_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
     payloads = [payload for payload in reply["content"]["payload"] if payload["source"] == "set_next_input"]
     assert payloads[-1]["replace"]
     assert payloads[-1]["text"] == (
-        "form = mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='D')\n"
+        "form = mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='D', "
+        "colors=mw.GeneExpression(gene='D'))\n"
         "form.display(interactive=False)"
     )

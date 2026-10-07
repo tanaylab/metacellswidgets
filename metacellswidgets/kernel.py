@@ -20,15 +20,18 @@ All of this uses internals of ``ipykernel`` 7, which is why the package requires
 
 import queue
 import threading
+from contextlib import contextmanager
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import Iterator
 from typing import List
 from typing import Optional
 from typing import TypeVar
 
 from dafpy.julia_import import jl
 from IPython import get_ipython
+from ipywidgets import Widget  # type: ignore
 
 __all__: List[str] = []
 
@@ -84,10 +87,35 @@ def _owned_subshell_id() -> str:
 
 
 def _route_to_subshell(widget: Any, subshell_id: str) -> None:
-    # Route the frontend messages of the widget, and of all the widgets it contains, to the subshell.
-    widget.comm._reply_subshell_for = lambda _data, _default: subshell_id  # pylint: disable=protected-access
+    # Route the frontend messages of the widget, and of all the widgets it contains, to the subshell. A widget without a
+    # comm yet is skipped; it is routed when it gets one (see ``_routing_new_widgets``).
+    if widget.comm is not None:
+        widget.comm._reply_subshell_for = lambda _data, _default: subshell_id  # pylint: disable=protected-access
     for child in getattr(widget, "children", ()):
         _route_to_subshell(child, subshell_id)
+
+
+@contextmanager
+def _routing_new_widgets(subshell_id: str) -> Iterator[None]:
+    # Route the frontend messages of every widget constructed in this context to the subshell. An editor creates widgets
+    # while its cell blocks (e.g. the editor of a property picked from a list), whose messages would otherwise wait for
+    # the blocked cell. ``ipywidgets`` has a single construction callback; any previous one is called too, and restored.
+    previous = Widget._widget_construction_callback  # pylint: disable=protected-access
+
+    def route(widget: Any) -> None:
+        if previous is not None:
+            previous(widget)
+        # A widget may be constructed before its comm is opened. It is routed once it has one.
+        if widget.comm is not None:
+            _route_to_subshell(widget, subshell_id)
+        else:
+            widget.observe(lambda _change: _route_to_subshell(widget, subshell_id), names="comm")
+
+    Widget.on_widget_constructed(route)
+    try:
+        yield
+    finally:
+        Widget.on_widget_constructed(previous)
 
 
 # pylint: disable=missing-function-docstring

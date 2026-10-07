@@ -152,10 +152,12 @@ def _callee_of(cls: type, namespace: Mapping[str, Any]) -> str:
 
 def _literal_text(name: str, value: Any, namespace: Optional[Mapping[str, Any]] = None) -> str:
     # The code of a value, which must read back as the same value. An object with a ``code`` method (e.g. a property)
-    # is written by it, naming its class as the namespace does.
+    # is written by it, naming its class as the namespace does, or by its bare name if there is no namespace (e.g. for
+    # its ``repr``).
     code = getattr(value, "code", None)
-    if callable(code) and namespace is not None:
-        return code(_callee_of(type(value), namespace), namespace)
+    if callable(code):
+        callee = type(value).__name__ if namespace is None else _callee_of(type(value), namespace)
+        return code(callee, namespace)
     text = repr(value)
     try:
         is_literal = ast.literal_eval(text) == value
@@ -181,6 +183,10 @@ def _rewritten_cell(
     # ``is_interactive``. The form call may be on another line than the display call, or chained to it. Values with a
     # ``code`` method (e.g. properties) name their classes as the cell's ``namespace`` does.
     tree = ast.parse(source)
+    if namespace is not None:
+        # Prefer the names the cell itself uses (e.g. ``mw``) for naming classes, over other names for the same things.
+        names_in_cell = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+        namespace = {**{name: namespace[name] for name in namespace if name in names_in_cell}, **namespace}
     form_call = _top_level_call(tree, form_position, "form")
     display_call = _top_level_call(tree, display_position, "display")
 
