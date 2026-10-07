@@ -40,12 +40,12 @@ from plotly.graph_objects import Figure  # type: ignore
 from plotly.graph_objects import FigureWidget  # type: ignore
 from somegraphspy import Graph
 
-from .arguments import Arguments
+from .common import Arguments
+from .common import _give_own_dispatchers
 from .kernel import _MainThreadJobs
 from .kernel import _owned_subshell_id
 from .kernel import _route_to_subshell
 from .kernel import _routing_new_widgets
-from .properties import _give_own_dispatchers
 from .rewrite import _CallSite
 from .rewrite import _cell_site
 from .rewrite import _claim_cell_rewrite
@@ -62,7 +62,7 @@ __all__: List[str] = [
 class GraphForm(Arguments):
     """
     The base class of the forms of graphs. It holds the data ``source`` the graph is drawn from, and the values of the
-    graph's arguments (see :py:class:`~metacellswidgets.arguments.Arguments`).
+    graph's arguments (see :py:class:`~metacellswidgets.common.Arguments`).
     """
 
     # The data source is written into the code of the cell as the receiver of the call (e.g. ``source.gene_gene(...)``),

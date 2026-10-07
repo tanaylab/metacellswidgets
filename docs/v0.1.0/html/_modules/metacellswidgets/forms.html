@@ -1,0 +1,430 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>metacellswidgets.forms &mdash; MetacellsWidgets 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MetacellsWidgets
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">README</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../API.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MetacellsWidgets</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">metacellswidgets.forms</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for metacellswidgets.forms</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""</span>
+<span class="sd">Forms: the graphs a notebook cell shows, holding the arguments they were created with.</span>
+
+<span class="sd">A form is created by a method of a kind of data source, e.g. ``mw.DafWidgets(daf).gene_gene(x_gene="Foxa1", ...)``.</span>
+<span class="sd">Displaying it shows its graph.</span>
+
+<span class="sd">A form's editor is made of widgets, each tied to one of its arguments (see :py:meth:`GraphForm.bind`). Changing a</span>
+<span class="sd">widget changes the argument and asks for the graph to be redrawn. Requests only mark the form; the graph is redrawn</span>
+<span class="sd">once for all the requests pending, when the interactive display polls the form.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">traceback</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">typing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenSet</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ipython</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span> <span class="k">as</span> <span class="n">display_in_cell</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Button</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HBox</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Output</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">VBox</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="kn">import</span> <span class="n">Figure</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="kn">import</span> <span class="n">FigureWidget</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">Arguments</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">_give_own_dispatchers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.kernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">_MainThreadJobs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.kernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">_owned_subshell_id</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.kernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">_route_to_subshell</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.kernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">_routing_new_widgets</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_CallSite</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_cell_site</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_claim_cell_rewrite</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_current_cell_source</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_rewritten_cell</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceWidgets</span>
+
+<span class="n">__all__</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"Branch"</span><span class="p">,</span>
+    <span class="s2">"GraphForm"</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="GraphForm">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GraphForm</span><span class="p">(</span><span class="n">Arguments</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The base class of the forms of graphs. It holds the data ``source`` the graph is drawn from, and the values of the</span>
+<span class="sd">    graph's arguments (see :py:class:`~metacellswidgets.common.Arguments`).</span>
+<span class="sd">    """</span>
+
+    <span class="c1"># The data source is written into the code of the cell as the receiver of the call (e.g. ``source.gene_gene(...)``),</span>
+    <span class="c1"># not as an argument.</span>
+    <span class="n">_not_arguments</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">FrozenSet</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"source"</span><span class="p">])</span>
+
+    <span class="c1"># Where in its cell the form was created, if it was created by a method of a kind of data source from the top level</span>
+    <span class="c1"># of the running cell. Set by ``graph_constructor``.</span>
+    <span class="n">_call_site</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_CallSite</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">_give_own_dispatchers</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">GraphForm</span><span class="p">,</span> <span class="p">(</span><span class="s2">"exists"</span><span class="p">,</span> <span class="s2">"base_graph"</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bound</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Widget</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_dirty</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_held_redraws</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="GraphForm.exists">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.exists">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">exists</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Whether the ``source`` has the data for this graph. Each kind of data source implements this for the graphs it</span>
+<span class="sd">        offers; for any other, the graph does not exist.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="GraphForm.base_graph">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.base_graph">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">base_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Graph</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The graph built from the data of the ``source``, before its slots (e.g. its colors) are filled. Each kind of</span>
+<span class="sd">        data source implements this for the graphs it offers; for any other, this is an error.</span>
+<span class="sd">        """</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.base_graph is not implemented for: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GraphForm.graph">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.graph">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Graph</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The graph, built from the data source and the arguments: the base graph, with its slots filled. Each graph</span>
+<span class="sd">        implements this, according to its slots.</span>
+<span class="sd">        """</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.graph"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GraphForm.is_complete">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.is_complete">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_complete</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Whether the arguments are complete enough to draw the graph: no argument whose type doesn't allow ``None`` is</span>
+<span class="sd">        ``None``. While editing, such an argument may be missing (e.g. a gene not yet picked). A graph with another</span>
+<span class="sd">        rule overrides this.</span>
+<span class="sd">        """</span>
+        <span class="n">hints</span> <span class="o">=</span> <span class="n">typing</span><span class="o">.</span><span class="n">get_type_hints</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">typing</span><span class="o">.</span><span class="n">get_args</span><span class="p">(</span><span class="n">hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GraphForm.editor">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.editor">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Widget</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The widgets for editing the arguments, each tied to its argument by</span>
+<span class="sd">        :py:meth:`~metacellswidgets.forms.GraphForm.bind`. Each graph implements this.</span>
+<span class="sd">        """</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.editor"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GraphForm.bind">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.bind">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">widgets</span><span class="p">:</span> <span class="n">Widget</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Tie each of the arguments to the ``widgets`` with its name. When the ``value`` of a widget changes, so does the</span>
+<span class="sd">        argument, and the graph is redrawn.</span>
+<span class="sd">        """</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">widget</span> <span class="ow">in</span> <span class="n">widgets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bound</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">widget</span>
+            <span class="n">widget</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_bound_change</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_bound_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">request_redraw</span><span class="p">()</span>
+
+<div class="viewcode-block" id="GraphForm.request_redraw">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.request_redraw">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">request_redraw</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Ask for the graph to be redrawn. Any number of requests made before the graph is redrawn give one redraw.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_dirty</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="GraphForm.hold_redraw">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.hold_redraw">[docs]</a>
+    <span class="nd">@contextmanager</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hold_redraw</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Hold the redrawing of the graph, e.g. while changing several arguments together, until the end of this context.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_held_redraws</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_held_redraws</span> <span class="o">-=</span> <span class="mi">1</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_poll_redraw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redraw</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Graph</span><span class="p">],</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># If a redraw was requested, it isn't held, and the arguments are complete, give the graph to ``redraw``. This</span>
+        <span class="c1"># runs on the main thread (which runs Julia), polled by the interactive display.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_dirty</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_held_redraws</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_complete</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_is_dirty</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">redraw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">())</span>
+
+<div class="viewcode-block" id="GraphForm.display">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.display">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"GraphForm"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Show the graph in the notebook cell. Returns the form, so it can be chained to its creation.</span>
+
+<span class="sd">        If ``interactive``, show an editor of the arguments and the graph instead, and block the cell until "Done" is</span>
+<span class="sd">        clicked. Then rewrite the code of the cell so that it creates the form with the edited arguments, and displays</span>
+<span class="sd">        it with ``interactive=False``, and show the graph. This requires the form to be created in the same cell, at its</span>
+<span class="sd">        top level, by a method of a kind of data source (e.g. ``source.gene_gene(...)``).</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">interactive</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_edit</span><span class="p">(</span><span class="n">_cell_site</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span>  <span class="c1"># pylint: disable=protected-access</span>
+        <span class="n">display_in_cell</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">()</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">display_site</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_CallSite</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Show the editor until "Done" is clicked, then rewrite the cell.</span>
+        <span class="n">call_site</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_site</span>
+        <span class="k">if</span> <span class="n">call_site</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">display_site</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">display_site</span><span class="o">.</span><span class="n">cell_token</span> <span class="o">!=</span> <span class="n">call_site</span><span class="o">.</span><span class="n">cell_token</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">"an interactive form must be created and displayed in the same cell, at its top level, "</span>
+                <span class="s2">"by a method of a kind of data source (e.g. source.gene_gene(...))"</span>
+            <span class="p">)</span>
+        <span class="n">_claim_cell_rewrite</span><span class="p">()</span>
+
+        <span class="n">figure</span> <span class="o">=</span> <span class="n">FigureWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">()</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span>
+        <span class="n">done</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"Done"</span><span class="p">,</span> <span class="n">button_style</span><span class="o">=</span><span class="s2">"primary"</span><span class="p">)</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="n">Output</span><span class="p">()</span>
+        <span class="n">editor</span> <span class="o">=</span> <span class="n">VBox</span><span class="p">([</span><span class="n">HBox</span><span class="p">([</span><span class="n">done</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">editor</span><span class="p">(),</span> <span class="n">figure</span><span class="p">,</span> <span class="n">errors</span><span class="p">])</span>
+        <span class="n">_route_to_subshell</span><span class="p">(</span><span class="n">editor</span><span class="p">,</span> <span class="n">_owned_subshell_id</span><span class="p">())</span>
+        <span class="n">display_in_cell</span><span class="p">(</span><span class="n">editor</span><span class="p">)</span>
+
+        <span class="n">jobs</span> <span class="o">=</span> <span class="n">_MainThreadJobs</span><span class="p">()</span>
+        <span class="n">is_done</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">on_done</span><span class="p">(</span><span class="n">_button</span><span class="p">:</span> <span class="n">Button</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">is_done</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+            <span class="n">jobs</span><span class="o">.</span><span class="n">wake</span><span class="p">()</span>
+
+        <span class="n">done</span><span class="o">.</span><span class="n">on_click</span><span class="p">(</span><span class="n">on_done</span><span class="p">)</span>
+        <span class="n">shown_at</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
+        <span class="n">is_resized</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">on_poll</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">nonlocal</span> <span class="n">is_resized</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_resized</span> <span class="ow">and</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">shown_at</span> <span class="o">&gt;=</span> <span class="n">_FIGURE_RESIZE_DELAY_SECONDS</span><span class="p">:</span>
+                <span class="n">figure</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">autosize</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">figure</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">autosize</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">is_resized</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_poll_redraw</span><span class="p">(</span><span class="k">lambda</span> <span class="n">graph</span><span class="p">:</span> <span class="n">_replace_figure</span><span class="p">(</span><span class="n">figure</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">figure</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
+                <span class="k">with</span> <span class="n">errors</span><span class="p">:</span>
+                    <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="n">_routing_new_widgets</span><span class="p">(</span><span class="n">_owned_subshell_id</span><span class="p">()):</span>
+            <span class="n">jobs</span><span class="o">.</span><span class="n">serve</span><span class="p">(</span><span class="n">is_done</span><span class="p">,</span> <span class="n">on_poll</span><span class="p">)</span>
+
+        <span class="n">shell</span> <span class="o">=</span> <span class="n">get_ipython</span><span class="p">()</span>
+        <span class="n">shell</span><span class="o">.</span><span class="n">set_next_input</span><span class="p">(</span>
+            <span class="n">_rewritten_cell</span><span class="p">(</span>
+                <span class="n">_current_cell_source</span><span class="p">(),</span>
+                <span class="n">form_position</span><span class="o">=</span><span class="n">call_site</span><span class="o">.</span><span class="n">position</span><span class="p">,</span>
+                <span class="n">form_keywords</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">(),</span>
+                <span class="n">display_position</span><span class="o">=</span><span class="n">display_site</span><span class="o">.</span><span class="n">position</span><span class="p">,</span>
+                <span class="n">is_interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">namespace</span><span class="o">=</span><span class="n">shell</span><span class="o">.</span><span class="n">user_ns</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">editor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+<span class="c1"># The interactive figure is drawn before its cell has a width, so it starts narrower than the cell. It measures the cell</span>
+<span class="c1"># again only when its layout changes. So this long after the editor is shown, its layout is changed by toggling</span>
+<span class="c1"># ``autosize``, and it measures the cell again. The delay is a guess at how long the browser takes to give the cell its</span>
+<span class="c1"># width. A slower browser may still show a narrow figure until its first relayout (e.g. picking the lasso tool).</span>
+<span class="n">_FIGURE_RESIZE_DELAY_SECONDS</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+
+<div class="viewcode-block" id="Branch">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.Branch">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Branch</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    A node of the tree of the graphs a kind of data source offers: a ``name``, and its ``children`` in the order they</span>
+<span class="sd">    are shown. Each child is a graph class (a leaf, named by its class name) or another branch. The root of the tree is</span>
+<span class="sd">    a branch too; its name titles the tree.</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">children</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">GraphForm</span><span class="p">],</span> <span class="s2">"Branch"</span><span class="p">]]</span>
+
+<div class="viewcode-block" id="Branch.leaves">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.Branch.leaves">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">leaves</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">GraphForm</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The graph classes in the tree, in the order they are shown.</span>
+<span class="sd">        """</span>
+        <span class="n">leaves</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">GraphForm</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">Branch</span><span class="p">):</span>
+                <span class="n">leaves</span> <span class="o">+=</span> <span class="n">child</span><span class="o">.</span><span class="n">leaves</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">leaves</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">leaves</span></div>
+
+
+<div class="viewcode-block" id="Branch.visible">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.Branch.visible">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">visible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">"Branch"</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The tree as shown for the ``source``: without the graphs which don't exist for it, nor the branches left empty.</span>
+<span class="sd">        If nothing is left, ``None``.</span>
+<span class="sd">        """</span>
+        <span class="n">children</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">GraphForm</span><span class="p">],</span> <span class="n">Branch</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">Branch</span><span class="p">):</span>
+                <span class="n">visible_child</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">visible</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">visible_child</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">visible_child</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">child</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+                <span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Branch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">children</span><span class="p">)</span> <span class="k">if</span> <span class="n">children</span> <span class="k">else</span> <span class="kc">None</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_replace_figure</span><span class="p">(</span><span class="n">widget</span><span class="p">:</span> <span class="n">FigureWidget</span><span class="p">,</span> <span class="n">figure</span><span class="p">:</span> <span class="n">Figure</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># Show the ``figure`` in the interactive figure ``widget``, replacing its traces and its layout.</span>
+    <span class="k">with</span> <span class="n">widget</span><span class="o">.</span><span class="n">batch_update</span><span class="p">():</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">add_traces</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">figure</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="n">figure</span><span class="o">.</span><span class="n">layout</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026 Weizmann Institute of Science.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

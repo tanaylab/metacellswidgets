@@ -5,7 +5,7 @@ API
 
 .. toctree::
 
-  arguments
+  common
   properties
   sources
   editors

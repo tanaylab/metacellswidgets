@@ -6,22 +6,19 @@ says what kind of values it produces (its ``eltype``), and that decides which sl
 a property, and how to fill a graph from it, is implemented separately for each kind of data source.
 """
 
-import functools
 from enum import Enum
 from typing import TYPE_CHECKING
 from typing import Any
-from typing import Callable
 from typing import FrozenSet
 from typing import List
 from typing import Mapping
 from typing import Optional
-from typing import Sequence
-from typing import TypeVar
 
 from ipywidgets import Widget  # type: ignore
 from somegraphspy import VectorDataSinks
 
-from .arguments import Arguments
+from .common import Arguments
+from .common import _give_own_dispatchers
 
 if TYPE_CHECKING:
     from .sources import SourceWidgets
@@ -42,7 +39,6 @@ __all__: List[str] = [
     "Slot",
     "TotalUMIs",
     "Type",
-    "implements",
 ]
 
 
@@ -111,19 +107,10 @@ _SLOT_ELTYPES: Mapping[Slot, FrozenSet[Eltype]] = {
 }
 
 
-def _give_own_dispatchers(cls: type, base: type, names: Sequence[str]) -> None:
-    # Give a subclass ``cls`` dispatchers of its own for the methods with the ``names`` of the ``base`` class, which
-    # each kind of data source implements, so that registering a kind's implementation of the methods of one subclass
-    # doesn't affect any other. The base's methods are the implementations for any kind which registers none.
-    for name in names:
-        if name not in cls.__dict__:
-            setattr(cls, name, functools.singledispatchmethod(base.__dict__[name]))
-
-
 class Property(Arguments):
     """
     The base class of all properties. Its instance holds the values of its arguments (see
-    :py:class:`~metacellswidgets.arguments.Arguments`).
+    :py:class:`~metacellswidgets.common.Arguments`).
     """
 
     #: The kind of values the property produces.
@@ -279,25 +266,3 @@ class GlobalFlowOrder(Property):
 
     eltype = Eltype.ARRANGEMENT
     shape = Shape.VECTOR
-
-
-_Function = TypeVar("_Function", bound=Callable[..., Any])
-
-
-def implements(method: Callable[..., Any], kind: type) -> Callable[[_Function], _Function]:
-    """
-    Register the decorated function as the implementation of a property's ``method`` for a ``kind`` of data source,
-    e.g. ``@implements(GeneExpression.fill, DafWidgets)``. The ``method`` is a ``functools.singledispatchmethod`` of the
-    property, dispatching on the data source. The function takes the same arguments as the method, including ``self``
-    (or ``cls`` for a class method).
-    """
-    # ``singledispatchmethod`` has a typed ``register``, but reading it through the class gives a function whose
-    # ``register`` the type stubs don't declare.
-    register = getattr(method, "register")
-    is_class_method = isinstance(register.__self__.func, classmethod)
-
-    def decorate(function: _Function) -> _Function:
-        register(kind, classmethod(function) if is_class_method else function)
-        return function
-
-    return decorate

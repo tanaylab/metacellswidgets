@@ -9,11 +9,11 @@ from typing import Set
 
 import pytest
 
+from metacellswidgets.common import implements
 from metacellswidgets.properties import Eltype
 from metacellswidgets.properties import Property
 from metacellswidgets.properties import Shape
 from metacellswidgets.properties import Slot
-from metacellswidgets.properties import implements
 from metacellswidgets.sources import SourceWidgets
 from metacellswidgets.sources import graph_constructor
 

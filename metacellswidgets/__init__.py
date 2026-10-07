@@ -14,7 +14,7 @@ __version__ = "0.1.0"
 # pylint: disable=wildcard-import,unused-wildcard-import
 
 from .anndata_widgets import *
-from .arguments import *
+from .common import *
 from .daf_widgets import *
 from .editors import *
 from .forms import *

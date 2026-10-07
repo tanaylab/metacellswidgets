@@ -13,6 +13,7 @@ from dafpy import DafReader
 from somegraphspy import PointsGraph
 from somegraphspy import VectorDataSinks
 
+from .common import implements
 from .editors import ArgumentEditor
 from .editors import GenePicker
 from .editors import NamePicker
@@ -29,7 +30,6 @@ from .properties import NCells
 from .properties import NMetacells
 from .properties import TotalUMIs
 from .properties import Type
-from .properties import implements
 from .sources import SourceWidgets
 from .sources import graph_constructor
 

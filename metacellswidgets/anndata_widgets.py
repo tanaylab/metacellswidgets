@@ -16,13 +16,13 @@ from anndata import AnnData  # type: ignore
 from somegraphspy import PointsGraph
 from somegraphspy import VectorDataSinks
 
+from .common import implements
 from .editors import ArgumentEditor
 from .editors import GenePicker
 from .forms import Branch
 from .graphs import GeneGene
 from .properties import GeneExpression
 from .properties import Type
-from .properties import implements
 from .sources import SourceWidgets
 from .sources import graph_constructor
 
