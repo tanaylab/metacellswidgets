@@ -132,6 +132,15 @@
 </li>
 
 <li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.editors.AxisPicker">
+<code class="docutils literal notranslate">
+<span class="pre">AxisPicker
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l3">
 <a class="reference internal" href="#metacellswidgets.editors.GeneChoices">
 <code class="docutils literal notranslate">
 <span class="pre">GeneChoices
@@ -172,6 +181,15 @@
 </li>
 
 <li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.editors.OnAxisChange">
+<code class="docutils literal notranslate">
+<span class="pre">OnAxisChange
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l3">
 <a class="reference internal" href="#metacellswidgets.editors.Picker">
 <code class="docutils literal notranslate">
 <span class="pre">Picker
@@ -184,6 +202,15 @@
 <a class="reference internal" href="#metacellswidgets.editors.PropertyEditor">
 <code class="docutils literal notranslate">
 <span class="pre">PropertyEditor
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.editors.PropertyPicker">
+<code class="docutils literal notranslate">
+<span class="pre">PropertyPicker
 </span>
 </code>
 </a>
@@ -416,6 +443,136 @@ picked string.
 </em>
 </a>
 <em>]
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.editors.AxisPicker">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.editors.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">AxisPicker
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">args
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="o">
+<span class="pre">**
+</span>
+</span>
+<span class="n">
+<span class="pre">kwargs
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/editors.html#AxisPicker">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.editors.AxisPicker" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Pick one of the 
+<code class="docutils literal notranslate">
+<span class="pre">allowed
+</span>
+</code> axes which the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code> has. The picker starts with the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> axis if it is
+one of them, and with the first of them otherwise.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>allowed
+</strong> (
+<em>Sequence
+</em>
+<em>[
+</em>
+<em>str
+</em>
+<em>]
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<em>str
+</em>
+<em> | 
+</em>
+<em>None
 </em>)
 </p>
 </li>
@@ -803,6 +960,66 @@ restricts the choices to the marker genes.
 </dl>
 
 
+<dl class="py data">
+
+<dt class="sig sig-object py" id="metacellswidgets.editors.OnAxisChange">
+
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.editors.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">OnAxisChange
+</span>
+</span>
+<a class="headerlink" href="#metacellswidgets.editors.OnAxisChange" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Decides which property a slot holds when the axis it follows changes, given the old axis, the new axis and the
+current property. Returning a property which doesn’t exist for the new axis empties the slot.
+</p>
+
+<p>alias of 
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">Callable
+</span>
+</code>[[
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">str
+</span>
+</code>, 
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">str
+</span>
+</code>, 
+<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">Property
+</span>
+</code>
+</a> | 
+<code class="xref py py-obj docutils literal notranslate">
+<span class="pre">None
+</span>
+</code>], 
+<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">Property
+</span>
+</code>
+</a> | 
+<code class="xref py py-obj docutils literal notranslate">
+<span class="pre">None
+</span>
+</code>]
+</p>
+
+</dd>
+</dl>
+
+
 <dl class="py class">
 
 <dt class="sig sig-object py" id="metacellswidgets.editors.Picker">
@@ -940,6 +1157,221 @@ nothing is chosen.
 </code> while
 its arguments are incomplete.
 </p>
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.editors.PropertyPicker">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.editors.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">PropertyPicker
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">args
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="o">
+<span class="pre">**
+</span>
+</span>
+<span class="n">
+<span class="pre">kwargs
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/editors.html#PropertyPicker">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.editors.PropertyPicker" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Pick a property of the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code> for a 
+<code class="docutils literal notranslate">
+<span class="pre">slot
+</span>
+</code>, for the entries of the 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code>, starting with the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code>
+property (if any). The choices are the properties registered for the source’s kind and the axis, which suit the
+slot, and which the source has; or none, leaving the slot empty. Picking a property with arguments shows its editor
+to the right of the choice.
+</p>
+
+<p>The 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code> may be an 
+<a class="reference internal" href="#metacellswidgets.editors.AxisPicker" title="metacellswidgets.editors.AxisPicker">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">AxisPicker
+</span>
+</code>
+</a> to follow. When its axis changes, the choices change with it. A
+property which is still one of them is kept, with its arguments, if they are valid for the new axis. Otherwise, the
+slot is emptied. An 
+<code class="docutils literal notranslate">
+<span class="pre">on_axis_change
+</span>
+</code> function may decide this instead.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>slot
+</strong> (
+<a class="reference internal" href="properties.html#metacellswidgets.properties.Slot" title="metacellswidgets.properties.Slot">
+<em>Slot
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>axis
+</strong> (
+<em>str
+</em>
+<em> | 
+</em>
+<a class="reference internal" href="#metacellswidgets.editors.AxisPicker" title="metacellswidgets.editors.AxisPicker">
+<em>AxisPicker
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
+<em>Property
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>on_axis_change
+</strong> (
+<em>Callable
+</em>
+<em>[
+</em>
+<em>[
+</em>
+<em>str
+</em>
+<em>, 
+</em>
+<em>str
+</em>
+<em>, 
+</em>
+<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
+<em>Property
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>
+<em>]
+</em>
+<em>, 
+</em>
+<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
+<em>Property
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>
+<em>] 
+</em>
+<em>| 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
 
 </dd>
 </dl>

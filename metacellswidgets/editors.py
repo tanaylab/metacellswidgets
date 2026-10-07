@@ -13,22 +13,30 @@ from typing import Optional
 from typing import Protocol
 from typing import Sequence
 from typing import Tuple
+from typing import Type
+from typing import Union
 
 import traitlets  # type: ignore
 from ipywidgets import Checkbox  # type: ignore
 from ipywidgets import Combobox  # type: ignore
 from ipywidgets import Dropdown  # type: ignore
 from ipywidgets import HBox  # type: ignore
+from ipywidgets import Layout  # type: ignore
 
 from .properties import Property
+from .properties import Slot
+from .sources import SourceWidgets
 
 __all__: List[str] = [
     "ArgumentEditor",
+    "AxisPicker",
     "GeneChoices",
     "GenePicker",
     "NamePicker",
+    "OnAxisChange",
     "Picker",
     "PropertyEditor",
+    "PropertyPicker",
 ]
 
 
@@ -139,3 +147,116 @@ class ArgumentEditor(PropertyEditor):  # pylint: disable=too-many-ancestors,abst
 
     def _on_picker_change(self, change: Dict) -> None:
         self.value = None if change["new"] is None else self._build(change["new"])
+
+
+class AxisPicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
+    """
+    Pick one of the ``allowed`` axes which the ``source`` has. The picker starts with the ``current`` axis if it is
+    one of them, and with the first of them otherwise.
+    """
+
+    def __init__(self, source: SourceWidgets, allowed: Sequence[str], current: Optional[str] = None) -> None:
+        super().__init__()
+        axes = [axis for axis in allowed if source.has_axis(axis)]
+        value = current if current in axes else (axes[0] if axes else None)
+        self._dropdown = Dropdown(options=axes, value=value)
+        self.children = [self._dropdown]
+        self.value = value
+        self._dropdown.observe(self._on_dropdown_change, names="value")
+
+    def _on_dropdown_change(self, change: Dict) -> None:
+        self.value = change["new"]
+
+
+#: Decides which property a slot holds when the axis it follows changes, given the old axis, the new axis and the
+#: current property. Returning a property which doesn't exist for the new axis empties the slot.
+OnAxisChange = Callable[[str, str, Optional[Property]], Optional[Property]]
+
+
+class PropertyPicker(PropertyEditor):  # pylint: disable=too-many-ancestors,abstract-method,too-many-instance-attributes
+    """
+    Pick a property of the ``source`` for a ``slot``, for the entries of the ``axis``, starting with the ``current``
+    property (if any). The choices are the properties registered for the source's kind and the axis, which suit the
+    slot, and which the source has; or none, leaving the slot empty. Picking a property with arguments shows its editor
+    to the right of the choice.
+
+    The ``axis`` may be an :py:class:`AxisPicker` to follow. When its axis changes, the choices change with it. A
+    property which is still one of them is kept, with its arguments, if they are valid for the new axis. Otherwise, the
+    slot is emptied. An ``on_axis_change`` function may decide this instead.
+    """
+
+    def __init__(
+        self,
+        source: SourceWidgets,
+        slot: Slot,
+        axis: Union[str, AxisPicker],
+        current: Optional[Property] = None,
+        *,
+        on_axis_change: Optional[OnAxisChange] = None,
+    ) -> None:
+        super().__init__(layout=Layout(align_items="flex-start"))
+        self._source = source
+        self._slot = slot
+        self._axis = axis if isinstance(axis, str) else axis.value
+        self._on_axis_change = on_axis_change
+        self._is_updating = False
+        self._editor: Optional[PropertyEditor] = None
+        self._dropdown = Dropdown()
+        self._editor_box = HBox(layout=Layout(flex="1 1 auto"))
+        self.children = [self._dropdown, self._editor_box]
+        self._show(current)
+        self._dropdown.observe(self._on_dropdown_change, names="value")
+        if isinstance(axis, AxisPicker):
+            axis.observe(self._on_axis_picker_change, names="value")
+
+    def _show(self, current: Optional[Property]) -> None:
+        # Show the choices for the current axis, with the ``current`` property picked, if it is one of them and its
+        # arguments are valid for the axis; otherwise, with nothing picked.
+        choices = self._source.properties(axis=self._axis, slot=self._slot)
+        property_class = None if current is None else type(current)
+        if property_class not in choices:
+            current = None
+            property_class = None
+        self._is_updating = True
+        try:
+            self._dropdown.options = [("", None)] + [(choice.__name__, choice) for choice in choices]
+            self._dropdown.value = property_class
+        finally:
+            self._is_updating = False
+        self._pick(property_class, current)
+        if current is not None and self.value is None:
+            self._show(None)
+
+    def _pick(self, property_class: Optional[Type[Property]], current: Optional[Property]) -> None:
+        # Pick the ``property_class``, starting its editor (if it has one) with the ``current`` property.
+        if self._editor is not None:
+            self._editor.unobserve(self._on_editor_change, names="value")
+            self._editor = None
+        if property_class is None:
+            self._editor_box.children = []
+            self.value = None
+            return
+        editor = property_class.editor(self._source, self._axis, current)
+        if editor is None:
+            self._editor_box.children = []
+            self.value = property_class()
+        else:
+            self._editor = editor
+            self._editor_box.children = [editor]
+            self.value = editor.value
+            editor.observe(self._on_editor_change, names="value")
+
+    def _on_dropdown_change(self, change: Dict) -> None:
+        if not self._is_updating:
+            self._pick(change["new"], None)
+
+    def _on_editor_change(self, change: Dict) -> None:
+        self.value = change["new"]
+
+    def _on_axis_picker_change(self, change: Dict) -> None:
+        old_axis = self._axis
+        self._axis = change["new"]
+        current = self.value
+        if self._on_axis_change is not None:
+            current = self._on_axis_change(old_axis, self._axis, current)
+        self._show(current)
