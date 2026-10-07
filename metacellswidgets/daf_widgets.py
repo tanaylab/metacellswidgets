@@ -10,11 +10,13 @@ from typing import Tuple
 import metacellsgraphspy as mg
 import numpy as np
 from dafpy import DafReader
+from somegraphspy import PointsGraph
 from somegraphspy import VectorDataSinks
 
 from .editors import ArgumentEditor
 from .editors import GenePicker
 from .editors import NamePicker
+from .graphs import GeneGene
 from .properties import Block
 from .properties import BooleanMask
 from .properties import GeneExpression
@@ -28,6 +30,7 @@ from .properties import TotalUMIs
 from .properties import Type
 from .properties import implements
 from .sources import SourceWidgets
+from .sources import graph_constructor
 
 __all__: List[str] = [
     "DafWidgets",
@@ -48,6 +51,8 @@ class DafWidgets(SourceWidgets):
     """
     Interactive graphs of a single ``Daf`` data set of metacells.
     """
+
+    gene_gene = graph_constructor(GeneGene)
 
     def __init__(self, daf: DafReader) -> None:
         self.daf = daf
@@ -227,6 +232,11 @@ def _has_global_flow_order(_cls: type, source: DafWidgets, axis: str) -> bool:
 @implements(GlobalFlowOrder.fill, DafWidgets)
 def _fill_global_flow_order(_self: GlobalFlowOrder, source: DafWidgets, sinks: VectorDataSinks, axis: str) -> None:
     mg.fill_global_flow_order(sinks, source.daf, axis=axis)
+
+
+@implements(GeneGene.points, DafWidgets)
+def _gene_gene_points(self: GeneGene, source: DafWidgets) -> PointsGraph:
+    return mg.gene_gene_graph(source.daf, axis=self.axis, x_gene=self.x_gene, y_gene=self.y_gene)
 
 
 DafWidgets.register_properties(

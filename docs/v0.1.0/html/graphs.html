@@ -13,7 +13,7 @@
   
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-<title>daf_widgets &mdash; MetacellsWidgets 0.1.0 documentation
+<title>graphs &mdash; MetacellsWidgets 0.1.0 documentation
 </title>
       
 <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
@@ -44,9 +44,9 @@
     
 <link rel="search" title="Search" href="search.html" />
     
-<link rel="next" title="anndata_widgets" href="anndata_widgets.html" />
+<link rel="next" title="daf_widgets" href="daf_widgets.html" />
     
-<link rel="prev" title="graphs" href="graphs.html" /> 
+<link rel="prev" title="forms" href="forms.html" /> 
 
 </head>
 
@@ -127,38 +127,33 @@
 </a>
 </li>
 
-<li class="toctree-l2">
-<a class="reference internal" href="graphs.html">graphs
-</a>
-</li>
-
 <li class="toctree-l2 current">
-<a class="current reference internal" href="#">daf_widgets
+<a class="current reference internal" href="#">graphs
 </a>
 <ul>
 
 <li class="toctree-l3">
-<a class="reference internal" href="#metacellswidgets.daf_widgets.DafWidgets">
+<a class="reference internal" href="#metacellswidgets.graphs.GeneGene">
 <code class="docutils literal notranslate">
-<span class="pre">DafWidgets
+<span class="pre">GeneGene
 </span>
 </code>
 </a>
 <ul>
 
 <li class="toctree-l4">
-<a class="reference internal" href="#metacellswidgets.daf_widgets.DafWidgets.gene_choices">
+<a class="reference internal" href="#metacellswidgets.graphs.GeneGene.points">
 <code class="docutils literal notranslate">
-<span class="pre">DafWidgets.gene_choices()
+<span class="pre">GeneGene.points()
 </span>
 </code>
 </a>
 </li>
 
 <li class="toctree-l4">
-<a class="reference internal" href="#metacellswidgets.daf_widgets.DafWidgets.boolean_vectors">
+<a class="reference internal" href="#metacellswidgets.graphs.GeneGene.graph">
 <code class="docutils literal notranslate">
-<span class="pre">DafWidgets.boolean_vectors()
+<span class="pre">GeneGene.graph()
 </span>
 </code>
 </a>
@@ -170,6 +165,11 @@
 
 </ul>
 
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="daf_widgets.html">daf_widgets
+</a>
 </li>
 
 <li class="toctree-l2">
@@ -221,12 +221,12 @@
 </a>
 </li>
       
-<li class="breadcrumb-item active">daf_widgets
+<li class="breadcrumb-item active">graphs
 </li>
       
 <li class="wy-breadcrumbs-aside">
             
-<a href="_sources/daf_widgets.rst.txt" rel="nofollow"> View page source
+<a href="_sources/graphs.rst.txt" rel="nofollow"> View page source
 </a>
       
 </li>
@@ -242,29 +242,31 @@
 <div itemprop="articleBody">
              
   
-<section id="module-metacellswidgets.daf_widgets">
+<section id="module-metacellswidgets.graphs">
 
-<span id="daf-widgets">
+<span id="graphs">
 </span>
-<h1>daf_widgets
-<a class="headerlink" href="#module-metacellswidgets.daf_widgets" title="Link to this heading">
+<h1>graphs
+<a class="headerlink" href="#module-metacellswidgets.graphs" title="Link to this heading">
 </a>
 </h1>
 
-<p>The 
-<code class="docutils literal notranslate">
-<span class="pre">Daf
+<p>The graphs a form can show. Each graph serves all the kinds of data sources which offer it.
+</p>
+
+<p>The part of a graph which differs between kinds (e.g. building its base graph from the data) is a dispatched method,
+which each kind implements in its own module (see 
+<a class="reference internal" href="properties.html#metacellswidgets.properties.implements" title="metacellswidgets.properties.implements">
+<code class="xref py py-func docutils literal notranslate">
+<span class="pre">implements()
 </span>
-</code> kind of data source: a single 
-<code class="docutils literal notranslate">
-<span class="pre">Daf
-</span>
-</code> data set of metacells.
+</code>
+</a>).
 </p>
 
 <dl class="py class">
 
-<dt class="sig sig-object py" id="metacellswidgets.daf_widgets.DafWidgets">
+<dt class="sig sig-object py" id="metacellswidgets.graphs.GeneGene">
 
 <span class="property">
 <span class="k">
@@ -275,70 +277,21 @@
 </span>
 </span>
 <span class="sig-prename descclassname">
-<span class="pre">metacellswidgets.daf_widgets.
+<span class="pre">metacellswidgets.graphs.
 </span>
 </span>
 <span class="sig-name descname">
-<span class="pre">DafWidgets
+<span class="pre">GeneGene
 </span>
 </span>
 <span class="sig-paren">(
 </span>
 <em class="sig-param">
 <span class="n">
-<span class="pre">daf
+<span class="pre">source
 </span>
 </span>
-</em>
-<span class="sig-paren">)
-</span>
-<a class="reference internal" href="_modules/metacellswidgets/daf_widgets.html#DafWidgets">
-<span class="viewcode-link">
-<span class="pre">[source]
-</span>
-</span>
-</a>
-<a class="headerlink" href="#metacellswidgets.daf_widgets.DafWidgets" title="Link to this definition">
-</a>
-</dt>
-
-<dd>
-<p>Interactive graphs of a single 
-<code class="docutils literal notranslate">
-<span class="pre">Daf
-</span>
-</code> data set of metacells.
-</p>
-
-<dl class="field-list simple">
-
-<dt class="field-odd">Parameters
-<span class="colon">:
-</span>
-</dt>
-
-<dd class="field-odd">
-<p>
-<strong>daf
-</strong> (
-<em>DafReader
-</em>)
-</p>
-
-</dd>
-
-</dl>
-
-<dl class="py method">
-
-<dt class="sig sig-object py" id="metacellswidgets.daf_widgets.DafWidgets.gene_choices">
-
-<span class="sig-name descname">
-<span class="pre">gene_choices
-</span>
-</span>
-<span class="sig-paren">(
-</span>
+</em>, 
 <em class="sig-param">
 <span class="keyword-only-separator o">
 <abbr title="Keyword-only parameters separator (PEP 3102)">
@@ -349,7 +302,7 @@
 </em>, 
 <em class="sig-param">
 <span class="n">
-<span class="pre">markers_only
+<span class="pre">axis
 </span>
 </span>
 <span class="o">
@@ -357,65 +310,238 @@
 </span>
 </span>
 <span class="default_value">
-<span class="pre">False
+<span class="pre">'metacell'
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">x_gene
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">y_gene
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">colors
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">sizes
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
 </span>
 </span>
 </em>
 <span class="sig-paren">)
 </span>
-<a class="reference internal" href="_modules/metacellswidgets/daf_widgets.html#DafWidgets.gene_choices">
+<a class="reference internal" href="_modules/metacellswidgets/graphs.html#GeneGene">
 <span class="viewcode-link">
 <span class="pre">[source]
 </span>
 </span>
 </a>
-<a class="headerlink" href="#metacellswidgets.daf_widgets.DafWidgets.gene_choices" title="Link to this definition">
+<a class="headerlink" href="#metacellswidgets.graphs.GeneGene" title="Link to this definition">
 </a>
 </dt>
 
 <dd>
-<p>The (label, name) of each gene, in the order of the gene axis. Excluded genes are never included. If
+<p>The expression of 
+<code class="docutils literal notranslate">
+<span class="pre">x_gene
+</span>
+</code> against 
+<code class="docutils literal notranslate">
+<span class="pre">y_gene
+</span>
+</code>, a point per entry of the 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code>, on log scale. The points may be
+colored by the 
+<code class="docutils literal notranslate">
+<span class="pre">colors
+</span>
+</code> property, and sized by the 
+<code class="docutils literal notranslate">
+<span class="pre">sizes
+</span>
+</code> property.
+</p>
 
-<code class="docutils literal notranslate">
-<span class="pre">markers_only
-</span>
-</code>, only the marker genes are included. The label is the name followed by the flags of the gene:
+<dl class="field-list simple">
 
-<code class="docutils literal notranslate">
-<span class="pre">L
+<dt class="field-odd">Parameters
+<span class="colon">:
 </span>
-</code> (lateral), 
-<code class="docutils literal notranslate">
-<span class="pre">M
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>axis
+</strong> (
+<em>str
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>x_gene
+</strong> (
+<em>str
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>y_gene
+</strong> (
+<em>str
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>colors
+</strong> (
+<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
+<em>Property
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>sizes
+</strong> (
+<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
+<em>Property
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.graphs.GeneGene.points">
+
+<span class="sig-name descname">
+<span class="pre">points
 </span>
-</code> (marker), 
-<code class="docutils literal notranslate">
-<span class="pre">T
 </span>
-</code> (transcription factor), 
-<code class="docutils literal notranslate">
-<span class="pre">R
+<span class="sig-paren">(
 </span>
-</code> (regulator), 
-<code class="docutils literal notranslate">
-<span class="pre">F
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
 </span>
-</code> (forbidden), 
-<code class="docutils literal notranslate">
-<span class="pre">S
 </span>
-</code>
-(skeleton), e.g. 
-<code class="docutils literal notranslate">
-<span class="pre">Foxa1
-</span> 
-<span class="pre">M
-</span> 
-<span class="pre">T
-</span> 
-<span class="pre">R
+</em>
+<span class="sig-paren">)
 </span>
-</code>. A flag the data set doesn’t have is never shown.
+<a class="reference internal" href="_modules/metacellswidgets/graphs.html#GeneGene.points">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.graphs.GeneGene.points" title="Link to this definition">
+</a>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="sig-name descname">
+<span class="pre">points
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="sig-name descname">
+<span class="pre">points
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dd>
+<p>The graph of the expression of the two genes, before coloring or sizing the points. Each kind of data source
+offering this graph implements this.
 </p>
 
 <dl class="field-list simple">
@@ -427,10 +553,12 @@
 
 <dd class="field-odd">
 <p>
-<strong>markers_only
+<strong>source
 </strong> (
-<em>bool
-</em>)
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
 </p>
 
 </dd>
@@ -442,10 +570,8 @@
 
 <dd class="field-even">
 <p>
-<em>List
-</em>[
-<em>Tuple
-</em>[str, str]]
+<em>PointsGraph
+</em>
 </p>
 
 </dd>
@@ -458,66 +584,41 @@
 
 <dl class="py method">
 
-<dt class="sig sig-object py" id="metacellswidgets.daf_widgets.DafWidgets.boolean_vectors">
+<dt class="sig sig-object py" id="metacellswidgets.graphs.GeneGene.graph">
 
 <span class="sig-name descname">
-<span class="pre">boolean_vectors
+<span class="pre">graph
 </span>
 </span>
 <span class="sig-paren">(
 </span>
-<em class="sig-param">
-<span class="n">
-<span class="pre">axis
-</span>
-</span>
-</em>
 <span class="sig-paren">)
 </span>
-<a class="reference internal" href="_modules/metacellswidgets/daf_widgets.html#DafWidgets.boolean_vectors">
+<a class="reference internal" href="_modules/metacellswidgets/graphs.html#GeneGene.graph">
 <span class="viewcode-link">
 <span class="pre">[source]
 </span>
 </span>
 </a>
-<a class="headerlink" href="#metacellswidgets.daf_widgets.DafWidgets.boolean_vectors" title="Link to this definition">
+<a class="headerlink" href="#metacellswidgets.graphs.GeneGene.graph" title="Link to this definition">
 </a>
 </dt>
 
 <dd>
-<p>The names of the Boolean vector properties of the 
-<code class="docutils literal notranslate">
-<span class="pre">axis
-</span>
-</code>, sorted.
+<p>The graph, built from the data source and the arguments.
 </p>
 
 <dl class="field-list simple">
 
-<dt class="field-odd">Parameters
+<dt class="field-odd">Return type
 <span class="colon">:
 </span>
 </dt>
 
 <dd class="field-odd">
 <p>
-<strong>axis
-</strong> (
-<em>str
-</em>)
-</p>
-
-</dd>
-
-<dt class="field-even">Return type
-<span class="colon">:
-</span>
-</dt>
-
-<dd class="field-even">
-<p>
-<em>List
-</em>[str]
+<em>PointsGraph
+</em>
 </p>
 
 </dd>
@@ -543,12 +644,12 @@
 <footer>
 <div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         
-<a href="graphs.html" class="btn btn-neutral float-left" title="graphs" accesskey="p" rel="prev">
+<a href="forms.html" class="btn btn-neutral float-left" title="forms" accesskey="p" rel="prev">
 <span class="fa fa-arrow-circle-left" aria-hidden="true">
 </span> Previous
 </a>
         
-<a href="anndata_widgets.html" class="btn btn-neutral float-right" title="anndata_widgets" accesskey="n" rel="next">Next 
+<a href="daf_widgets.html" class="btn btn-neutral float-right" title="daf_widgets" accesskey="n" rel="next">Next 
 <span class="fa fa-arrow-circle-right" aria-hidden="true">
 </span>
 </a>

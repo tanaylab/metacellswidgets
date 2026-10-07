@@ -13,7 +13,7 @@
   
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-<title>daf_widgets &mdash; MetacellsWidgets 0.1.0 documentation
+<title>arguments &mdash; MetacellsWidgets 0.1.0 documentation
 </title>
       
 <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
@@ -44,9 +44,9 @@
     
 <link rel="search" title="Search" href="search.html" />
     
-<link rel="next" title="anndata_widgets" href="anndata_widgets.html" />
+<link rel="next" title="properties" href="properties.html" />
     
-<link rel="prev" title="graphs" href="graphs.html" /> 
+<link rel="prev" title="API" href="API.html" /> 
 
 </head>
 
@@ -102,9 +102,44 @@
 </a>
 <ul class="current">
 
-<li class="toctree-l2">
-<a class="reference internal" href="arguments.html">arguments
+<li class="toctree-l2 current">
+<a class="current reference internal" href="#">arguments
 </a>
+<ul>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.arguments.Arguments">
+<code class="docutils literal notranslate">
+<span class="pre">Arguments
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.arguments.Arguments.arguments">
+<code class="docutils literal notranslate">
+<span class="pre">Arguments.arguments()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.arguments.Arguments.code">
+<code class="docutils literal notranslate">
+<span class="pre">Arguments.code()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+</ul>
+
 </li>
 
 <li class="toctree-l2">
@@ -132,44 +167,9 @@
 </a>
 </li>
 
-<li class="toctree-l2 current">
-<a class="current reference internal" href="#">daf_widgets
+<li class="toctree-l2">
+<a class="reference internal" href="daf_widgets.html">daf_widgets
 </a>
-<ul>
-
-<li class="toctree-l3">
-<a class="reference internal" href="#metacellswidgets.daf_widgets.DafWidgets">
-<code class="docutils literal notranslate">
-<span class="pre">DafWidgets
-</span>
-</code>
-</a>
-<ul>
-
-<li class="toctree-l4">
-<a class="reference internal" href="#metacellswidgets.daf_widgets.DafWidgets.gene_choices">
-<code class="docutils literal notranslate">
-<span class="pre">DafWidgets.gene_choices()
-</span>
-</code>
-</a>
-</li>
-
-<li class="toctree-l4">
-<a class="reference internal" href="#metacellswidgets.daf_widgets.DafWidgets.boolean_vectors">
-<code class="docutils literal notranslate">
-<span class="pre">DafWidgets.boolean_vectors()
-</span>
-</code>
-</a>
-</li>
-
-</ul>
-
-</li>
-
-</ul>
-
 </li>
 
 <li class="toctree-l2">
@@ -221,12 +221,12 @@
 </a>
 </li>
       
-<li class="breadcrumb-item active">daf_widgets
+<li class="breadcrumb-item active">arguments
 </li>
       
 <li class="wy-breadcrumbs-aside">
             
-<a href="_sources/daf_widgets.rst.txt" rel="nofollow"> View page source
+<a href="_sources/arguments.rst.txt" rel="nofollow"> View page source
 </a>
       
 </li>
@@ -242,29 +242,21 @@
 <div itemprop="articleBody">
              
   
-<section id="module-metacellswidgets.daf_widgets">
+<section id="module-metacellswidgets.arguments">
 
-<span id="daf-widgets">
+<span id="arguments">
 </span>
-<h1>daf_widgets
-<a class="headerlink" href="#module-metacellswidgets.daf_widgets" title="Link to this heading">
+<h1>arguments
+<a class="headerlink" href="#module-metacellswidgets.arguments" title="Link to this heading">
 </a>
 </h1>
 
-<p>The 
-<code class="docutils literal notranslate">
-<span class="pre">Daf
-</span>
-</code> kind of data source: a single 
-<code class="docutils literal notranslate">
-<span class="pre">Daf
-</span>
-</code> data set of metacells.
+<p>Objects which hold the values of their arguments, so they can be written back into the code of a cell.
 </p>
 
 <dl class="py class">
 
-<dt class="sig sig-object py" id="metacellswidgets.daf_widgets.DafWidgets">
+<dt class="sig sig-object py" id="metacellswidgets.arguments.Arguments">
 
 <span class="property">
 <span class="k">
@@ -275,177 +267,78 @@
 </span>
 </span>
 <span class="sig-prename descclassname">
-<span class="pre">metacellswidgets.daf_widgets.
+<span class="pre">metacellswidgets.arguments.
 </span>
 </span>
 <span class="sig-name descname">
-<span class="pre">DafWidgets
+<span class="pre">Arguments
 </span>
 </span>
-<span class="sig-paren">(
-</span>
-<em class="sig-param">
-<span class="n">
-<span class="pre">daf
-</span>
-</span>
-</em>
-<span class="sig-paren">)
-</span>
-<a class="reference internal" href="_modules/metacellswidgets/daf_widgets.html#DafWidgets">
+<a class="reference internal" href="_modules/metacellswidgets/arguments.html#Arguments">
 <span class="viewcode-link">
 <span class="pre">[source]
 </span>
 </span>
 </a>
-<a class="headerlink" href="#metacellswidgets.daf_widgets.DafWidgets" title="Link to this definition">
+<a class="headerlink" href="#metacellswidgets.arguments.Arguments" title="Link to this definition">
 </a>
 </dt>
 
 <dd>
-<p>Interactive graphs of a single 
+<p>The base class of objects which hold the values of their arguments, such as properties and graphs.
+</p>
+
+<p>The 
 <code class="docutils literal notranslate">
-<span class="pre">Daf
+<span class="pre">__init__
 </span>
-</code> data set of metacells.
+</code> of such an object stores the value of each of its arguments in an attribute of the same name. This
+is what lets a form write the object back into the code of its cell.
 </p>
-
-<dl class="field-list simple">
-
-<dt class="field-odd">Parameters
-<span class="colon">:
-</span>
-</dt>
-
-<dd class="field-odd">
-<p>
-<strong>daf
-</strong> (
-<em>DafReader
-</em>)
-</p>
-
-</dd>
-
-</dl>
 
 <dl class="py method">
 
-<dt class="sig sig-object py" id="metacellswidgets.daf_widgets.DafWidgets.gene_choices">
+<dt class="sig sig-object py" id="metacellswidgets.arguments.Arguments.arguments">
 
 <span class="sig-name descname">
-<span class="pre">gene_choices
+<span class="pre">arguments
 </span>
 </span>
 <span class="sig-paren">(
 </span>
-<em class="sig-param">
-<span class="keyword-only-separator o">
-<abbr title="Keyword-only parameters separator (PEP 3102)">
-<span class="pre">*
-</span>
-</abbr>
-</span>
-</em>, 
-<em class="sig-param">
-<span class="n">
-<span class="pre">markers_only
-</span>
-</span>
-<span class="o">
-<span class="pre">=
-</span>
-</span>
-<span class="default_value">
-<span class="pre">False
-</span>
-</span>
-</em>
 <span class="sig-paren">)
 </span>
-<a class="reference internal" href="_modules/metacellswidgets/daf_widgets.html#DafWidgets.gene_choices">
+<a class="reference internal" href="_modules/metacellswidgets/arguments.html#Arguments.arguments">
 <span class="viewcode-link">
 <span class="pre">[source]
 </span>
 </span>
 </a>
-<a class="headerlink" href="#metacellswidgets.daf_widgets.DafWidgets.gene_choices" title="Link to this definition">
+<a class="headerlink" href="#metacellswidgets.arguments.Arguments.arguments" title="Link to this definition">
 </a>
 </dt>
 
 <dd>
-<p>The (label, name) of each gene, in the order of the gene axis. Excluded genes are never included. If
-
+<p>The values of the arguments, by the names of the parameters of 
 <code class="docutils literal notranslate">
-<span class="pre">markers_only
+<span class="pre">__init__
 </span>
-</code>, only the marker genes are included. The label is the name followed by the flags of the gene:
-
-<code class="docutils literal notranslate">
-<span class="pre">L
-</span>
-</code> (lateral), 
-<code class="docutils literal notranslate">
-<span class="pre">M
-</span>
-</code> (marker), 
-<code class="docutils literal notranslate">
-<span class="pre">T
-</span>
-</code> (transcription factor), 
-<code class="docutils literal notranslate">
-<span class="pre">R
-</span>
-</code> (regulator), 
-<code class="docutils literal notranslate">
-<span class="pre">F
-</span>
-</code> (forbidden), 
-<code class="docutils literal notranslate">
-<span class="pre">S
-</span>
-</code>
-(skeleton), e.g. 
-<code class="docutils literal notranslate">
-<span class="pre">Foxa1
-</span> 
-<span class="pre">M
-</span> 
-<span class="pre">T
-</span> 
-<span class="pre">R
-</span>
-</code>. A flag the data set doesn’t have is never shown.
+</code>.
 </p>
 
 <dl class="field-list simple">
 
-<dt class="field-odd">Parameters
+<dt class="field-odd">Return type
 <span class="colon">:
 </span>
 </dt>
 
 <dd class="field-odd">
 <p>
-<strong>markers_only
-</strong> (
-<em>bool
-</em>)
-</p>
-
-</dd>
-
-<dt class="field-even">Return type
-<span class="colon">:
-</span>
-</dt>
-
-<dd class="field-even">
-<p>
-<em>List
-</em>[
-<em>Tuple
-</em>[str, str]]
+<em>Dict
+</em>[str, 
+<em>Any
+</em>]
 </p>
 
 </dd>
@@ -458,38 +351,42 @@
 
 <dl class="py method">
 
-<dt class="sig sig-object py" id="metacellswidgets.daf_widgets.DafWidgets.boolean_vectors">
+<dt class="sig sig-object py" id="metacellswidgets.arguments.Arguments.code">
 
 <span class="sig-name descname">
-<span class="pre">boolean_vectors
+<span class="pre">code
 </span>
 </span>
 <span class="sig-paren">(
 </span>
 <em class="sig-param">
 <span class="n">
-<span class="pre">axis
+<span class="pre">callee
 </span>
 </span>
 </em>
 <span class="sig-paren">)
 </span>
-<a class="reference internal" href="_modules/metacellswidgets/daf_widgets.html#DafWidgets.boolean_vectors">
+<a class="reference internal" href="_modules/metacellswidgets/arguments.html#Arguments.code">
 <span class="viewcode-link">
 <span class="pre">[source]
 </span>
 </span>
 </a>
-<a class="headerlink" href="#metacellswidgets.daf_widgets.DafWidgets.boolean_vectors" title="Link to this definition">
+<a class="headerlink" href="#metacellswidgets.arguments.Arguments.code" title="Link to this definition">
 </a>
 </dt>
 
 <dd>
-<p>The names of the Boolean vector properties of the 
+<p>The code which creates the object with its arguments, calling the 
 <code class="docutils literal notranslate">
-<span class="pre">axis
+<span class="pre">callee
 </span>
-</code>, sorted.
+</code> (e.g., 
+<code class="docutils literal notranslate">
+<span class="pre">mw.GeneExpression
+</span>
+</code>).
 </p>
 
 <dl class="field-list simple">
@@ -501,7 +398,7 @@
 
 <dd class="field-odd">
 <p>
-<strong>axis
+<strong>callee
 </strong> (
 <em>str
 </em>)
@@ -515,9 +412,7 @@
 </dt>
 
 <dd class="field-even">
-<p>
-<em>List
-</em>[str]
+<p>str
 </p>
 
 </dd>
@@ -543,12 +438,12 @@
 <footer>
 <div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         
-<a href="graphs.html" class="btn btn-neutral float-left" title="graphs" accesskey="p" rel="prev">
+<a href="API.html" class="btn btn-neutral float-left" title="API" accesskey="p" rel="prev">
 <span class="fa fa-arrow-circle-left" aria-hidden="true">
 </span> Previous
 </a>
         
-<a href="anndata_widgets.html" class="btn btn-neutral float-right" title="anndata_widgets" accesskey="n" rel="next">Next 
+<a href="properties.html" class="btn btn-neutral float-right" title="properties" accesskey="n" rel="next">Next 
 <span class="fa fa-arrow-circle-right" aria-hidden="true">
 </span>
 </a>

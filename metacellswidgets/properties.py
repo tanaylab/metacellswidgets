@@ -7,12 +7,10 @@ a property, and how to fill a graph from it, is implemented separately for each 
 """
 
 import functools
-import inspect
 from enum import Enum
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
-from typing import Dict
 from typing import FrozenSet
 from typing import List
 from typing import Mapping
@@ -22,7 +20,7 @@ from typing import TypeVar
 from ipywidgets import Widget  # type: ignore
 from somegraphspy import VectorDataSinks
 
-from .rewrite import _literal_text
+from .arguments import Arguments
 
 if TYPE_CHECKING:
     from .sources import SourceWidgets
@@ -112,12 +110,10 @@ _SLOT_ELTYPES: Mapping[Slot, FrozenSet[Eltype]] = {
 }
 
 
-class Property:
+class Property(Arguments):
     """
-    The base class of all properties.
-
-    A property's ``__init__`` takes the values of its arguments, and stores each in an attribute of the same name. This
-    is what lets a form write the property back into the code of its cell.
+    The base class of all properties. Its instance holds the values of its arguments (see
+    :py:class:`~metacellswidgets.arguments.Arguments`).
     """
 
     #: The kind of values the property produces.
@@ -166,27 +162,6 @@ class Property:
         A property without arguments has no editor.
         """
         return None
-
-    def arguments(self) -> Dict[str, Any]:
-        """
-        The values of the property's arguments, by the names of the parameters of its ``__init__``.
-        """
-        parameters = list(inspect.signature(type(self).__init__).parameters.values())[1:]
-        return {
-            parameter.name: getattr(self, parameter.name)
-            for parameter in parameters
-            if parameter.kind not in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)
-        }
-
-    def code(self, callee: str) -> str:
-        """
-        The code which creates the property, calling its class by the ``callee`` name (e.g., ``mw.GeneExpression``).
-        """
-        arguments = [f"{name}={_literal_text(name, value)}" for name, value in self.arguments().items()]
-        return f"{callee}({', '.join(arguments)})"
-
-    def __repr__(self) -> str:
-        return self.code(type(self).__name__)
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, Property) and type(other) is type(self) and other.arguments() == self.arguments()

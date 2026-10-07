@@ -46,7 +46,7 @@
     
 <link rel="next" title="sources" href="sources.html" />
     
-<link rel="prev" title="API" href="API.html" /> 
+<link rel="prev" title="arguments" href="arguments.html" /> 
 
 </head>
 
@@ -101,6 +101,11 @@
 <a class="reference internal" href="API.html">API
 </a>
 <ul class="current">
+
+<li class="toctree-l2">
+<a class="reference internal" href="arguments.html">arguments
+</a>
+</li>
 
 <li class="toctree-l2 current">
 <a class="current reference internal" href="#">properties
@@ -741,24 +746,6 @@
 </a>
 </li>
 
-<li class="toctree-l4">
-<a class="reference internal" href="#metacellswidgets.properties.Property.arguments">
-<code class="docutils literal notranslate">
-<span class="pre">Property.arguments()
-</span>
-</code>
-</a>
-</li>
-
-<li class="toctree-l4">
-<a class="reference internal" href="#metacellswidgets.properties.Property.code">
-<code class="docutils literal notranslate">
-<span class="pre">Property.code()
-</span>
-</code>
-</a>
-</li>
-
 </ul>
 
 </li>
@@ -997,6 +984,16 @@
 
 <li class="toctree-l2">
 <a class="reference internal" href="editors.html">editors
+</a>
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="forms.html">forms
+</a>
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="graphs.html">graphs
 </a>
 </li>
 
@@ -7538,15 +7535,14 @@ kind of data source implements this for the properties it supports; for any othe
 </dt>
 
 <dd>
-<p>The base class of all properties.
-</p>
+<p>The base class of all properties. Its instance holds the values of its arguments (see
 
-<p>A property’s 
-<code class="docutils literal notranslate">
-<span class="pre">__init__
+<a class="reference internal" href="arguments.html#metacellswidgets.arguments.Arguments" title="metacellswidgets.arguments.Arguments">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">Arguments
 </span>
-</code> takes the values of its arguments, and stores each in an attribute of the same name. This
-is what lets a form write the property back into the code of its cell.
+</code>
+</a>).
 </p>
 
 <dl class="py attribute">
@@ -8182,133 +8178,6 @@ A property without arguments has no editor.
 <p>
 <em>Widget
 </em> | None
-</p>
-
-</dd>
-
-</dl>
-
-</dd>
-</dl>
-
-
-<dl class="py method">
-
-<dt class="sig sig-object py" id="metacellswidgets.properties.Property.arguments">
-
-<span class="sig-name descname">
-<span class="pre">arguments
-</span>
-</span>
-<span class="sig-paren">(
-</span>
-<span class="sig-paren">)
-</span>
-<a class="reference internal" href="_modules/metacellswidgets/properties.html#Property.arguments">
-<span class="viewcode-link">
-<span class="pre">[source]
-</span>
-</span>
-</a>
-<a class="headerlink" href="#metacellswidgets.properties.Property.arguments" title="Link to this definition">
-</a>
-</dt>
-
-<dd>
-<p>The values of the property’s arguments, by the names of the parameters of its 
-<code class="docutils literal notranslate">
-<span class="pre">__init__
-</span>
-</code>.
-</p>
-
-<dl class="field-list simple">
-
-<dt class="field-odd">Return type
-<span class="colon">:
-</span>
-</dt>
-
-<dd class="field-odd">
-<p>
-<em>Dict
-</em>[str, 
-<em>Any
-</em>]
-</p>
-
-</dd>
-
-</dl>
-
-</dd>
-</dl>
-
-
-<dl class="py method">
-
-<dt class="sig sig-object py" id="metacellswidgets.properties.Property.code">
-
-<span class="sig-name descname">
-<span class="pre">code
-</span>
-</span>
-<span class="sig-paren">(
-</span>
-<em class="sig-param">
-<span class="n">
-<span class="pre">callee
-</span>
-</span>
-</em>
-<span class="sig-paren">)
-</span>
-<a class="reference internal" href="_modules/metacellswidgets/properties.html#Property.code">
-<span class="viewcode-link">
-<span class="pre">[source]
-</span>
-</span>
-</a>
-<a class="headerlink" href="#metacellswidgets.properties.Property.code" title="Link to this definition">
-</a>
-</dt>
-
-<dd>
-<p>The code which creates the property, calling its class by the 
-<code class="docutils literal notranslate">
-<span class="pre">callee
-</span>
-</code> name (e.g., 
-<code class="docutils literal notranslate">
-<span class="pre">mw.GeneExpression
-</span>
-</code>).
-</p>
-
-<dl class="field-list simple">
-
-<dt class="field-odd">Parameters
-<span class="colon">:
-</span>
-</dt>
-
-<dd class="field-odd">
-<p>
-<strong>callee
-</strong> (
-<em>str
-</em>)
-</p>
-
-</dd>
-
-<dt class="field-even">Return type
-<span class="colon">:
-</span>
-</dt>
-
-<dd class="field-even">
-<p>str
 </p>
 
 </dd>
@@ -10230,7 +10099,7 @@ property, dispatching on the data source. The function takes the same arguments 
 <footer>
 <div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         
-<a href="API.html" class="btn btn-neutral float-left" title="API" accesskey="p" rel="prev">
+<a href="arguments.html" class="btn btn-neutral float-left" title="arguments" accesskey="p" rel="prev">
 <span class="fa fa-arrow-circle-left" aria-hidden="true">
 </span> Previous
 </a>

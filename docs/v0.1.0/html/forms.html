@@ -13,7 +13,7 @@
   
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-<title>daf_widgets &mdash; MetacellsWidgets 0.1.0 documentation
+<title>forms &mdash; MetacellsWidgets 0.1.0 documentation
 </title>
       
 <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
@@ -44,9 +44,9 @@
     
 <link rel="search" title="Search" href="search.html" />
     
-<link rel="next" title="anndata_widgets" href="anndata_widgets.html" />
+<link rel="next" title="graphs" href="graphs.html" />
     
-<link rel="prev" title="graphs" href="graphs.html" /> 
+<link rel="prev" title="editors" href="editors.html" /> 
 
 </head>
 
@@ -122,9 +122,44 @@
 </a>
 </li>
 
-<li class="toctree-l2">
-<a class="reference internal" href="forms.html">forms
+<li class="toctree-l2 current">
+<a class="current reference internal" href="#">forms
 </a>
+<ul>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm">
+<code class="docutils literal notranslate">
+<span class="pre">GraphForm
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.graph">
+<code class="docutils literal notranslate">
+<span class="pre">GraphForm.graph()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.display">
+<code class="docutils literal notranslate">
+<span class="pre">GraphForm.display()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+</ul>
+
 </li>
 
 <li class="toctree-l2">
@@ -132,44 +167,9 @@
 </a>
 </li>
 
-<li class="toctree-l2 current">
-<a class="current reference internal" href="#">daf_widgets
+<li class="toctree-l2">
+<a class="reference internal" href="daf_widgets.html">daf_widgets
 </a>
-<ul>
-
-<li class="toctree-l3">
-<a class="reference internal" href="#metacellswidgets.daf_widgets.DafWidgets">
-<code class="docutils literal notranslate">
-<span class="pre">DafWidgets
-</span>
-</code>
-</a>
-<ul>
-
-<li class="toctree-l4">
-<a class="reference internal" href="#metacellswidgets.daf_widgets.DafWidgets.gene_choices">
-<code class="docutils literal notranslate">
-<span class="pre">DafWidgets.gene_choices()
-</span>
-</code>
-</a>
-</li>
-
-<li class="toctree-l4">
-<a class="reference internal" href="#metacellswidgets.daf_widgets.DafWidgets.boolean_vectors">
-<code class="docutils literal notranslate">
-<span class="pre">DafWidgets.boolean_vectors()
-</span>
-</code>
-</a>
-</li>
-
-</ul>
-
-</li>
-
-</ul>
-
 </li>
 
 <li class="toctree-l2">
@@ -221,12 +221,12 @@
 </a>
 </li>
       
-<li class="breadcrumb-item active">daf_widgets
+<li class="breadcrumb-item active">forms
 </li>
       
 <li class="wy-breadcrumbs-aside">
             
-<a href="_sources/daf_widgets.rst.txt" rel="nofollow"> View page source
+<a href="_sources/forms.rst.txt" rel="nofollow"> View page source
 </a>
       
 </li>
@@ -242,29 +242,31 @@
 <div itemprop="articleBody">
              
   
-<section id="module-metacellswidgets.daf_widgets">
+<section id="module-metacellswidgets.forms">
 
-<span id="daf-widgets">
+<span id="forms">
 </span>
-<h1>daf_widgets
-<a class="headerlink" href="#module-metacellswidgets.daf_widgets" title="Link to this heading">
+<h1>forms
+<a class="headerlink" href="#module-metacellswidgets.forms" title="Link to this heading">
 </a>
 </h1>
 
-<p>The 
+<p>Forms: the graphs a notebook cell shows, holding the arguments they were created with.
+</p>
+
+<p>A form is created by a method of a kind of data source, e.g. 
 <code class="docutils literal notranslate">
-<span class="pre">Daf
+<span class="pre">mw.DafWidgets(daf).gene_gene(x_gene=&quot;Foxa1&quot;,
+</span> 
+<span class="pre">...)
 </span>
-</code> kind of data source: a single 
-<code class="docutils literal notranslate">
-<span class="pre">Daf
-</span>
-</code> data set of metacells.
+</code>.
+Displaying it shows its graph.
 </p>
 
 <dl class="py class">
 
-<dt class="sig sig-object py" id="metacellswidgets.daf_widgets.DafWidgets">
+<dt class="sig sig-object py" id="metacellswidgets.forms.GraphForm">
 
 <span class="property">
 <span class="k">
@@ -275,147 +277,46 @@
 </span>
 </span>
 <span class="sig-prename descclassname">
-<span class="pre">metacellswidgets.daf_widgets.
+<span class="pre">metacellswidgets.forms.
 </span>
 </span>
 <span class="sig-name descname">
-<span class="pre">DafWidgets
+<span class="pre">GraphForm
 </span>
 </span>
 <span class="sig-paren">(
 </span>
 <em class="sig-param">
 <span class="n">
-<span class="pre">daf
+<span class="pre">source
 </span>
 </span>
 </em>
 <span class="sig-paren">)
 </span>
-<a class="reference internal" href="_modules/metacellswidgets/daf_widgets.html#DafWidgets">
+<a class="reference internal" href="_modules/metacellswidgets/forms.html#GraphForm">
 <span class="viewcode-link">
 <span class="pre">[source]
 </span>
 </span>
 </a>
-<a class="headerlink" href="#metacellswidgets.daf_widgets.DafWidgets" title="Link to this definition">
+<a class="headerlink" href="#metacellswidgets.forms.GraphForm" title="Link to this definition">
 </a>
 </dt>
 
 <dd>
-<p>Interactive graphs of a single 
+<p>The base class of the forms of graphs. It holds the data 
 <code class="docutils literal notranslate">
-<span class="pre">Daf
+<span class="pre">source
 </span>
-</code> data set of metacells.
-</p>
-
-<dl class="field-list simple">
-
-<dt class="field-odd">Parameters
-<span class="colon">:
-</span>
-</dt>
-
-<dd class="field-odd">
-<p>
-<strong>daf
-</strong> (
-<em>DafReader
-</em>)
-</p>
-
-</dd>
-
-</dl>
-
-<dl class="py method">
-
-<dt class="sig sig-object py" id="metacellswidgets.daf_widgets.DafWidgets.gene_choices">
-
-<span class="sig-name descname">
-<span class="pre">gene_choices
-</span>
-</span>
-<span class="sig-paren">(
-</span>
-<em class="sig-param">
-<span class="keyword-only-separator o">
-<abbr title="Keyword-only parameters separator (PEP 3102)">
-<span class="pre">*
-</span>
-</abbr>
-</span>
-</em>, 
-<em class="sig-param">
-<span class="n">
-<span class="pre">markers_only
-</span>
-</span>
-<span class="o">
-<span class="pre">=
-</span>
-</span>
-<span class="default_value">
-<span class="pre">False
-</span>
-</span>
-</em>
-<span class="sig-paren">)
-</span>
-<a class="reference internal" href="_modules/metacellswidgets/daf_widgets.html#DafWidgets.gene_choices">
-<span class="viewcode-link">
-<span class="pre">[source]
-</span>
-</span>
-</a>
-<a class="headerlink" href="#metacellswidgets.daf_widgets.DafWidgets.gene_choices" title="Link to this definition">
-</a>
-</dt>
-
-<dd>
-<p>The (label, name) of each gene, in the order of the gene axis. Excluded genes are never included. If
-
-<code class="docutils literal notranslate">
-<span class="pre">markers_only
-</span>
-</code>, only the marker genes are included. The label is the name followed by the flags of the gene:
-
-<code class="docutils literal notranslate">
-<span class="pre">L
-</span>
-</code> (lateral), 
-<code class="docutils literal notranslate">
-<span class="pre">M
-</span>
-</code> (marker), 
-<code class="docutils literal notranslate">
-<span class="pre">T
-</span>
-</code> (transcription factor), 
-<code class="docutils literal notranslate">
-<span class="pre">R
-</span>
-</code> (regulator), 
-<code class="docutils literal notranslate">
-<span class="pre">F
-</span>
-</code> (forbidden), 
-<code class="docutils literal notranslate">
-<span class="pre">S
+</code> the graph is drawn from, and the values of the
+graph’s arguments (see 
+<a class="reference internal" href="arguments.html#metacellswidgets.arguments.Arguments" title="metacellswidgets.arguments.Arguments">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">Arguments
 </span>
 </code>
-(skeleton), e.g. 
-<code class="docutils literal notranslate">
-<span class="pre">Foxa1
-</span> 
-<span class="pre">M
-</span> 
-<span class="pre">T
-</span> 
-<span class="pre">R
-</span>
-</code>. A flag the data set doesn’t have is never shown.
+</a>).
 </p>
 
 <dl class="field-list simple">
@@ -427,25 +328,55 @@
 
 <dd class="field-odd">
 <p>
-<strong>markers_only
+<strong>source
 </strong> (
-<em>bool
-</em>)
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
 </p>
 
 </dd>
 
-<dt class="field-even">Return type
+</dl>
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.forms.GraphForm.graph">
+
+<span class="sig-name descname">
+<span class="pre">graph
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/forms.html#GraphForm.graph">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.forms.GraphForm.graph" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The graph, built from the data source and the arguments.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Return type
 <span class="colon">:
 </span>
 </dt>
 
-<dd class="field-even">
+<dd class="field-odd">
 <p>
-<em>List
-</em>[
-<em>Tuple
-</em>[str, str]]
+<em>Graph
+</em>
 </p>
 
 </dd>
@@ -458,66 +389,43 @@
 
 <dl class="py method">
 
-<dt class="sig sig-object py" id="metacellswidgets.daf_widgets.DafWidgets.boolean_vectors">
+<dt class="sig sig-object py" id="metacellswidgets.forms.GraphForm.display">
 
 <span class="sig-name descname">
-<span class="pre">boolean_vectors
+<span class="pre">display
 </span>
 </span>
 <span class="sig-paren">(
 </span>
-<em class="sig-param">
-<span class="n">
-<span class="pre">axis
-</span>
-</span>
-</em>
 <span class="sig-paren">)
 </span>
-<a class="reference internal" href="_modules/metacellswidgets/daf_widgets.html#DafWidgets.boolean_vectors">
+<a class="reference internal" href="_modules/metacellswidgets/forms.html#GraphForm.display">
 <span class="viewcode-link">
 <span class="pre">[source]
 </span>
 </span>
 </a>
-<a class="headerlink" href="#metacellswidgets.daf_widgets.DafWidgets.boolean_vectors" title="Link to this definition">
+<a class="headerlink" href="#metacellswidgets.forms.GraphForm.display" title="Link to this definition">
 </a>
 </dt>
 
 <dd>
-<p>The names of the Boolean vector properties of the 
-<code class="docutils literal notranslate">
-<span class="pre">axis
-</span>
-</code>, sorted.
+<p>Show the graph in the notebook cell. Returns the form, so it can be chained to its creation.
 </p>
 
 <dl class="field-list simple">
 
-<dt class="field-odd">Parameters
+<dt class="field-odd">Return type
 <span class="colon">:
 </span>
 </dt>
 
 <dd class="field-odd">
 <p>
-<strong>axis
-</strong> (
-<em>str
-</em>)
-</p>
-
-</dd>
-
-<dt class="field-even">Return type
-<span class="colon">:
-</span>
-</dt>
-
-<dd class="field-even">
-<p>
-<em>List
-</em>[str]
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm" title="metacellswidgets.forms.GraphForm">
+<em>GraphForm
+</em>
+</a>
 </p>
 
 </dd>
@@ -543,12 +451,12 @@
 <footer>
 <div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         
-<a href="graphs.html" class="btn btn-neutral float-left" title="graphs" accesskey="p" rel="prev">
+<a href="editors.html" class="btn btn-neutral float-left" title="editors" accesskey="p" rel="prev">
 <span class="fa fa-arrow-circle-left" aria-hidden="true">
 </span> Previous
 </a>
         
-<a href="anndata_widgets.html" class="btn btn-neutral float-right" title="anndata_widgets" accesskey="n" rel="next">Next 
+<a href="graphs.html" class="btn btn-neutral float-right" title="graphs" accesskey="n" rel="next">Next 
 <span class="fa fa-arrow-circle-right" aria-hidden="true">
 </span>
 </a>

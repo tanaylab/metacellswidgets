@@ -13,14 +13,17 @@ from typing import Tuple
 import metacellsgraphspy as mg
 import numpy as np
 from anndata import AnnData  # type: ignore
+from somegraphspy import PointsGraph
 from somegraphspy import VectorDataSinks
 
 from .editors import ArgumentEditor
 from .editors import GenePicker
+from .graphs import GeneGene
 from .properties import GeneExpression
 from .properties import Type
 from .properties import implements
 from .sources import SourceWidgets
+from .sources import graph_constructor
 
 __all__: List[str] = [
     "AnnDataWidgets",
@@ -32,6 +35,8 @@ class AnnDataWidgets(SourceWidgets):
     Interactive graphs of a metacells ``AnnData``. The types of the metacells are in the ``type_property`` of its
     ``obs``, and their colors are in the ``type_colors_csv`` file (see ``metacellsgraphspy.ad_get_type_colors``).
     """
+
+    gene_gene = graph_constructor(GeneGene)
 
     def __init__(self, adata: AnnData, *, type_property: str, type_colors_csv: str) -> None:
         self.adata = adata
@@ -87,6 +92,11 @@ def _gene_expression_editor(
     _cls: type, source: AnnDataWidgets, _axis: str, current: Optional[GeneExpression]
 ) -> ArgumentEditor:
     return ArgumentEditor(GenePicker(source, None if current is None else current.gene), GeneExpression)
+
+
+@implements(GeneGene.points, AnnDataWidgets)
+def _gene_gene_points(self: GeneGene, source: AnnDataWidgets) -> PointsGraph:
+    return mg.ad_gene_gene_graph(source.adata, x_gene=self.x_gene, y_gene=self.y_gene)
 
 
 AnnDataWidgets.register_properties(axis="metacell", properties=[Type, GeneExpression])
