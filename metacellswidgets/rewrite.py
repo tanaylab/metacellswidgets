@@ -153,7 +153,9 @@ def _callee_of(cls: type, namespace: Mapping[str, Any]) -> str:
 def _literal_text(name: str, value: Any, namespace: Optional[Mapping[str, Any]] = None) -> str:
     # The code of a value, which must read back as the same value. An object with a ``code`` method (e.g. a property)
     # is written by it, naming its class as the namespace does, or by its bare name if there is no namespace (e.g. for
-    # its ``repr``).
+    # its ``repr``). A list is written item by item, so it may hold such objects (e.g. tweaks).
+    if isinstance(value, list):
+        return f"[{', '.join(_literal_text(name, item, namespace) for item in value)}]"
     code = getattr(value, "code", None)
     if callable(code):
         callee = type(value).__name__ if namespace is None else _callee_of(type(value), namespace)

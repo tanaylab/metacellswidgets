@@ -1,0 +1,1570 @@
+
+
+
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en" data-content_root="./">
+
+<head>
+  
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+<title>tweaks &mdash; MetacellsWidgets 0.1.0 documentation
+</title>
+      
+<link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      
+<link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      
+<script src="_static/jquery.js?v=5d32c60e">
+</script>
+      
+<script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c">
+</script>
+      
+<script src="_static/documentation_options.js?v=01f34227">
+</script>
+      
+<script src="_static/doctools.js?v=fd6eb6e6">
+</script>
+      
+<script src="_static/sphinx_highlight.js?v=6ffebe34">
+</script>
+    
+<script src="_static/js/theme.js">
+</script>
+    
+<link rel="index" title="Index" href="genindex.html" />
+    
+<link rel="search" title="Search" href="search.html" />
+    
+<link rel="next" title="daf_widgets" href="daf_widgets.html" />
+    
+<link rel="prev" title="graphs" href="graphs.html" /> 
+
+</head>
+
+
+<body class="wy-body-for-nav"> 
+  
+<div class="wy-grid-for-nav">
+    
+<nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      
+<div class="wy-side-scroll">
+        
+<div class="wy-side-nav-search" >
+
+          
+          
+          
+<a href="index.html" class="icon icon-home">
+            MetacellsWidgets
+          
+</a>
+
+<div role="search">
+  
+<form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    
+<input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    
+<input type="hidden" name="check_keywords" value="yes" />
+    
+<input type="hidden" name="area" value="default" />
+  
+</form>
+
+</div>
+        
+</div>
+<div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              
+<ul>
+
+<li class="toctree-l1">
+<a class="reference internal" href="readme.html">README
+</a>
+</li>
+
+</ul>
+
+<ul class="current">
+
+<li class="toctree-l1 current">
+<a class="reference internal" href="API.html">API
+</a>
+<ul class="current">
+
+<li class="toctree-l2">
+<a class="reference internal" href="common.html">common
+</a>
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="properties.html">properties
+</a>
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="sources.html">sources
+</a>
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="editors.html">editors
+</a>
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="forms.html">forms
+</a>
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="graphs.html">graphs
+</a>
+</li>
+
+<li class="toctree-l2 current">
+<a class="current reference internal" href="#">tweaks
+</a>
+<ul>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.tweaks.Tweak">
+<code class="docutils literal notranslate">
+<span class="pre">Tweak
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.tweaks.Tweak.apply">
+<code class="docutils literal notranslate">
+<span class="pre">Tweak.apply()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.tweaks.Tweak.applies_to">
+<code class="docutils literal notranslate">
+<span class="pre">Tweak.applies_to()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.tweaks.Tweak.editor">
+<code class="docutils literal notranslate">
+<span class="pre">Tweak.editor()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.tweaks.registered_tweaks">
+<code class="docutils literal notranslate">
+<span class="pre">registered_tweaks()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.tweaks.tweak">
+<code class="docutils literal notranslate">
+<span class="pre">tweak()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="daf_widgets.html">daf_widgets
+</a>
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="anndata_widgets.html">anndata_widgets
+</a>
+</li>
+
+</ul>
+
+</li>
+
+</ul>
+
+        
+</div>
+      
+</div>
+    
+</nav>
+
+    
+<section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+<nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          
+<i data-toggle="wy-nav-top" class="fa fa-bars">
+</i>
+          
+<a href="index.html">MetacellsWidgets
+</a>
+      
+</nav>
+
+      
+<div class="wy-nav-content">
+        
+<div class="rst-content">
+          
+<div role="navigation" aria-label="Page navigation">
+  
+<ul class="wy-breadcrumbs">
+      
+<li>
+<a href="index.html" class="icon icon-home" aria-label="Home">
+</a>
+</li>
+          
+<li class="breadcrumb-item">
+<a href="API.html">API
+</a>
+</li>
+      
+<li class="breadcrumb-item active">tweaks
+</li>
+      
+<li class="wy-breadcrumbs-aside">
+            
+<a href="_sources/tweaks.rst.txt" rel="nofollow"> View page source
+</a>
+      
+</li>
+  
+</ul>
+  
+<hr/>
+
+</div>
+          
+<div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           
+<div itemprop="articleBody">
+             
+  
+<section id="module-metacellswidgets.tweaks">
+
+<span id="tweaks">
+</span>
+<h1>tweaks
+<a class="headerlink" href="#module-metacellswidgets.tweaks" title="Link to this heading">
+</a>
+</h1>
+
+<p>Tweaks: changes to a graph after a form builds it, such as its size or its title.
+</p>
+
+<p>A tweak is a class. Its instance holds the values of its arguments, e.g. 
+<code class="docutils literal notranslate">
+<span class="pre">Size(width=800)
+</span>
+</code>. A form applies its tweaks
+in order, every time it builds its graph. Registering a tweak with 
+<a class="reference internal" href="#metacellswidgets.tweaks.tweak" title="metacellswidgets.tweaks.tweak">
+<code class="xref py py-func docutils literal notranslate">
+<span class="pre">tweak()
+</span>
+</code>
+</a> lets the editor offer it.
+</p>
+
+<p>A tweak which changes every graph the same way defines 
+<code class="docutils literal notranslate">
+<span class="pre">apply
+</span>
+</code> in its class:
+</p>
+
+<div class="highlight-python notranslate">
+<div class="highlight">
+<pre>
+<span>
+</span>
+<span class="nd">@mw
+</span>
+<span class="o">.
+</span>
+<span class="n">tweak
+</span>
+
+<span class="k">class
+</span>
+<span class="w"> 
+</span>
+<span class="nc">FontSize
+</span>
+<span class="p">(
+</span>
+<span class="n">mw
+</span>
+<span class="o">.
+</span>
+<span class="n">Tweak
+</span>
+<span class="p">):
+</span>
+    
+<span class="k">def
+</span>
+<span class="w"> 
+</span>
+<span class="fm">__init__
+</span>
+<span class="p">(
+</span>
+<span class="bp">self
+</span>
+<span class="p">,
+</span> 
+<span class="n">size
+</span>
+<span class="p">:
+</span> 
+<span class="nb">int
+</span> 
+<span class="o">=
+</span> 
+<span class="mi">14
+</span>
+<span class="p">)
+</span> 
+<span class="o">-&gt;
+</span> 
+<span class="kc">None
+</span>
+<span class="p">:
+</span>
+        
+<span class="bp">self
+</span>
+<span class="o">.
+</span>
+<span class="n">size
+</span> 
+<span class="o">=
+</span> 
+<span class="n">size
+</span>
+
+    
+<span class="k">def
+</span>
+<span class="w"> 
+</span>
+<span class="nf">apply
+</span>
+<span class="p">(
+</span>
+<span class="bp">self
+</span>
+<span class="p">,
+</span> 
+<span class="n">graph
+</span>
+<span class="p">:
+</span> 
+<span class="n">sg
+</span>
+<span class="o">.
+</span>
+<span class="n">Graph
+</span>
+<span class="p">,
+</span> 
+<span class="n">source
+</span>
+<span class="p">:
+</span> 
+<span class="n">mw
+</span>
+<span class="o">.
+</span>
+<span class="n">SourceWidgets
+</span>
+<span class="p">)
+</span> 
+<span class="o">-&gt;
+</span> 
+<span class="kc">None
+</span>
+<span class="p">:
+</span>
+        
+<span class="o">...
+</span>
+
+</pre>
+</div>
+
+</div>
+
+<p>A tweak which changes only some types of graphs, or changes each type differently, implements 
+<code class="docutils literal notranslate">
+<span class="pre">apply
+</span>
+</code> for each graph
+type with 
+<a class="reference internal" href="common.html#metacellswidgets.common.implements" title="metacellswidgets.common.implements">
+<code class="xref py py-func docutils literal notranslate">
+<span class="pre">implements()
+</span>
+</code>
+</a>. Each implementation applies to its graph type and to its
+subtypes. The editor offers the tweak only for graphs of these types:
+</p>
+
+<div class="highlight-python notranslate">
+<div class="highlight">
+<pre>
+<span>
+</span>
+<span class="nd">@mw
+</span>
+<span class="o">.
+</span>
+<span class="n">tweak
+</span>
+
+<span class="k">class
+</span>
+<span class="w"> 
+</span>
+<span class="nc">Highlight
+</span>
+<span class="p">(
+</span>
+<span class="n">mw
+</span>
+<span class="o">.
+</span>
+<span class="n">Tweak
+</span>
+<span class="p">):
+</span>
+    
+<span class="k">def
+</span>
+<span class="w"> 
+</span>
+<span class="fm">__init__
+</span>
+<span class="p">(
+</span>
+<span class="bp">self
+</span>
+<span class="p">,
+</span> 
+<span class="n">type_name
+</span>
+<span class="p">:
+</span> 
+<span class="nb">str
+</span>
+<span class="p">)
+</span> 
+<span class="o">-&gt;
+</span> 
+<span class="kc">None
+</span>
+<span class="p">:
+</span>
+        
+<span class="bp">self
+</span>
+<span class="o">.
+</span>
+<span class="n">type_name
+</span> 
+<span class="o">=
+</span> 
+<span class="n">type_name
+</span>
+
+
+
+<span class="nd">@mw
+</span>
+<span class="o">.
+</span>
+<span class="n">implements
+</span>
+<span class="p">(
+</span>
+<span class="n">Highlight
+</span>
+<span class="o">.
+</span>
+<span class="n">apply
+</span>
+<span class="p">,
+</span> 
+<span class="n">sg
+</span>
+<span class="o">.
+</span>
+<span class="n">PointsGraph
+</span>
+<span class="p">)
+</span>
+
+<span class="k">def
+</span>
+<span class="w"> 
+</span>
+<span class="nf">_highlight_points
+</span>
+<span class="p">(
+</span>
+<span class="bp">self
+</span>
+<span class="p">:
+</span> 
+<span class="n">Highlight
+</span>
+<span class="p">,
+</span> 
+<span class="n">graph
+</span>
+<span class="p">:
+</span> 
+<span class="n">sg
+</span>
+<span class="o">.
+</span>
+<span class="n">PointsGraph
+</span>
+<span class="p">,
+</span> 
+<span class="n">source
+</span>
+<span class="p">:
+</span> 
+<span class="n">mw
+</span>
+<span class="o">.
+</span>
+<span class="n">SourceWidgets
+</span>
+<span class="p">)
+</span> 
+<span class="o">-&gt;
+</span> 
+<span class="kc">None
+</span>
+<span class="p">:
+</span>
+    
+<span class="o">...
+</span>
+
+
+
+<span class="nd">@mw
+</span>
+<span class="o">.
+</span>
+<span class="n">implements
+</span>
+<span class="p">(
+</span>
+<span class="n">Highlight
+</span>
+<span class="o">.
+</span>
+<span class="n">apply
+</span>
+<span class="p">,
+</span> 
+<span class="n">sg
+</span>
+<span class="o">.
+</span>
+<span class="n">HeatmapGraph
+</span>
+<span class="p">)
+</span>
+
+<span class="k">def
+</span>
+<span class="w"> 
+</span>
+<span class="nf">_highlight_heatmap
+</span>
+<span class="p">(
+</span>
+<span class="bp">self
+</span>
+<span class="p">:
+</span> 
+<span class="n">Highlight
+</span>
+<span class="p">,
+</span> 
+<span class="n">graph
+</span>
+<span class="p">:
+</span> 
+<span class="n">sg
+</span>
+<span class="o">.
+</span>
+<span class="n">HeatmapGraph
+</span>
+<span class="p">,
+</span> 
+<span class="n">source
+</span>
+<span class="p">:
+</span> 
+<span class="n">mw
+</span>
+<span class="o">.
+</span>
+<span class="n">SourceWidgets
+</span>
+<span class="p">)
+</span> 
+<span class="o">-&gt;
+</span> 
+<span class="kc">None
+</span>
+<span class="p">:
+</span>
+    
+<span class="o">...
+</span>
+
+</pre>
+</div>
+
+</div>
+
+<p>A tweak without arguments, such as a template which makes graphs fit a lab’s style, can be a single function.
+
+<a class="reference internal" href="#metacellswidgets.tweaks.tweak" title="metacellswidgets.tweaks.tweak">
+<code class="xref py py-func docutils literal notranslate">
+<span class="pre">tweak()
+</span>
+</code>
+</a> turns it into a tweak class with the same name. It applies to the graph type of its first parameter:
+</p>
+
+<div class="highlight-python notranslate">
+<div class="highlight">
+<pre>
+<span>
+</span>
+<span class="nd">@mw
+</span>
+<span class="o">.
+</span>
+<span class="n">tweak
+</span>
+
+<span class="k">def
+</span>
+<span class="w"> 
+</span>
+<span class="nf">paper_figure
+</span>
+<span class="p">(
+</span>
+<span class="n">graph
+</span>
+<span class="p">:
+</span> 
+<span class="n">sg
+</span>
+<span class="o">.
+</span>
+<span class="n">Graph
+</span>
+<span class="p">,
+</span> 
+<span class="n">source
+</span>
+<span class="p">:
+</span> 
+<span class="n">mw
+</span>
+<span class="o">.
+</span>
+<span class="n">SourceWidgets
+</span>
+<span class="p">)
+</span> 
+<span class="o">-&gt;
+</span> 
+<span class="kc">None
+</span>
+<span class="p">:
+</span>
+    
+<span class="n">graph
+</span>
+<span class="o">.
+</span>
+<span class="n">configuration
+</span>
+<span class="o">.
+</span>
+<span class="n">figure
+</span>
+<span class="o">.
+</span>
+<span class="n">width
+</span> 
+<span class="o">=
+</span> 
+<span class="mi">600
+</span>
+    
+<span class="n">graph
+</span>
+<span class="o">.
+</span>
+<span class="n">configuration
+</span>
+<span class="o">.
+</span>
+<span class="n">figure
+</span>
+<span class="o">.
+</span>
+<span class="n">height
+</span> 
+<span class="o">=
+</span> 
+<span class="mi">400
+</span>
+
+
+
+<span class="n">form
+</span> 
+<span class="o">=
+</span> 
+<span class="n">mw
+</span>
+<span class="o">.
+</span>
+<span class="n">DafWidgets
+</span>
+<span class="p">(
+</span>
+<span class="n">daf
+</span>
+<span class="p">)
+</span>
+<span class="o">.
+</span>
+<span class="n">gene_gene
+</span>
+<span class="p">(
+</span>
+<span class="n">x_gene
+</span>
+<span class="o">=
+</span>
+<span class="s2">"Foxa1"
+</span>
+<span class="p">,
+</span> 
+<span class="n">y_gene
+</span>
+<span class="o">=
+</span>
+<span class="s2">"Sox2"
+</span>
+<span class="p">,
+</span> 
+<span class="n">tweaks
+</span>
+<span class="o">=
+</span>
+<span class="p">[
+</span>
+<span class="n">paper_figure
+</span>
+<span class="p">()])
+</span>
+
+</pre>
+</div>
+
+</div>
+
+<p>A tweak with arguments also needs an editor (see 
+<a class="reference internal" href="#metacellswidgets.tweaks.Tweak.editor" title="metacellswidgets.tweaks.Tweak.editor">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">Tweak.editor()
+</span>
+</code>
+</a>).
+</p>
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.tweaks.Tweak">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.tweaks.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">Tweak
+</span>
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/tweaks.html#Tweak">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.tweaks.Tweak" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The base class of all tweaks. Its instance holds the values of its arguments (see
+
+<a class="reference internal" href="common.html#metacellswidgets.common.Arguments" title="metacellswidgets.common.Arguments">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">Arguments
+</span>
+</code>
+</a>).
+</p>
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.tweaks.Tweak.apply">
+
+<span class="sig-name descname">
+<span class="pre">apply
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">graph
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/tweaks.html#Tweak.apply">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.tweaks.Tweak.apply" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Change the 
+<code class="docutils literal notranslate">
+<span class="pre">graph
+</span>
+</code>, which a form built from the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code>. A tweak defines this in its class, or implements
+it for each graph type it applies to; for any other graph type, this is an error.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>graph
+</strong> (
+<em>Graph
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>None
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.tweaks.Tweak.applies_to">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">applies_to
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">graph_type
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/tweaks.html#Tweak.applies_to">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.tweaks.Tweak.applies_to" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Whether the tweak can change graphs of the 
+<code class="docutils literal notranslate">
+<span class="pre">graph_type
+</span>
+</code>.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>graph_type
+</strong> (
+<em>Type
+</em>
+<em>[
+</em>
+<em>Graph
+</em>
+<em>]
+</em>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>bool
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.tweaks.Tweak.editor">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">editor
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">current
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/tweaks.html#Tweak.editor">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.tweaks.Tweak.editor" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>A widget for editing the tweak’s arguments for the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code>, starting from the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> tweak (if any). Its
+
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is the tweak, or 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> while the arguments are incomplete. A tweak without arguments has no editor.
+A tweak whose editor doesn’t depend on the data defines this in its class. Otherwise, it implements this for
+each kind of data source with 
+<a class="reference internal" href="common.html#metacellswidgets.common.implements" title="metacellswidgets.common.implements">
+<code class="xref py py-func docutils literal notranslate">
+<span class="pre">implements()
+</span>
+</code>
+</a>.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<a class="reference internal" href="#metacellswidgets.tweaks.Tweak" title="metacellswidgets.tweaks.Tweak">
+<em>Tweak
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>Widget
+</em> | None
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+<dl class="py function">
+
+<dt class="sig sig-object py" id="metacellswidgets.tweaks.registered_tweaks">
+
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.tweaks.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">registered_tweaks
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">graph_type
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/tweaks.html#registered_tweaks">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.tweaks.registered_tweaks" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The registered tweaks which apply to the 
+<code class="docutils literal notranslate">
+<span class="pre">graph_type
+</span>
+</code>, in the order they were registered.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>graph_type
+</strong> (
+<em>Type
+</em>
+<em>[
+</em>
+<em>Graph
+</em>
+<em>]
+</em>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>List
+</em>[
+<em>Type
+</em>[
+<a class="reference internal" href="#metacellswidgets.tweaks.Tweak" title="metacellswidgets.tweaks.Tweak">
+<em>Tweak
+</em>
+</a>]]
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py function">
+
+<dt class="sig sig-object py" id="metacellswidgets.tweaks.tweak">
+
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.tweaks.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">tweak
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">target
+</span>
+</span>
+<span class="p">
+<span class="pre">:
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="n">
+<span class="pre">_Tweak
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span> 
+<span class="sig-return">
+<span class="sig-return-icon">&#x2192;
+</span> 
+<span class="sig-return-typehint">
+<span class="pre">_Tweak
+</span>
+</span>
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/tweaks.html#tweak">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.tweaks.tweak" title="Link to this definition">
+</a>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.tweaks.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">tweak
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">target
+</span>
+</span>
+<span class="p">
+<span class="pre">:
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="n">
+<span class="pre">Callable
+</span>
+<span class="p">
+<span class="pre">[
+</span>
+</span>
+<span class="p">
+<span class="pre">[
+</span>
+</span>
+<span class="pre">Any
+</span>
+<span class="p">
+<span class="pre">,
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="s">
+<span class="pre">'SourceWidgets'
+</span>
+</span>
+<span class="p">
+<span class="pre">]
+</span>
+</span>
+<span class="p">
+<span class="pre">,
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="pre">None
+</span>
+<span class="p">
+<span class="pre">]
+</span>
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span> 
+<span class="sig-return">
+<span class="sig-return-icon">&#x2192;
+</span> 
+<span class="sig-return-typehint">
+<span class="pre">Type
+</span>
+<span class="p">
+<span class="pre">[
+</span>
+</span>
+<a class="reference internal" href="#metacellswidgets.tweaks.Tweak" title="metacellswidgets.tweaks.Tweak">
+<span class="pre">Tweak
+</span>
+</a>
+<span class="p">
+<span class="pre">]
+</span>
+</span>
+</span>
+</span>
+</dt>
+
+<dd>
+<p>Register a tweak, so the editor offers it for the graphs it applies to. On a tweak class, return the class. On a
+function, return a new tweak class without arguments, with the function’s name and documentation, whose 
+<code class="docutils literal notranslate">
+<span class="pre">apply
+</span>
+</code>
+calls the function with the graph and the data source. It applies to the graph type the function’s first parameter
+is annotated with.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>target
+</strong> (
+<em>Type
+</em>
+<em>[
+</em>
+<a class="reference internal" href="#metacellswidgets.tweaks.Tweak" title="metacellswidgets.tweaks.Tweak">
+<em>Tweak
+</em>
+</a>
+<em>] 
+</em>
+<em>| 
+</em>
+<em>Callable
+</em>
+<em>[
+</em>
+<em>[
+</em>
+<em>Any
+</em>
+<em>, 
+</em>
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>
+<em>]
+</em>
+<em>, 
+</em>
+<em>None
+</em>
+<em>]
+</em>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>Type
+</em>[
+<a class="reference internal" href="#metacellswidgets.tweaks.Tweak" title="metacellswidgets.tweaks.Tweak">
+<em>Tweak
+</em>
+</a>]
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+</section>
+
+
+           
+</div>
+          
+</div>
+          
+<footer>
+<div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        
+<a href="graphs.html" class="btn btn-neutral float-left" title="graphs" accesskey="p" rel="prev">
+<span class="fa fa-arrow-circle-left" aria-hidden="true">
+</span> Previous
+</a>
+        
+<a href="daf_widgets.html" class="btn btn-neutral float-right" title="daf_widgets" accesskey="n" rel="next">Next 
+<span class="fa fa-arrow-circle-right" aria-hidden="true">
+</span>
+</a>
+    
+</div>
+
+  
+<hr/>
+
+  
+<div role="contentinfo">
+    
+<p>&#169; Copyright 2026 Weizmann Institute of Science.
+</p>
+  
+</div>
+
+  Built with 
+<a href="https://www.sphinx-doc.org/">Sphinx
+</a> using a
+    
+<a href="https://github.com/readthedocs/sphinx_rtd_theme">theme
+</a>
+    provided by 
+<a href="https://readthedocs.org">Read the Docs
+</a>.
+   
+
+
+</footer>
+        
+</div>
+      
+</div>
+    
+</section>
+  
+</div>
+  
+<script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  
+</script> 
+
+
+</body>
+
+</html>

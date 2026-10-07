@@ -11,5 +11,6 @@ API
   editors
   forms
   graphs
+  tweaks
   daf_widgets
   anndata_widgets

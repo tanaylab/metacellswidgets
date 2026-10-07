@@ -230,6 +230,22 @@ def test_properties_through_class() -> None:
     )
 
 
+def test_lists() -> None:
+    """
+    A list is written item by item, so it may hold objects written by their code (e.g. tweaks).
+    """
+    source = "form = mw.form(daf)\nform.display(interactive=True)\n"
+    keywords = {
+        "genes": ["A", "B"],
+        "tweaks": [metacellswidgets.NCells(), metacellswidgets.GeneExpression("A")],
+        "empty": [],
+    }
+    assert _rewrite(source, keywords, namespace={"mw": metacellswidgets}) == (
+        "form = mw.form(daf, genes=['A', 'B'], tweaks=[mw.NCells(), mw.GeneExpression(gene='A')], empty=[])\n"
+        "form.display(interactive=False)\n"
+    )
+
+
 def test_properties_without_name() -> None:
     """
     A property whose class the notebook has no name for can't be written into the cell.

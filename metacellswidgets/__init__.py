@@ -23,3 +23,4 @@ from .kernel import *
 from .properties import *
 from .rewrite import *
 from .sources import *
+from .tweaks import *
