@@ -89,6 +89,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">traceback</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">typing</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
@@ -97,6 +98,9 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ipython</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span> <span class="k">as</span> <span class="n">display_in_cell</span>
@@ -122,6 +126,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceWidgets</span>
 
 <span class="n">__all__</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"Branch"</span><span class="p">,</span>
     <span class="s2">"GraphForm"</span><span class="p">,</span>
 <span class="p">]</span>
 
@@ -335,6 +340,54 @@
 <span class="c1"># ``autosize``, and it measures the cell again. The delay is a guess at how long the browser takes to give the cell its</span>
 <span class="c1"># width. A slower browser may still show a narrow figure until its first relayout (e.g. picking the lasso tool).</span>
 <span class="n">_FIGURE_RESIZE_DELAY_SECONDS</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+
+<div class="viewcode-block" id="Branch">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.Branch">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Branch</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    A node of the tree of the graphs a kind of data source offers: a ``name``, and its ``children`` in the order they</span>
+<span class="sd">    are shown. Each child is a graph class (a leaf, named by its class name) or another branch. The root of the tree is</span>
+<span class="sd">    a branch too; its name titles the tree.</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">children</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">GraphForm</span><span class="p">],</span> <span class="s2">"Branch"</span><span class="p">]]</span>
+
+<div class="viewcode-block" id="Branch.leaves">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.Branch.leaves">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">leaves</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">GraphForm</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The graph classes in the tree, in the order they are shown.</span>
+<span class="sd">        """</span>
+        <span class="n">leaves</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">GraphForm</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">Branch</span><span class="p">):</span>
+                <span class="n">leaves</span> <span class="o">+=</span> <span class="n">child</span><span class="o">.</span><span class="n">leaves</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">leaves</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">leaves</span></div>
+
+
+<div class="viewcode-block" id="Branch.visible">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.Branch.visible">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">visible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">"Branch"</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The tree as shown for the ``source``: without the graphs which don't exist for it, nor the branches left empty.</span>
+<span class="sd">        If nothing is left, ``None``.</span>
+<span class="sd">        """</span>
+        <span class="n">children</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">GraphForm</span><span class="p">],</span> <span class="n">Branch</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">Branch</span><span class="p">):</span>
+                <span class="n">visible_child</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">visible</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">visible_child</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">visible_child</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">child</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+                <span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Branch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">children</span><span class="p">)</span> <span class="k">if</span> <span class="n">children</span> <span class="k">else</span> <span class="kc">None</span></div>
+</div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_replace_figure</span><span class="p">(</span><span class="n">widget</span><span class="p">:</span> <span class="n">FigureWidget</span><span class="p">,</span> <span class="n">figure</span><span class="p">:</span> <span class="n">Figure</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>

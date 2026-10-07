@@ -69,6 +69,16 @@ def test_graphs_are_implemented(kind: Type[mw.SourceWidgets], name: str, graph_c
     assert _is_implemented(graph_class, "base_graph", kind)
 
 
+@pytest.mark.parametrize("kind", _KINDS)
+def test_trees(kind: Type[mw.SourceWidgets]) -> None:
+    """
+    Each graph appears at most once in the tree of a kind, and is offered by the kind as a method.
+    """
+    leaves = getattr(kind, "graphs").leaves()
+    assert len(set(leaves)) == len(leaves)
+    assert set(leaves) <= set(kind.offered_graphs().values())
+
+
 def test_not_vacuous() -> None:
     """
     The checks have something to check.

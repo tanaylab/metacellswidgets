@@ -89,6 +89,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArgumentEditor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">GenePicker</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamePicker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">Branch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.graphs</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneGene</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">Block</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">BooleanMask</span>
@@ -128,6 +129,9 @@
 <span class="sd">    """</span>
 
     <span class="n">gene_gene</span> <span class="o">=</span> <span class="n">graph_constructor</span><span class="p">(</span><span class="n">GeneGene</span><span class="p">)</span>
+
+    <span class="c1">#: The tree of the graphs offered, as shown in the menus.</span>
+    <span class="n">graphs</span> <span class="o">=</span> <span class="n">Branch</span><span class="p">(</span><span class="s2">"Graphs"</span><span class="p">,</span> <span class="p">[</span><span class="n">GeneGene</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">daf</span><span class="p">:</span> <span class="n">DafReader</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">daf</span> <span class="o">=</span> <span class="n">daf</span>

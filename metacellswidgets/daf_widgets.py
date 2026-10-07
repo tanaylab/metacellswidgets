@@ -16,6 +16,7 @@ from somegraphspy import VectorDataSinks
 from .editors import ArgumentEditor
 from .editors import GenePicker
 from .editors import NamePicker
+from .forms import Branch
 from .graphs import GeneGene
 from .properties import Block
 from .properties import BooleanMask
@@ -53,6 +54,9 @@ class DafWidgets(SourceWidgets):
     """
 
     gene_gene = graph_constructor(GeneGene)
+
+    #: The tree of the graphs offered, as shown in the menus.
+    graphs = Branch("Graphs", [GeneGene])
 
     def __init__(self, daf: DafReader) -> None:
         self.daf = daf

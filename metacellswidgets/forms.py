@@ -16,6 +16,7 @@ import time
 import traceback
 import typing
 from contextlib import contextmanager
+from dataclasses import dataclass
 from typing import Any
 from typing import Callable
 from typing import ClassVar
@@ -24,6 +25,9 @@ from typing import FrozenSet
 from typing import Iterator
 from typing import List
 from typing import Optional
+from typing import Sequence
+from typing import Type
+from typing import Union
 
 from IPython import get_ipython
 from IPython.display import display as display_in_cell
@@ -49,6 +53,7 @@ from .rewrite import _rewritten_cell
 from .sources import SourceWidgets
 
 __all__: List[str] = [
+    "Branch",
     "GraphForm",
 ]
 
@@ -232,6 +237,45 @@ class GraphForm(Arguments):
 # ``autosize``, and it measures the cell again. The delay is a guess at how long the browser takes to give the cell its
 # width. A slower browser may still show a narrow figure until its first relayout (e.g. picking the lasso tool).
 _FIGURE_RESIZE_DELAY_SECONDS = 0.5
+
+
+@dataclass(frozen=True)
+class Branch:
+    """
+    A node of the tree of the graphs a kind of data source offers: a ``name``, and its ``children`` in the order they
+    are shown. Each child is a graph class (a leaf, named by its class name) or another branch. The root of the tree is
+    a branch too; its name titles the tree.
+    """
+
+    name: str
+    children: Sequence[Union[Type[GraphForm], "Branch"]]
+
+    def leaves(self) -> List[Type[GraphForm]]:
+        """
+        The graph classes in the tree, in the order they are shown.
+        """
+        leaves: List[Type[GraphForm]] = []
+        for child in self.children:
+            if isinstance(child, Branch):
+                leaves += child.leaves()
+            else:
+                leaves.append(child)
+        return leaves
+
+    def visible(self, source: SourceWidgets) -> Optional["Branch"]:
+        """
+        The tree as shown for the ``source``: without the graphs which don't exist for it, nor the branches left empty.
+        If nothing is left, ``None``.
+        """
+        children: List[Union[Type[GraphForm], Branch]] = []
+        for child in self.children:
+            if isinstance(child, Branch):
+                visible_child = child.visible(source)
+                if visible_child is not None:
+                    children.append(visible_child)
+            elif child.exists(source):
+                children.append(child)
+        return Branch(self.name, children) if children else None
 
 
 def _replace_figure(widget: FigureWidget, figure: Figure) -> None:

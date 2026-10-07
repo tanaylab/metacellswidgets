@@ -18,6 +18,7 @@ from somegraphspy import VectorDataSinks
 
 from .editors import ArgumentEditor
 from .editors import GenePicker
+from .forms import Branch
 from .graphs import GeneGene
 from .properties import GeneExpression
 from .properties import Type
@@ -37,6 +38,9 @@ class AnnDataWidgets(SourceWidgets):
     """
 
     gene_gene = graph_constructor(GeneGene)
+
+    #: The tree of the graphs offered, as shown in the menus.
+    graphs = Branch("Graphs", [GeneGene])
 
     def __init__(self, adata: AnnData, *, type_property: str, type_colors_csv: str) -> None:
         self.adata = adata
