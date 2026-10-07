@@ -77,21 +77,87 @@
 <span class="sd">Each kind registers, per axis of its data, the properties a form may offer for that axis. The properties a slot</span>
 <span class="sd">offers for an actual data source are those registered for its kind and axis, which suit the slot, and which the data</span>
 <span class="sd">source has.</span>
+
+<span class="sd">Each kind also offers its graphs as methods, e.g. ``DafWidgets(daf).gene_gene(...)``, using ``graph_constructor``.</span>
 <span class="sd">"""</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Concatenate</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generic</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParamSpec</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Set</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TypeVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">overload</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">Property</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">Slot</span>
 
 <span class="n">__all__</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"SourceWidgets"</span><span class="p">,</span>
+    <span class="s2">"graph_constructor"</span><span class="p">,</span>
 <span class="p">]</span>
+
+<span class="n">_Parameters</span> <span class="o">=</span> <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">"_Parameters"</span><span class="p">)</span>
+<span class="n">_Graph</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"_Graph"</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_GraphConstructor</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">_Parameters</span><span class="p">,</span> <span class="n">_Graph</span><span class="p">]):</span>
+    <span class="c1"># Constructs a graph class with the data source it is read through, followed by the given arguments.</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_class</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="n">Concatenate</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">_Parameters</span><span class="p">],</span> <span class="n">_Graph</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph_class</span> <span class="o">=</span> <span class="n">graph_class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s2">""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__set_name__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="n">owner</span><span class="p">:</span> <span class="nb">type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"_GraphConstructor[_Parameters, _Graph]"</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="s2">"SourceWidgets"</span><span class="p">,</span> <span class="n">owner</span><span class="p">:</span> <span class="nb">type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="n">_Parameters</span><span class="p">,</span> <span class="n">_Graph</span><span class="p">]:</span> <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__get__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">"SourceWidgets"</span><span class="p">],</span> <span class="n">owner</span><span class="p">:</span> <span class="nb">type</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="s2">"_GraphConstructor[_Parameters, _Graph]"</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="n">_Parameters</span><span class="p">,</span> <span class="n">_Graph</span><span class="p">]]:</span>
+        <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="n">graph_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_class</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">construct</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">_Parameters</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_Parameters</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Graph</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">graph_class</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># So that completion and help show the graph's parameters and documentation.</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">graph_class</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">construct</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+        <span class="n">construct</span><span class="o">.</span><span class="vm">__qualname__</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">owner</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">construct</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">graph_class</span><span class="o">.</span><span class="vm">__doc__</span>
+        <span class="n">signature</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">graph_class</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span> <span class="n">return_annotation</span><span class="o">=</span><span class="n">graph_class</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">construct</span><span class="p">,</span> <span class="s2">"__signature__"</span><span class="p">,</span> <span class="n">signature</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">construct</span>
+
+
+<div class="viewcode-block" id="graph_constructor">
+<a class="viewcode-back" href="../../sources.html#metacellswidgets.sources.graph_constructor">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">graph_constructor</span><span class="p">(</span>
+    <span class="n">graph_class</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="n">Concatenate</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">_Parameters</span><span class="p">],</span> <span class="n">_Graph</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_GraphConstructor</span><span class="p">[</span><span class="n">_Parameters</span><span class="p">,</span> <span class="n">_Graph</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Offer the ``graph_class`` as a method of a kind of data source, e.g. ``gene_gene = graph_constructor(GeneGene)``.</span>
+<span class="sd">    Then ``source.gene_gene(...)`` is ``GeneGene(source, ...)``. The method takes the parameters of the class's</span>
+<span class="sd">    constructor after the data source, and has the class's documentation.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_GraphConstructor</span><span class="p">(</span><span class="n">graph_class</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="SourceWidgets">

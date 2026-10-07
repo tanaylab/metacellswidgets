@@ -4,21 +4,84 @@ Kinds of data sources. Each kind is a class wrapping its data, such as a single 
 Each kind registers, per axis of its data, the properties a form may offer for that axis. The properties a slot
 offers for an actual data source are those registered for its kind and axis, which suit the slot, and which the data
 source has.
+
+Each kind also offers its graphs as methods, e.g. ``DafWidgets(daf).gene_gene(...)``, using ``graph_constructor``.
 """
 
+import inspect
+from typing import Any
+from typing import Callable
 from typing import ClassVar
+from typing import Concatenate
 from typing import Dict
+from typing import Generic
 from typing import List
+from typing import Optional
+from typing import ParamSpec
 from typing import Sequence
 from typing import Set
 from typing import Type
+from typing import TypeVar
+from typing import Union
+from typing import overload
 
 from .properties import Property
 from .properties import Slot
 
 __all__: List[str] = [
     "SourceWidgets",
+    "graph_constructor",
 ]
+
+_Parameters = ParamSpec("_Parameters")
+_Graph = TypeVar("_Graph")
+
+
+class _GraphConstructor(Generic[_Parameters, _Graph]):
+    # Constructs a graph class with the data source it is read through, followed by the given arguments.
+
+    def __init__(self, graph_class: Callable[Concatenate[Any, _Parameters], _Graph]) -> None:
+        self._graph_class = graph_class
+        self._name = ""
+
+    def __set_name__(self, owner: type, name: str) -> None:
+        self._name = name
+
+    @overload
+    def __get__(self, source: None, owner: type) -> "_GraphConstructor[_Parameters, _Graph]": ...
+
+    @overload
+    def __get__(self, source: "SourceWidgets", owner: type) -> Callable[_Parameters, _Graph]: ...
+
+    def __get__(
+        self, source: Optional["SourceWidgets"], owner: type
+    ) -> Union["_GraphConstructor[_Parameters, _Graph]", Callable[_Parameters, _Graph]]:
+        if source is None:
+            return self
+        graph_class = self._graph_class
+
+        def construct(*args: _Parameters.args, **kwargs: _Parameters.kwargs) -> _Graph:
+            return graph_class(source, *args, **kwargs)
+
+        # So that completion and help show the graph's parameters and documentation.
+        parameters = list(inspect.signature(graph_class).parameters.values())[1:]
+        construct.__name__ = self._name
+        construct.__qualname__ = f"{owner.__name__}.{self._name}"
+        construct.__doc__ = graph_class.__doc__
+        signature = inspect.signature(graph_class).replace(parameters=parameters, return_annotation=graph_class)
+        setattr(construct, "__signature__", signature)
+        return construct
+
+
+def graph_constructor(
+    graph_class: Callable[Concatenate[Any, _Parameters], _Graph],
+) -> _GraphConstructor[_Parameters, _Graph]:
+    """
+    Offer the ``graph_class`` as a method of a kind of data source, e.g. ``gene_gene = graph_constructor(GeneGene)``.
+    Then ``source.gene_gene(...)`` is ``GeneGene(source, ...)``. The method takes the parameters of the class's
+    constructor after the data source, and has the class's documentation.
+    """
+    return _GraphConstructor(graph_class)
 
 
 class SourceWidgets:

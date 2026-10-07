@@ -2,6 +2,7 @@
 Test the base of the kinds of data sources.
 """
 
+import inspect
 from typing import Any
 from typing import List
 from typing import Set
@@ -14,6 +15,7 @@ from metacellswidgets.properties import Shape
 from metacellswidgets.properties import Slot
 from metacellswidgets.properties import implements
 from metacellswidgets.sources import SourceWidgets
+from metacellswidgets.sources import graph_constructor
 
 
 class _Toys(SourceWidgets):
@@ -134,3 +136,47 @@ def test_unimplemented() -> None:
     with pytest.raises(TypeError, match="_Others"):
         _Category().fill(_Others(), sinks, "cell")
     assert _Category.editor(_Others(), "cell", None) is None
+
+
+class _Chart:
+    """
+    A chart of some ``things``.
+    """
+
+    def __init__(self, source: SourceWidgets, *, things: str, size: int = 1) -> None:
+        self.source = source
+        self.things = things
+        self.size = size
+
+
+class _Charting(_Toys):
+    """
+    A kind offering a chart.
+    """
+
+    chart = graph_constructor(_Chart)
+
+
+def test_graph_constructor() -> None:
+    """
+    A graph constructor constructs the graph with the data source, followed by the given arguments.
+    """
+    source = _Charting(set())
+    chart = source.chart(things="cells", size=2)
+    assert isinstance(chart, _Chart)
+    assert chart.source is source
+    assert chart.things == "cells"
+    assert chart.size == 2
+
+
+def test_graph_constructor_help() -> None:
+    """
+    The method has the name, the parameters (without the data source) and the documentation of the graph.
+    """
+    method = _Charting(set()).chart
+    assert method.__name__ == "chart"
+    assert method.__qualname__ == "_Charting.chart"
+    assert method.__doc__ == _Chart.__doc__
+    signature = inspect.signature(method)
+    assert list(signature.parameters) == ["things", "size"]
+    assert signature.return_annotation is _Chart

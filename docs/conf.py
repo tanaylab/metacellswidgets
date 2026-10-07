@@ -43,11 +43,12 @@ nitpick_ignore = [
     ('py:class', 'numpy.float64'),
     ('py:class', 'numpy.ndarray'),
     ('py:class', 'plotly.graph_objs._figure.Figure'),
-    ('py:class', 'metacellswidgets.properties._Function'),
 ]
-# The types of the packages this one builds on are documented there, not here.
+# The types of the packages this one builds on are documented there, not here. Private types (e.g. the type variables
+# of generic signatures) are not documented at all.
 nitpick_ignore_regex = [
     (r'py:class', r'(anndata|dafpy|ipywidgets|metacellsgraphspy|pandas|somegraphspy)\..*'),
+    (r'py:class', r'(~|metacellswidgets\.\w+\.)_\w+'),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
