@@ -5,6 +5,7 @@ A form is created by a method of a kind of data source, e.g. ``mw.DafWidgets(daf
 Displaying it shows its graph.
 """
 
+from typing import Any
 from typing import ClassVar
 from typing import FrozenSet
 from typing import List
@@ -13,6 +14,7 @@ from IPython.display import display as display_in_cell
 from somegraphspy import Graph
 
 from .arguments import Arguments
+from .properties import _give_own_dispatchers
 from .sources import SourceWidgets
 
 __all__: List[str] = [
@@ -30,12 +32,32 @@ class GraphForm(Arguments):
     # not as an argument.
     _not_arguments: ClassVar[FrozenSet[str]] = frozenset(["source"])
 
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        super().__init_subclass__(**kwargs)
+        _give_own_dispatchers(cls, GraphForm, ("exists", "base_graph"))
+
     def __init__(self, source: SourceWidgets) -> None:
         self.source = source
 
+    @classmethod
+    def exists(cls, source: SourceWidgets) -> bool:  # pylint: disable=unused-argument
+        """
+        Whether the ``source`` has the data for this graph. Each kind of data source implements this for the graphs it
+        offers; for any other, the graph does not exist.
+        """
+        return False
+
+    def base_graph(self, source: SourceWidgets) -> Graph:
+        """
+        The graph built from the data of the ``source``, before its slots (e.g. its colors) are filled. Each kind of
+        data source implements this for the graphs it offers; for any other, this is an error.
+        """
+        raise TypeError(f"{type(self).__name__}.base_graph is not implemented for: {type(source).__name__}")
+
     def graph(self) -> Graph:
         """
-        The graph, built from the data source and the arguments.
+        The graph, built from the data source and the arguments: the base graph, with its slots filled. Each graph
+        implements this, according to its slots.
         """
         raise NotImplementedError(f"{type(self).__name__}.graph")
 

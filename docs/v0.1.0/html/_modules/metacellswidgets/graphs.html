@@ -78,7 +78,6 @@
 <span class="sd">which each kind implements in its own module (see :py:func:`~metacellswidgets.properties.implements`).</span>
 <span class="sd">"""</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 
@@ -118,21 +117,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">colors</span> <span class="o">=</span> <span class="n">colors</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span> <span class="o">=</span> <span class="n">sizes</span>
 
-<div class="viewcode-block" id="GeneGene.points">
-<a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GeneGene.points">[docs]</a>
-    <span class="nd">@functools</span><span class="o">.</span><span class="n">singledispatchmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PointsGraph</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        The graph of the expression of the two genes, before coloring or sizing the points. Each kind of data source</span>
-<span class="sd">        offering this graph implements this.</span>
-<span class="sd">        """</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"GeneGene.points is not implemented for: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
-
-
 <div class="viewcode-block" id="GeneGene.graph">
 <a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GeneGene.graph">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PointsGraph</span><span class="p">:</span>
-        <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">PointsGraph</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">colors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">points_colors_vector_fields</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

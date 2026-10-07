@@ -10,6 +10,7 @@ import metacellswidgets as mw
 
 from .test_anndata_widgets import _source
 from .test_daf_widgets import _full_daf
+from .test_daf_widgets import _sparse_daf
 
 
 def test_gene_gene_arguments() -> None:
@@ -51,6 +52,15 @@ def test_gene_gene_of_anndata(tmp_path: Path) -> None:
     graph = _source(tmp_path).gene_gene(x_gene="A", y_gene="B", colors=mw.Type()).graph()
     assert graph.data.points.colors.vector is not None
     assert list(graph.data.points.colors.vector) == ["T1", "T2", "T1"]
+
+
+def test_gene_gene_exists(tmp_path: Path) -> None:
+    """
+    The graph exists for a data source with the expression of genes.
+    """
+    assert mw.GeneGene.exists(mw.DafWidgets(_full_daf()))
+    assert not mw.GeneGene.exists(mw.DafWidgets(_sparse_daf()))
+    assert mw.GeneGene.exists(_source(tmp_path))
 
 
 def test_display() -> None:

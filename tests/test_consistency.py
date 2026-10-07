@@ -1,5 +1,5 @@
 """
-Test that each kind of data source implements every property it registers.
+Test that each kind of data source implements every property it registers, and every graph it offers.
 """
 
 from typing import List
@@ -25,11 +25,18 @@ def _registrations() -> List[Tuple[Type[mw.SourceWidgets], str, Type[mw.Property
     ]
 
 
-def _is_implemented(property_class: Type[mw.Property], method: str, kind: Type[mw.SourceWidgets]) -> bool:
+def _offerings() -> List[Tuple[Type[mw.SourceWidgets], str, Type[mw.GraphForm]]]:
     """
-    Whether the ``kind`` has an implementation of its own of the ``method`` of the ``property_class``.
+    Each (kind, method name, graph) offered by the kinds.
     """
-    dispatcher = property_class.__dict__[method].dispatcher
+    return [(kind, name, graph_class) for kind in _KINDS for name, graph_class in kind.offered_graphs().items()]
+
+
+def _is_implemented(owner: type, method: str, kind: Type[mw.SourceWidgets]) -> bool:
+    """
+    Whether the ``kind`` has an implementation of its own of the dispatched ``method`` of the ``owner`` class.
+    """
+    dispatcher = owner.__dict__[method].dispatcher
     return dispatcher.dispatch(kind) is not dispatcher.dispatch(object)
 
 
@@ -41,7 +48,7 @@ def _has_arguments(property_class: Type[mw.Property]) -> bool:
 
 
 @pytest.mark.parametrize("kind, axis, property_class", _registrations())
-def test_implemented(kind: Type[mw.SourceWidgets], axis: str, property_class: Type[mw.Property]) -> None:
+def test_properties_are_implemented(kind: Type[mw.SourceWidgets], axis: str, property_class: Type[mw.Property]) -> None:
     """
     A registered property has the implementations the kind needs.
     """
@@ -52,9 +59,21 @@ def test_implemented(kind: Type[mw.SourceWidgets], axis: str, property_class: Ty
         assert _is_implemented(property_class, "editor", kind)
 
 
-def test_some_have_arguments() -> None:
+@pytest.mark.parametrize("kind, name, graph_class", _offerings())
+def test_graphs_are_implemented(kind: Type[mw.SourceWidgets], name: str, graph_class: Type[mw.GraphForm]) -> None:
     """
-    The check of the editors is not vacuous.
+    An offered graph has the implementations the kind needs.
+    """
+    assert name
+    assert _is_implemented(graph_class, "exists", kind)
+    assert _is_implemented(graph_class, "base_graph", kind)
+
+
+def test_not_vacuous() -> None:
+    """
+    The checks have something to check.
     """
     assert _has_arguments(mw.GeneExpression)
     assert not _has_arguments(mw.Type)
+    assert mw.DafWidgets.offered_graphs() == {"gene_gene": mw.GeneGene}
+    assert mw.AnnDataWidgets.offered_graphs() == {"gene_gene": mw.GeneGene}

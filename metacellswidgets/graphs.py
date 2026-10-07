@@ -5,7 +5,6 @@ The part of a graph which differs between kinds (e.g. building its base graph fr
 which each kind implements in its own module (see :py:func:`~metacellswidgets.properties.implements`).
 """
 
-import functools
 from typing import List
 from typing import Optional
 
@@ -43,16 +42,9 @@ class GeneGene(GraphForm):
         self.colors = colors
         self.sizes = sizes
 
-    @functools.singledispatchmethod
-    def points(self, source: SourceWidgets) -> PointsGraph:
-        """
-        The graph of the expression of the two genes, before coloring or sizing the points. Each kind of data source
-        offering this graph implements this.
-        """
-        raise TypeError(f"GeneGene.points is not implemented for: {type(source).__name__}")
-
     def graph(self) -> PointsGraph:
-        graph = self.points(self.source)
+        graph = self.base_graph(self.source)
+        assert isinstance(graph, PointsGraph)
         if self.colors is not None:
             self.colors.fill(self.source, graph.points_colors_vector_fields(), self.axis)
         if self.sizes is not None:

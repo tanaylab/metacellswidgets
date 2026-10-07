@@ -78,6 +78,7 @@
 <span class="sd">Displaying it shows its graph.</span>
 <span class="sd">"""</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenSet</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
@@ -86,6 +87,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.arguments</span><span class="w"> </span><span class="kn">import</span> <span class="n">Arguments</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">_give_own_dispatchers</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceWidgets</span>
 
 <span class="n">__all__</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
@@ -105,14 +107,40 @@
     <span class="c1"># not as an argument.</span>
     <span class="n">_not_arguments</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">FrozenSet</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"source"</span><span class="p">])</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">_give_own_dispatchers</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">GraphForm</span><span class="p">,</span> <span class="p">(</span><span class="s2">"exists"</span><span class="p">,</span> <span class="s2">"base_graph"</span><span class="p">))</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">source</span>
+
+<div class="viewcode-block" id="GraphForm.exists">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.exists">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">exists</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Whether the ``source`` has the data for this graph. Each kind of data source implements this for the graphs it</span>
+<span class="sd">        offers; for any other, the graph does not exist.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="GraphForm.base_graph">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.base_graph">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">base_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Graph</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The graph built from the data of the ``source``, before its slots (e.g. its colors) are filled. Each kind of</span>
+<span class="sd">        data source implements this for the graphs it offers; for any other, this is an error.</span>
+<span class="sd">        """</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.base_graph is not implemented for: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="GraphForm.graph">
 <a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.graph">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Graph</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        The graph, built from the data source and the arguments.</span>
+<span class="sd">        The graph, built from the data source and the arguments: the base graph, with its slots filled. Each graph</span>
+<span class="sd">        implements this, according to its slots.</span>
 <span class="sd">        """</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.graph"</span><span class="p">)</span></div>
 

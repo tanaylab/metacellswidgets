@@ -59,6 +59,9 @@ class DafWidgets(SourceWidgets):
         self._gene_choices: Dict[bool, List[Tuple[str, str]]] = {}
         self._boolean_vectors: Dict[str, List[str]] = {}
 
+    def has_axis(self, axis: str) -> bool:
+        return self.daf.has_axis(axis)
+
     def gene_choices(self, *, markers_only: bool = False) -> List[Tuple[str, str]]:
         """
         The (label, name) of each gene, in the order of the gene axis. Excluded genes are never included. If
@@ -234,8 +237,13 @@ def _fill_global_flow_order(_self: GlobalFlowOrder, source: DafWidgets, sinks: V
     mg.fill_global_flow_order(sinks, source.daf, axis=axis)
 
 
-@implements(GeneGene.points, DafWidgets)
-def _gene_gene_points(self: GeneGene, source: DafWidgets) -> PointsGraph:
+@implements(GeneGene.exists, DafWidgets)
+def _has_gene_gene(_cls: type, source: DafWidgets) -> bool:
+    return any(GeneExpression.exists(source, axis) for axis in ("metacell", "block"))
+
+
+@implements(GeneGene.base_graph, DafWidgets)
+def _gene_gene_base_graph(self: GeneGene, source: DafWidgets) -> PointsGraph:
     return mg.gene_gene_graph(source.daf, axis=self.axis, x_gene=self.x_gene, y_gene=self.y_gene)
 
 

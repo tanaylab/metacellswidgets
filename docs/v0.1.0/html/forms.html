@@ -137,6 +137,24 @@
 <ul>
 
 <li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.exists">
+<code class="docutils literal notranslate">
+<span class="pre">GraphForm.exists()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.base_graph">
+<code class="docutils literal notranslate">
+<span class="pre">GraphForm.base_graph()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
 <a class="reference internal" href="#metacellswidgets.forms.GraphForm.graph">
 <code class="docutils literal notranslate">
 <span class="pre">GraphForm.graph()
@@ -342,6 +360,162 @@ graph’s arguments (see
 
 <dl class="py method">
 
+<dt class="sig sig-object py" id="metacellswidgets.forms.GraphForm.exists">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/forms.html#GraphForm.exists">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.forms.GraphForm.exists" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Whether the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code> has the data for this graph. Each kind of data source implements this for the graphs it
+offers; for any other, the graph does not exist.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>bool
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.forms.GraphForm.base_graph">
+
+<span class="sig-name descname">
+<span class="pre">base_graph
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/forms.html#GraphForm.base_graph">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.forms.GraphForm.base_graph" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The graph built from the data of the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code>, before its slots (e.g. its colors) are filled. Each kind of
+data source implements this for the graphs it offers; for any other, this is an error.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>Graph
+</em>
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
 <dt class="sig sig-object py" id="metacellswidgets.forms.GraphForm.graph">
 
 <span class="sig-name descname">
@@ -363,7 +537,8 @@ graph’s arguments (see
 </dt>
 
 <dd>
-<p>The graph, built from the data source and the arguments.
+<p>The graph, built from the data source and the arguments: the base graph, with its slots filled. Each graph
+implements this, according to its slots.
 </p>
 
 <dl class="field-list simple">

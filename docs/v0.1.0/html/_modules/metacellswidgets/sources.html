@@ -114,7 +114,7 @@
     <span class="c1"># Constructs a graph class with the data source it is read through, followed by the given arguments.</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_class</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="n">Concatenate</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">_Parameters</span><span class="p">],</span> <span class="n">_Graph</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_graph_class</span> <span class="o">=</span> <span class="n">graph_class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph_class</span> <span class="o">=</span> <span class="n">graph_class</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s2">""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__set_name__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -131,7 +131,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="s2">"_GraphConstructor[_Parameters, _Graph]"</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="n">_Parameters</span><span class="p">,</span> <span class="n">_Graph</span><span class="p">]]:</span>
         <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
-        <span class="n">graph_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_class</span>
+        <span class="n">graph_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_class</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">construct</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">_Parameters</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_Parameters</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Graph</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">graph_class</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -224,6 +224,40 @@
             <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">SourceWidgets</span><span class="p">):</span>
                 <span class="n">registered</span> <span class="o">+=</span> <span class="n">kind</span><span class="o">.</span><span class="n">_properties_per_axis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="p">[])</span>
         <span class="k">return</span> <span class="n">registered</span></div>
+
+
+<div class="viewcode-block" id="SourceWidgets.offered_graphs">
+<a class="viewcode-back" href="../../sources.html#metacellswidgets.sources.SourceWidgets.offered_graphs">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">offered_graphs</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The graph classes this kind of data source offers as methods (using ``graph_constructor``), including those of</span>
+<span class="sd">        its base classes, by the names of the methods.</span>
+<span class="sd">        """</span>
+        <span class="n">graphs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__mro__</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kind</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">_GraphConstructor</span><span class="p">):</span>
+                    <span class="n">graphs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">graph_class</span>
+        <span class="k">return</span> <span class="n">graphs</span></div>
+
+
+<div class="viewcode-block" id="SourceWidgets.has_axis">
+<a class="viewcode-back" href="../../sources.html#metacellswidgets.sources.SourceWidgets.has_axis">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Whether this data source has entries of the ``axis``. Each kind of data source implements this.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="SourceWidgets.axes">
+<a class="viewcode-back" href="../../sources.html#metacellswidgets.sources.SourceWidgets.axes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">axes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The axes this data source has, of those with registered properties for its kind, sorted.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">axis</span> <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">registered_axes</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_axis</span><span class="p">(</span><span class="n">axis</span><span class="p">)]</span></div>
 
 
 <div class="viewcode-block" id="SourceWidgets.properties">

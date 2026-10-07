@@ -41,7 +41,7 @@ class _GraphConstructor(Generic[_Parameters, _Graph]):
     # Constructs a graph class with the data source it is read through, followed by the given arguments.
 
     def __init__(self, graph_class: Callable[Concatenate[Any, _Parameters], _Graph]) -> None:
-        self._graph_class = graph_class
+        self.graph_class = graph_class
         self._name = ""
 
     def __set_name__(self, owner: type, name: str) -> None:
@@ -58,7 +58,7 @@ class _GraphConstructor(Generic[_Parameters, _Graph]):
     ) -> Union["_GraphConstructor[_Parameters, _Graph]", Callable[_Parameters, _Graph]]:
         if source is None:
             return self
-        graph_class = self._graph_class
+        graph_class = self.graph_class
 
         def construct(*args: _Parameters.args, **kwargs: _Parameters.kwargs) -> _Graph:
             return graph_class(source, *args, **kwargs)
@@ -138,6 +138,31 @@ class SourceWidgets:
             if issubclass(kind, SourceWidgets):
                 registered += kind._properties_per_axis.get(axis, [])
         return registered
+
+    @classmethod
+    def offered_graphs(cls) -> Dict[str, Any]:
+        """
+        The graph classes this kind of data source offers as methods (using ``graph_constructor``), including those of
+        its base classes, by the names of the methods.
+        """
+        graphs: Dict[str, Any] = {}
+        for kind in reversed(cls.__mro__):
+            for name, value in kind.__dict__.items():
+                if isinstance(value, _GraphConstructor):
+                    graphs[name] = value.graph_class
+        return graphs
+
+    def has_axis(self, axis: str) -> bool:  # pylint: disable=unused-argument
+        """
+        Whether this data source has entries of the ``axis``. Each kind of data source implements this.
+        """
+        return False
+
+    def axes(self) -> List[str]:
+        """
+        The axes this data source has, of those with registered properties for its kind, sorted.
+        """
+        return [axis for axis in self.registered_axes() if self.has_axis(axis)]
 
     def properties(self, *, axis: str, slot: Slot) -> List[Type[Property]]:
         """

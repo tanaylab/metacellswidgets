@@ -15,6 +15,7 @@ from typing import FrozenSet
 from typing import List
 from typing import Mapping
 from typing import Optional
+from typing import Sequence
 from typing import TypeVar
 
 from ipywidgets import Widget  # type: ignore
@@ -110,6 +111,15 @@ _SLOT_ELTYPES: Mapping[Slot, FrozenSet[Eltype]] = {
 }
 
 
+def _give_own_dispatchers(cls: type, base: type, names: Sequence[str]) -> None:
+    # Give a subclass ``cls`` dispatchers of its own for the methods with the ``names`` of the ``base`` class, which
+    # each kind of data source implements, so that registering a kind's implementation of the methods of one subclass
+    # doesn't affect any other. The base's methods are the implementations for any kind which registers none.
+    for name in names:
+        if name not in cls.__dict__:
+            setattr(cls, name, functools.singledispatchmethod(base.__dict__[name]))
+
+
 class Property(Arguments):
     """
     The base class of all properties. Its instance holds the values of its arguments (see
@@ -124,11 +134,7 @@ class Property(Arguments):
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
-        # Each property gets dispatchers of its own for the methods each kind of data source implements, so that
-        # registering a kind's implementation of one property doesn't affect any other.
-        for name in ("exists", "fill", "editor"):
-            if name not in cls.__dict__:
-                setattr(cls, name, functools.singledispatchmethod(Property.__dict__[name]))
+        _give_own_dispatchers(cls, Property, ("exists", "fill", "editor"))
 
     @classmethod
     def suits(cls, slot: Slot) -> bool:

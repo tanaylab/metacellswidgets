@@ -119,6 +119,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">type_colors_csv</span> <span class="o">=</span> <span class="n">type_colors_csv</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gene_choices</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
 
+<div class="viewcode-block" id="AnnDataWidgets.has_axis">
+<a class="viewcode-back" href="../../anndata_widgets.html#metacellswidgets.anndata_widgets.AnnDataWidgets.has_axis">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">"metacell"</span></div>
+
+
 <div class="viewcode-block" id="AnnDataWidgets.gene_choices">
 <a class="viewcode-back" href="../../anndata_widgets.html#metacellswidgets.anndata_widgets.AnnDataWidgets.gene_choices">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">gene_choices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">markers_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
@@ -173,8 +179,13 @@
     <span class="k">return</span> <span class="n">ArgumentEditor</span><span class="p">(</span><span class="n">GenePicker</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">gene</span><span class="p">),</span> <span class="n">GeneExpression</span><span class="p">)</span>
 
 
-<span class="nd">@implements</span><span class="p">(</span><span class="n">GeneGene</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">AnnDataWidgets</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">_gene_gene_points</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">GeneGene</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">AnnDataWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PointsGraph</span><span class="p">:</span>
+<span class="nd">@implements</span><span class="p">(</span><span class="n">GeneGene</span><span class="o">.</span><span class="n">exists</span><span class="p">,</span> <span class="n">AnnDataWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_gene_gene</span><span class="p">(</span><span class="n">_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">_source</span><span class="p">:</span> <span class="n">AnnDataWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">GeneGene</span><span class="o">.</span><span class="n">base_graph</span><span class="p">,</span> <span class="n">AnnDataWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_gene_gene_base_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">GeneGene</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">AnnDataWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PointsGraph</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">mg</span><span class="o">.</span><span class="n">ad_gene_gene_graph</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">adata</span><span class="p">,</span> <span class="n">x_gene</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">x_gene</span><span class="p">,</span> <span class="n">y_gene</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">y_gene</span><span class="p">)</span>
 
 
