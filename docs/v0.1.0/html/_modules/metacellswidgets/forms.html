@@ -76,15 +76,26 @@
 
 <span class="sd">A form is created by a method of a kind of data source, e.g. ``mw.DafWidgets(daf).gene_gene(x_gene="Foxa1", ...)``.</span>
 <span class="sd">Displaying it shows its graph.</span>
+
+<span class="sd">A form's editor is made of widgets, each tied to one of its arguments (see :py:meth:`GraphForm.bind`). Changing a</span>
+<span class="sd">widget changes the argument and asks for the graph to be redrawn. Requests only mark the form; the graph is redrawn</span>
+<span class="sd">once for all the requests pending, when the interactive display polls the form.</span>
 <span class="sd">"""</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">typing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenSet</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span> <span class="k">as</span> <span class="n">display_in_cell</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.arguments</span><span class="w"> </span><span class="kn">import</span> <span class="n">Arguments</span>
@@ -119,6 +130,9 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bound</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Widget</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_dirty</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_held_redraws</span> <span class="o">=</span> <span class="mi">0</span>
 
 <div class="viewcode-block" id="GraphForm.exists">
 <a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.exists">[docs]</a>
@@ -150,6 +164,78 @@
 <span class="sd">        """</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.graph"</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="GraphForm.is_complete">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.is_complete">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_complete</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Whether the arguments are complete enough to draw the graph: no argument whose type doesn't allow ``None`` is</span>
+<span class="sd">        ``None``. While editing, such an argument may be missing (e.g. a gene not yet picked). A graph with another</span>
+<span class="sd">        rule overrides this.</span>
+<span class="sd">        """</span>
+        <span class="n">hints</span> <span class="o">=</span> <span class="n">typing</span><span class="o">.</span><span class="n">get_type_hints</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">typing</span><span class="o">.</span><span class="n">get_args</span><span class="p">(</span><span class="n">hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GraphForm.editor">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.editor">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Widget</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The widgets for editing the arguments, each tied to its argument by</span>
+<span class="sd">        :py:meth:`~metacellswidgets.forms.GraphForm.bind`. Each graph implements this.</span>
+<span class="sd">        """</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.editor"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GraphForm.bind">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.bind">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">widgets</span><span class="p">:</span> <span class="n">Widget</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Tie each of the arguments to the ``widgets`` with its name. When the ``value`` of a widget changes, so does the</span>
+<span class="sd">        argument, and the graph is redrawn.</span>
+<span class="sd">        """</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">widget</span> <span class="ow">in</span> <span class="n">widgets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bound</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">widget</span>
+            <span class="n">widget</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_bound_change</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_bound_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">request_redraw</span><span class="p">()</span>
+
+<div class="viewcode-block" id="GraphForm.request_redraw">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.request_redraw">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">request_redraw</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Ask for the graph to be redrawn. Any number of requests made before the graph is redrawn give one redraw.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_dirty</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="GraphForm.hold_redraw">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.hold_redraw">[docs]</a>
+    <span class="nd">@contextmanager</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hold_redraw</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Hold the redrawing of the graph, e.g. while changing several arguments together, until the end of this context.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_held_redraws</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_held_redraws</span> <span class="o">-=</span> <span class="mi">1</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_poll_redraw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redraw</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Graph</span><span class="p">],</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># If a redraw was requested, it isn't held, and the arguments are complete, give the graph to ``redraw``. This</span>
+        <span class="c1"># runs on the main thread (which runs Julia), polled by the interactive display.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_dirty</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_held_redraws</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_complete</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_is_dirty</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">redraw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">())</span>
 
 <div class="viewcode-block" id="GraphForm.display">
 <a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.display">[docs]</a>

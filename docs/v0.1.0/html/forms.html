@@ -164,6 +164,51 @@
 </li>
 
 <li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.is_complete">
+<code class="docutils literal notranslate">
+<span class="pre">GraphForm.is_complete()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.editor">
+<code class="docutils literal notranslate">
+<span class="pre">GraphForm.editor()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.bind">
+<code class="docutils literal notranslate">
+<span class="pre">GraphForm.bind()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.request_redraw">
+<code class="docutils literal notranslate">
+<span class="pre">GraphForm.request_redraw()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.hold_redraw">
+<code class="docutils literal notranslate">
+<span class="pre">GraphForm.hold_redraw()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
 <a class="reference internal" href="#metacellswidgets.forms.GraphForm.display">
 <code class="docutils literal notranslate">
 <span class="pre">GraphForm.display()
@@ -280,6 +325,17 @@
 </span>
 </code>.
 Displaying it shows its graph.
+</p>
+
+<p>A form’s editor is made of widgets, each tied to one of its arguments (see 
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.bind" title="metacellswidgets.forms.GraphForm.bind">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">GraphForm.bind()
+</span>
+</code>
+</a>). Changing a
+widget changes the argument and asks for the graph to be redrawn. Requests only mark the form; the graph is redrawn
+once for all the requests pending, when the interactive display polls the form.
 </p>
 
 <dl class="py class">
@@ -552,6 +608,286 @@ implements this, according to its slots.
 <p>
 <em>Graph
 </em>
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.forms.GraphForm.is_complete">
+
+<span class="sig-name descname">
+<span class="pre">is_complete
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/forms.html#GraphForm.is_complete">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.forms.GraphForm.is_complete" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Whether the arguments are complete enough to draw the graph: no argument whose type doesn’t allow 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> is
+
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code>. While editing, such an argument may be missing (e.g. a gene not yet picked). A graph with another
+rule overrides this.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>bool
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.forms.GraphForm.editor">
+
+<span class="sig-name descname">
+<span class="pre">editor
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/forms.html#GraphForm.editor">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.forms.GraphForm.editor" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The widgets for editing the arguments, each tied to its argument by
+
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.bind" title="metacellswidgets.forms.GraphForm.bind">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">bind()
+</span>
+</code>
+</a>. Each graph implements this.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<em>Widget
+</em>
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.forms.GraphForm.bind">
+
+<span class="sig-name descname">
+<span class="pre">bind
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">**
+</span>
+</span>
+<span class="n">
+<span class="pre">widgets
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/forms.html#GraphForm.bind">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.forms.GraphForm.bind" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Tie each of the arguments to the 
+<code class="docutils literal notranslate">
+<span class="pre">widgets
+</span>
+</code> with its name. When the 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> of a widget changes, so does the
+argument, and the graph is redrawn.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>widgets
+</strong> (
+<em>Widget
+</em>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>None
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.forms.GraphForm.request_redraw">
+
+<span class="sig-name descname">
+<span class="pre">request_redraw
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/forms.html#GraphForm.request_redraw">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.forms.GraphForm.request_redraw" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Ask for the graph to be redrawn. Any number of requests made before the graph is redrawn give one redraw.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>None
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.forms.GraphForm.hold_redraw">
+
+<span class="sig-name descname">
+<span class="pre">hold_redraw
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/forms.html#GraphForm.hold_redraw">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.forms.GraphForm.hold_redraw" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Hold the redrawing of the graph, e.g. while changing several arguments together, until the end of this context.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<em>Iterator
+</em>[None]
 </p>
 
 </dd>

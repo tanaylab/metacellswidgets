@@ -104,6 +104,7 @@ def _has_gene_gene(_cls: type, _source: AnnDataWidgets) -> bool:
 
 @implements(GeneGene.base_graph, AnnDataWidgets)
 def _gene_gene_base_graph(self: GeneGene, source: AnnDataWidgets) -> PointsGraph:
+    assert self.x_gene is not None and self.y_gene is not None
     return mg.ad_gene_gene_graph(source.adata, x_gene=self.x_gene, y_gene=self.y_gene)
 
 

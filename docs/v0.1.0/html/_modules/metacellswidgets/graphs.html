@@ -80,11 +80,21 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">cast</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HBox</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Label</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">VBox</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">PointsGraph</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">AxisPicker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneChoices</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">GenePicker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">PropertyPicker</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">GraphForm</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">Property</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">Slot</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceWidgets</span>
 
 <span class="n">__all__</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
@@ -112,10 +122,31 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">x_gene</span> <span class="o">=</span> <span class="n">x_gene</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">y_gene</span> <span class="o">=</span> <span class="n">y_gene</span>
+        <span class="c1"># While editing, a gene may not be picked yet.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_gene</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_gene</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_gene</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_gene</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">colors</span> <span class="o">=</span> <span class="n">colors</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span> <span class="o">=</span> <span class="n">sizes</span>
+
+<div class="viewcode-block" id="GeneGene.editor">
+<a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GeneGene.editor">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Widget</span><span class="p">:</span>
+        <span class="c1"># Every kind of data source offering this graph has genes to pick from.</span>
+        <span class="n">genes</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">GeneChoices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="n">AxisPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="p">[</span><span class="s2">"metacell"</span><span class="p">,</span> <span class="s2">"block"</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
+        <span class="n">x_gene</span> <span class="o">=</span> <span class="n">GenePicker</span><span class="p">(</span><span class="n">genes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_gene</span><span class="p">)</span>
+        <span class="n">y_gene</span> <span class="o">=</span> <span class="n">GenePicker</span><span class="p">(</span><span class="n">genes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_gene</span><span class="p">)</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="n">PropertyPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">Slot</span><span class="o">.</span><span class="n">COLORS</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">)</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="n">PropertyPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">Slot</span><span class="o">.</span><span class="n">SIZES</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">x_gene</span><span class="o">=</span><span class="n">x_gene</span><span class="p">,</span> <span class="n">y_gene</span><span class="o">=</span><span class="n">y_gene</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">colors</span><span class="p">,</span> <span class="n">sizes</span><span class="o">=</span><span class="n">sizes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">VBox</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">HBox</span><span class="p">([</span><span class="n">Label</span><span class="p">(</span><span class="s2">"Axis"</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">Label</span><span class="p">(</span><span class="s2">"X"</span><span class="p">),</span> <span class="n">x_gene</span><span class="p">,</span> <span class="n">Label</span><span class="p">(</span><span class="s2">"Y"</span><span class="p">),</span> <span class="n">y_gene</span><span class="p">]),</span>
+                <span class="n">HBox</span><span class="p">([</span><span class="n">Label</span><span class="p">(</span><span class="s2">"Colors"</span><span class="p">),</span> <span class="n">colors</span><span class="p">]),</span>
+                <span class="n">HBox</span><span class="p">([</span><span class="n">Label</span><span class="p">(</span><span class="s2">"Sizes"</span><span class="p">),</span> <span class="n">sizes</span><span class="p">]),</span>
+            <span class="p">]</span>
+        <span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="GeneGene.graph">
 <a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GeneGene.graph">[docs]</a>

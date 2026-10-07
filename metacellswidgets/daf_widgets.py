@@ -244,6 +244,7 @@ def _has_gene_gene(_cls: type, source: DafWidgets) -> bool:
 
 @implements(GeneGene.base_graph, DafWidgets)
 def _gene_gene_base_graph(self: GeneGene, source: DafWidgets) -> PointsGraph:
+    assert self.x_gene is not None and self.y_gene is not None
     return mg.gene_gene_graph(source.daf, axis=self.axis, x_gene=self.x_gene, y_gene=self.y_gene)
 
 
