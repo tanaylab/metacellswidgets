@@ -10,6 +10,10 @@ once for all the requests pending, when the interactive display polls the form.
 """
 
 import functools
+import sys
+import threading
+import time
+import traceback
 import typing
 from contextlib import contextmanager
 from typing import Any
@@ -21,13 +25,27 @@ from typing import Iterator
 from typing import List
 from typing import Optional
 
+from IPython import get_ipython
 from IPython.display import display as display_in_cell
+from ipywidgets import Button  # type: ignore
+from ipywidgets import HBox  # type: ignore
+from ipywidgets import Output  # type: ignore
+from ipywidgets import VBox  # type: ignore
 from ipywidgets import Widget  # type: ignore
+from plotly.graph_objects import Figure  # type: ignore
+from plotly.graph_objects import FigureWidget  # type: ignore
 from somegraphspy import Graph
 
 from .arguments import Arguments
+from .kernel import _MainThreadJobs
+from .kernel import _owned_subshell_id
+from .kernel import _route_to_subshell
 from .properties import _give_own_dispatchers
 from .rewrite import _CallSite
+from .rewrite import _cell_site
+from .rewrite import _claim_cell_rewrite
+from .rewrite import _current_cell_source
+from .rewrite import _rewritten_cell
 from .sources import SourceWidgets
 
 __all__: List[str] = [
@@ -138,9 +156,87 @@ class GraphForm(Arguments):
             self._is_dirty = False
             redraw(self.graph())
 
-    def display(self) -> "GraphForm":
+    def display(self, *, interactive: bool = False) -> "GraphForm":
         """
         Show the graph in the notebook cell. Returns the form, so it can be chained to its creation.
+
+        If ``interactive``, show an editor of the arguments and the graph instead, and block the cell until "Done" is
+        clicked. Then rewrite the code of the cell so that it creates the form with the edited arguments, and displays
+        it with ``interactive=False``, and show the graph. This requires the form to be created in the same cell, at its
+        top level, by a method of a kind of data source (e.g. ``source.gene_gene(...)``).
         """
+        if interactive:
+            self._edit(_cell_site(sys._getframe(1)))  # pylint: disable=protected-access
         display_in_cell(self.graph().figure)
         return self
+
+    def _edit(self, display_site: Optional[_CallSite]) -> None:
+        # Show the editor until "Done" is clicked, then rewrite the cell.
+        call_site = self._call_site
+        if call_site is None or display_site is None or display_site.cell_token != call_site.cell_token:
+            raise RuntimeError(
+                "an interactive form must be created and displayed in the same cell, at its top level, "
+                "by a method of a kind of data source (e.g. source.gene_gene(...))"
+            )
+        _claim_cell_rewrite()
+
+        figure = FigureWidget(self.graph().figure)
+        done = Button(description="Done", button_style="primary")
+        errors = Output()
+        editor = VBox([HBox([done]), self.editor(), figure, errors])
+        _route_to_subshell(editor, _owned_subshell_id())
+        display_in_cell(editor)
+
+        jobs = _MainThreadJobs()
+        is_done = threading.Event()
+
+        def on_done(_button: Button) -> None:
+            is_done.set()
+            jobs.wake()
+
+        done.on_click(on_done)
+        shown_at = time.monotonic()
+        is_resized = False
+
+        def on_poll() -> None:
+            nonlocal is_resized
+            if not is_resized and time.monotonic() - shown_at >= _FIGURE_RESIZE_DELAY_SECONDS:
+                figure.layout.autosize = False
+                figure.layout.autosize = True
+                is_resized = True
+            try:
+                self._poll_redraw(lambda graph: _replace_figure(figure, graph.figure))
+            except Exception:  # pylint: disable=broad-except
+                with errors:
+                    traceback.print_exc()
+
+        jobs.serve(is_done, on_poll)
+
+        shell = get_ipython()
+        shell.set_next_input(
+            _rewritten_cell(
+                _current_cell_source(),
+                form_position=call_site.position,
+                form_keywords=self.arguments(),
+                display_position=display_site.position,
+                is_interactive=False,
+                namespace=shell.user_ns,
+            ),
+            replace=True,
+        )
+        editor.close()
+
+
+# The interactive figure is drawn before its cell has a width, so it starts narrower than the cell. It measures the cell
+# again only when its layout changes. So this long after the editor is shown, its layout is changed by toggling
+# ``autosize``, and it measures the cell again. The delay is a guess at how long the browser takes to give the cell its
+# width. A slower browser may still show a narrow figure until its first relayout (e.g. picking the lasso tool).
+_FIGURE_RESIZE_DELAY_SECONDS = 0.5
+
+
+def _replace_figure(widget: FigureWidget, figure: Figure) -> None:
+    # Show the ``figure`` in the interactive figure ``widget``, replacing its traces and its layout.
+    with widget.batch_update():
+        widget.data = []
+        widget.add_traces(list(figure.data))
+        widget.layout = figure.layout

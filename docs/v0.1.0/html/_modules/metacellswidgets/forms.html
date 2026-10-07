@@ -83,6 +83,10 @@
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">traceback</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">typing</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
@@ -94,13 +98,27 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ipython</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span> <span class="k">as</span> <span class="n">display_in_cell</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Button</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HBox</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Output</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">VBox</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="kn">import</span> <span class="n">Figure</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="kn">import</span> <span class="n">FigureWidget</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.arguments</span><span class="w"> </span><span class="kn">import</span> <span class="n">Arguments</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.kernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">_MainThreadJobs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.kernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">_owned_subshell_id</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.kernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">_route_to_subshell</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">_give_own_dispatchers</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_CallSite</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_cell_site</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_claim_cell_rewrite</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_current_cell_source</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_rewritten_cell</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceWidgets</span>
 
 <span class="n">__all__</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
@@ -239,14 +257,92 @@
 
 <div class="viewcode-block" id="GraphForm.display">
 <a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.display">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"GraphForm"</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"GraphForm"</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Show the graph in the notebook cell. Returns the form, so it can be chained to its creation.</span>
+
+<span class="sd">        If ``interactive``, show an editor of the arguments and the graph instead, and block the cell until "Done" is</span>
+<span class="sd">        clicked. Then rewrite the code of the cell so that it creates the form with the edited arguments, and displays</span>
+<span class="sd">        it with ``interactive=False``, and show the graph. This requires the form to be created in the same cell, at its</span>
+<span class="sd">        top level, by a method of a kind of data source (e.g. ``source.gene_gene(...)``).</span>
 <span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">interactive</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_edit</span><span class="p">(</span><span class="n">_cell_site</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span>  <span class="c1"># pylint: disable=protected-access</span>
         <span class="n">display_in_cell</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">()</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span></div>
-</div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">display_site</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_CallSite</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Show the editor until "Done" is clicked, then rewrite the cell.</span>
+        <span class="n">call_site</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_site</span>
+        <span class="k">if</span> <span class="n">call_site</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">display_site</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">display_site</span><span class="o">.</span><span class="n">cell_token</span> <span class="o">!=</span> <span class="n">call_site</span><span class="o">.</span><span class="n">cell_token</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">"an interactive form must be created and displayed in the same cell, at its top level, "</span>
+                <span class="s2">"by a method of a kind of data source (e.g. source.gene_gene(...))"</span>
+            <span class="p">)</span>
+        <span class="n">_claim_cell_rewrite</span><span class="p">()</span>
+
+        <span class="n">figure</span> <span class="o">=</span> <span class="n">FigureWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">()</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span>
+        <span class="n">done</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"Done"</span><span class="p">,</span> <span class="n">button_style</span><span class="o">=</span><span class="s2">"primary"</span><span class="p">)</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="n">Output</span><span class="p">()</span>
+        <span class="n">editor</span> <span class="o">=</span> <span class="n">VBox</span><span class="p">([</span><span class="n">HBox</span><span class="p">([</span><span class="n">done</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">editor</span><span class="p">(),</span> <span class="n">figure</span><span class="p">,</span> <span class="n">errors</span><span class="p">])</span>
+        <span class="n">_route_to_subshell</span><span class="p">(</span><span class="n">editor</span><span class="p">,</span> <span class="n">_owned_subshell_id</span><span class="p">())</span>
+        <span class="n">display_in_cell</span><span class="p">(</span><span class="n">editor</span><span class="p">)</span>
+
+        <span class="n">jobs</span> <span class="o">=</span> <span class="n">_MainThreadJobs</span><span class="p">()</span>
+        <span class="n">is_done</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">on_done</span><span class="p">(</span><span class="n">_button</span><span class="p">:</span> <span class="n">Button</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">is_done</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+            <span class="n">jobs</span><span class="o">.</span><span class="n">wake</span><span class="p">()</span>
+
+        <span class="n">done</span><span class="o">.</span><span class="n">on_click</span><span class="p">(</span><span class="n">on_done</span><span class="p">)</span>
+        <span class="n">shown_at</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
+        <span class="n">is_resized</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">on_poll</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">nonlocal</span> <span class="n">is_resized</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_resized</span> <span class="ow">and</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">shown_at</span> <span class="o">&gt;=</span> <span class="n">_FIGURE_RESIZE_DELAY_SECONDS</span><span class="p">:</span>
+                <span class="n">figure</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">autosize</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">figure</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">autosize</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">is_resized</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_poll_redraw</span><span class="p">(</span><span class="k">lambda</span> <span class="n">graph</span><span class="p">:</span> <span class="n">_replace_figure</span><span class="p">(</span><span class="n">figure</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">figure</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
+                <span class="k">with</span> <span class="n">errors</span><span class="p">:</span>
+                    <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+
+        <span class="n">jobs</span><span class="o">.</span><span class="n">serve</span><span class="p">(</span><span class="n">is_done</span><span class="p">,</span> <span class="n">on_poll</span><span class="p">)</span>
+
+        <span class="n">shell</span> <span class="o">=</span> <span class="n">get_ipython</span><span class="p">()</span>
+        <span class="n">shell</span><span class="o">.</span><span class="n">set_next_input</span><span class="p">(</span>
+            <span class="n">_rewritten_cell</span><span class="p">(</span>
+                <span class="n">_current_cell_source</span><span class="p">(),</span>
+                <span class="n">form_position</span><span class="o">=</span><span class="n">call_site</span><span class="o">.</span><span class="n">position</span><span class="p">,</span>
+                <span class="n">form_keywords</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">(),</span>
+                <span class="n">display_position</span><span class="o">=</span><span class="n">display_site</span><span class="o">.</span><span class="n">position</span><span class="p">,</span>
+                <span class="n">is_interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">namespace</span><span class="o">=</span><span class="n">shell</span><span class="o">.</span><span class="n">user_ns</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">editor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+<span class="c1"># The interactive figure is drawn before its cell has a width, so it starts narrower than the cell. It measures the cell</span>
+<span class="c1"># again only when its layout changes. So this long after the editor is shown, its layout is changed by toggling</span>
+<span class="c1"># ``autosize``, and it measures the cell again. The delay is a guess at how long the browser takes to give the cell its</span>
+<span class="c1"># width. A slower browser may still show a narrow figure until its first relayout (e.g. picking the lasso tool).</span>
+<span class="n">_FIGURE_RESIZE_DELAY_SECONDS</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_replace_figure</span><span class="p">(</span><span class="n">widget</span><span class="p">:</span> <span class="n">FigureWidget</span><span class="p">,</span> <span class="n">figure</span><span class="p">:</span> <span class="n">Figure</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># Show the ``figure`` in the interactive figure ``widget``, replacing its traces and its layout.</span>
+    <span class="k">with</span> <span class="n">widget</span><span class="o">.</span><span class="n">batch_update</span><span class="p">():</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">add_traces</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">figure</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="n">figure</span><span class="o">.</span><span class="n">layout</span>
 </pre></div>
 
            </div>

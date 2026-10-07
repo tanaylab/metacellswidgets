@@ -23,6 +23,7 @@ from ipywidgets import Dropdown  # type: ignore
 from ipywidgets import HBox  # type: ignore
 from ipywidgets import Layout  # type: ignore
 
+from .kernel import _on_main_thread
 from .properties import Property
 from .properties import Slot
 from .sources import SourceWidgets
@@ -108,6 +109,10 @@ class GenePicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
         self.value = self._name_per_label.get(change["new"])
 
     def _on_markers_only_change(self, _change: Dict) -> None:
+        _on_main_thread(self._reset_markers_only)
+
+    def _reset_markers_only(self) -> None:
+        # Show the choices according to the markers only toggle, keeping the gene if it is one of them.
         current = self.value
         self._reset_choices()
         label = None if current is None else self._label_of(current)
@@ -248,7 +253,7 @@ class PropertyPicker(PropertyEditor):  # pylint: disable=too-many-ancestors,abst
 
     def _on_dropdown_change(self, change: Dict) -> None:
         if not self._is_updating:
-            self._pick(change["new"], None)
+            _on_main_thread(lambda: self._pick(change["new"], None))
 
     def _on_editor_change(self, change: Dict) -> None:
         self.value = change["new"]
@@ -259,4 +264,4 @@ class PropertyPicker(PropertyEditor):  # pylint: disable=too-many-ancestors,abst
         current = self.value
         if self._on_axis_change is not None:
             current = self._on_axis_change(old_axis, self._axis, current)
-        self._show(current)
+        _on_main_thread(lambda: self._show(current))

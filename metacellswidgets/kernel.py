@@ -126,16 +126,33 @@ class _MainThreadJobs:
 
     def serve(self, is_done: threading.Event, on_poll: Optional[Callable[[], None]] = None) -> None:
         # Run handed jobs on the main thread until ``is_done`` is set. Call ``on_poll`` between jobs, about every 0.1
-        # seconds.
+        # seconds. While serving, these are the jobs ``_on_main_thread`` hands work to.
+        global _SERVING_JOBS  # pylint: disable=global-statement
         assert threading.current_thread() is threading.main_thread()
-        while not is_done.is_set():
-            if on_poll is not None:
-                on_poll()
-            try:
-                job = self._jobs.get(timeout=0.1)
-            except queue.Empty:
-                continue
-            job()
+        _SERVING_JOBS = self
+        try:
+            while not is_done.is_set():
+                if on_poll is not None:
+                    on_poll()
+                try:
+                    job = self._jobs.get(timeout=0.1)
+                except queue.Empty:
+                    continue
+                job()
+        finally:
+            _SERVING_JOBS = None
 
 
 # pylint: enable=missing-function-docstring
+
+_SERVING_JOBS: Optional[_MainThreadJobs] = None
+
+
+def _on_main_thread(function: Callable[[], T]) -> T:
+    # Run the function on the main thread and return its result. A widget callback which may call Julia (e.g. through a
+    # data source) runs its work through this, since widget callbacks run on the subshell thread while an interactive
+    # display serves its jobs. When no display is serving (e.g. in tests), run it directly.
+    jobs = _SERVING_JOBS
+    if jobs is None:
+        return function()
+    return jobs.run(function)

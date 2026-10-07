@@ -13,6 +13,7 @@ import time
 from typing import Any
 from typing import Dict
 from typing import Iterator
+from typing import List
 from typing import Tuple
 
 import pytest
@@ -169,3 +170,72 @@ def test_widget_messages_reach_a_blocked_cell(kernel: Tuple[Any, Any]) -> None:
     callback_thread, job_thread = _outputs(client, message_id, timeout=60).split()
     assert callback_thread.startswith("subshell-")
     assert job_thread == "MainThread"
+
+
+def _opened_widgets(client: Any, message_id: str, count: int, timeout: float = 300) -> List[Dict[str, Any]]:
+    # The states (with their comm ids) of the first ``count`` widgets the execution opened which match the wanted ones:
+    # the gene comboboxes and the "Done" button.
+    widgets: List[Dict[str, Any]] = []
+    deadline = time.time() + timeout
+    while len(widgets) < count:
+        message = client.get_iopub_msg(timeout=max(deadline - time.time(), 0.1))
+        if message["parent_header"].get("msg_id") != message_id or message["msg_type"] != "comm_open":
+            if message["msg_type"] == "error":
+                raise AssertionError(message["content"]["ename"] + ": " + message["content"]["evalue"])
+            continue
+        state = message["content"]["data"].get("state", {})
+        is_gene = state.get("_model_name") == "ComboboxModel" and state.get("placeholder") == "Gene"
+        is_done = state.get("_model_name") == "ButtonModel" and state.get("description") == "Done"
+        if is_gene or is_done:
+            widgets.append(dict(state, comm_id=message["content"]["comm_id"]))
+    return widgets
+
+
+def test_interactive_display_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
+    """
+    An interactive form blocks its cell; after editing a gene and clicking "Done", the cell is rewritten with the
+    edited arguments, keeping the receiver of the form's call.
+    """
+    _, client = kernel
+    _execute(
+        client,
+        "import numpy as np\n"
+        "import dafpy as dp\n"
+        "import metacellswidgets as mw\n"
+        "daf = dp.memory_daf(name='genes')\n"
+        "daf.add_axis('gene', ['A', 'B', 'D'])\n"
+        "daf.add_axis('metacell', ['M1', 'M2'])\n"
+        "daf.set_matrix('gene', 'metacell', 'linear_fraction', "
+        "np.array([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]], dtype='float32', order='F'))\n",
+    )
+
+    cell = "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.display(interactive=True)\n"
+    message_id = client.execute(cell)
+    widgets = _opened_widgets(client, message_id, 3)
+    done = next(widget for widget in widgets if widget["_model_name"] == "ButtonModel")
+    _x_gene, y_gene = [widget for widget in widgets if widget["_model_name"] == "ComboboxModel"]
+
+    time.sleep(1)
+    update = client.session.msg(
+        "comm_msg",
+        {"comm_id": y_gene["comm_id"], "data": {"method": "update", "state": {"value": "D"}, "buffer_paths": []}},
+    )
+    client.shell_channel.send(update)
+    time.sleep(1)
+    click = client.session.msg(
+        "comm_msg", {"comm_id": done["comm_id"], "data": {"method": "custom", "content": {"event": "click"}}}
+    )
+    client.shell_channel.send(click)
+
+    deadline = time.time() + 120
+    while True:
+        reply = client.get_shell_msg(timeout=max(deadline - time.time(), 0.1))
+        if reply["parent_header"].get("msg_id") == message_id:
+            break
+    assert reply["content"]["status"] == "ok"
+    payloads = [payload for payload in reply["content"]["payload"] if payload["source"] == "set_next_input"]
+    assert payloads[-1]["replace"]
+    assert payloads[-1]["text"] == (
+        "form = mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='D')\n"
+        "form.display(interactive=False)"
+    )

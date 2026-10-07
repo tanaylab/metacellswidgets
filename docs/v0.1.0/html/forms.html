@@ -908,6 +908,28 @@ argument, and the graph is redrawn.
 </span>
 <span class="sig-paren">(
 </span>
+<em class="sig-param">
+<span class="keyword-only-separator o">
+<abbr title="Keyword-only parameters separator (PEP 3102)">
+<span class="pre">*
+</span>
+</abbr>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">interactive
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">False
+</span>
+</span>
+</em>
 <span class="sig-paren">)
 </span>
 <a class="reference internal" href="_modules/metacellswidgets/forms.html#GraphForm.display">
@@ -924,14 +946,47 @@ argument, and the graph is redrawn.
 <p>Show the graph in the notebook cell. Returns the form, so it can be chained to its creation.
 </p>
 
+<p>If 
+<code class="docutils literal notranslate">
+<span class="pre">interactive
+</span>
+</code>, show an editor of the arguments and the graph instead, and block the cell until “Done” is
+clicked. Then rewrite the code of the cell so that it creates the form with the edited arguments, and displays
+it with 
+<code class="docutils literal notranslate">
+<span class="pre">interactive=False
+</span>
+</code>, and show the graph. This requires the form to be created in the same cell, at its
+top level, by a method of a kind of data source (e.g. 
+<code class="docutils literal notranslate">
+<span class="pre">source.gene_gene(...)
+</span>
+</code>).
+</p>
+
 <dl class="field-list simple">
 
-<dt class="field-odd">Return type
+<dt class="field-odd">Parameters
 <span class="colon">:
 </span>
 </dt>
 
 <dd class="field-odd">
+<p>
+<strong>interactive
+</strong> (
+<em>bool
+</em>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
 <p>
 <a class="reference internal" href="#metacellswidgets.forms.GraphForm" title="metacellswidgets.forms.GraphForm">
 <em>GraphForm
