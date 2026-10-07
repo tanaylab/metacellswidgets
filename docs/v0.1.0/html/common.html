@@ -306,6 +306,14 @@ code of a cell, and methods implemented separately for each type of their first 
 is what lets a form write the object back into the code of its cell.
 </p>
 
+<p>Two such objects are equal if they have the same type and the same values of all the parameters of 
+<code class="docutils literal notranslate">
+<span class="pre">__init__
+</span>
+</code>.
+They aren’t hashable, since they may change (e.g., a form while it is edited).
+</p>
+
 <dl class="py method">
 
 <dt class="sig sig-object py" id="metacellswidgets.common.Arguments.arguments">

@@ -30,6 +30,17 @@ def test_gene_gene_repr() -> None:
     assert repr(form) == "GeneGene(axis='metacell', x_gene='A', y_gene='B', colors=None, sizes=TotalUMIs())"
 
 
+def test_gene_gene_equality() -> None:
+    """
+    Forms are equal when they have the same data source and the same arguments.
+    """
+    source = mw.DafWidgets(_full_daf())
+    form = source.gene_gene(x_gene="A", y_gene="B", colors=mw.Type())
+    assert form == source.gene_gene(x_gene="A", y_gene="B", colors=mw.Type())
+    assert form != source.gene_gene(x_gene="A", y_gene="B")
+    assert form != mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B", colors=mw.Type())
+
+
 def test_gene_gene_of_daf() -> None:
     """
     The graph of a ``Daf`` data set, with its points colored and sized.

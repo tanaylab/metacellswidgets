@@ -74,13 +74,14 @@ def test_code_of_non_literal() -> None:
 
 def test_equality() -> None:
     """
-    Properties are equal when they are of the same class with the same arguments.
+    Properties are equal when they are of the same class with the same arguments. They aren't hashable.
     """
     assert _Level("Foxa1") == _Level("Foxa1")
     assert _Level("Foxa1") != _Level("Sox2")
     assert _Level("Foxa1") != _Kind()
     assert _Kind() == _Kind()
-    assert len({_Level("Foxa1"), _Level("Foxa1"), _Kind()}) == 2
+    with pytest.raises(TypeError, match="unhashable"):
+        hash(_Kind())
 
 
 @pytest.mark.parametrize(

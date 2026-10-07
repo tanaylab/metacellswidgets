@@ -156,12 +156,6 @@ class Property(Arguments):
         """
         return None
 
-    def __eq__(self, other: object) -> bool:
-        return isinstance(other, Property) and type(other) is type(self) and other.arguments() == self.arguments()
-
-    def __hash__(self) -> int:
-        return hash((type(self), tuple(self.arguments().items())))
-
 
 class Type(Property):
     """
