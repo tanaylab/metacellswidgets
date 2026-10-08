@@ -23,6 +23,7 @@ from ipywidgets import Dropdown  # type: ignore
 from ipywidgets import HBox  # type: ignore
 from ipywidgets import Layout  # type: ignore
 
+from .common import Arguments
 from .kernel import _on_main_thread
 from .properties import Property
 from .properties import Slot
@@ -31,6 +32,7 @@ from .sources import SourceWidgets
 __all__: List[str] = [
     "ArgumentsEditor",
     "AxisPicker",
+    "ClassPicker",
     "GeneChoices",
     "GenePicker",
     "NamePicker",
@@ -178,9 +180,76 @@ class AxisPicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
 OnAxisChange = Callable[[str, str, Optional[Property]], Optional[Property]]
 
 
-class PropertyPicker(  # pylint: disable=too-many-ancestors,abstract-method,too-many-instance-attributes
-    ArgumentsEditor
-):
+class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
+    """
+    The base class of the widgets picking one of some classes of properties or of tweaks, and editing the arguments of
+    the picked one. The choices start with none. Picking a class whose objects have arguments shows its editor to the
+    right of the choice. The ``value`` is the object, or ``None`` while nothing is picked or its arguments are
+    incomplete.
+
+    A subclass makes its widget, then calls ``_show`` with its choices and the object it starts with. It implements
+    ``_editor_of``, which makes the editor of a choice.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(layout=Layout(align_items="flex-start"))
+        self._is_updating = False
+        self._editor: Optional[ArgumentsEditor] = None
+        self._dropdown = Dropdown()
+        self._editor_box = HBox(layout=Layout(flex="1 1 auto"))
+        self.children = [self._dropdown, self._editor_box]
+        self._dropdown.observe(self._on_dropdown_change, names="value")
+
+    def _editor_of(self, choice: Type[Arguments], current: Optional[Arguments]) -> Optional[ArgumentsEditor]:
+        # The editor of the arguments of the ``choice``, starting with the ``current`` object (if any); or ``None`` if
+        # the choice has no arguments. Each subclass implements this.
+        raise NotImplementedError(f"{type(self).__name__}._editor_of")
+
+    def _show(self, choices: Sequence[Type[Arguments]], current: Optional[Arguments]) -> None:
+        # Show the ``choices``, with the ``current`` object picked if it is one of them and its arguments are valid.
+        # Otherwise, nothing is picked.
+        choice = None if current is None else type(current)
+        if choice not in choices:
+            current = None
+            choice = None
+        self._is_updating = True
+        try:
+            self._dropdown.options = [("", None)] + [(each_choice.__name__, each_choice) for each_choice in choices]
+            self._dropdown.value = choice
+        finally:
+            self._is_updating = False
+        self._pick(choice, current)
+        if current is not None and self.value is None:
+            self._show(choices, None)
+
+    def _pick(self, choice: Optional[Type[Arguments]], current: Optional[Arguments]) -> None:
+        # Pick the ``choice``, starting its editor (if it has one) with the ``current`` object.
+        if self._editor is not None:
+            self._editor.unobserve(self._on_editor_change, names="value")
+            self._editor = None
+        if choice is None:
+            self._editor_box.children = []
+            self.value = None
+            return
+        editor = self._editor_of(choice, current)
+        if editor is None:
+            self._editor_box.children = []
+            self.value = choice()
+        else:
+            self._editor = editor
+            self._editor_box.children = [editor]
+            self.value = editor.value
+            editor.observe(self._on_editor_change, names="value")
+
+    def _on_dropdown_change(self, change: Dict) -> None:
+        if not self._is_updating:
+            _on_main_thread(lambda: self._pick(change["new"], None))
+
+    def _on_editor_change(self, change: Dict) -> None:
+        self.value = change["new"]
+
+
+class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstract-method
     """
     Pick a property of the ``source`` for a ``slot``, for the entries of the ``axis``, starting with the ``current``
     property (if any). The choices are the properties registered for the source's kind and the axis, which suit the
@@ -201,64 +270,23 @@ class PropertyPicker(  # pylint: disable=too-many-ancestors,abstract-method,too-
         *,
         on_axis_change: Optional[OnAxisChange] = None,
     ) -> None:
-        super().__init__(layout=Layout(align_items="flex-start"))
+        super().__init__()
         self._source = source
         self._slot = slot
         self._axis = axis if isinstance(axis, str) else axis.value
         self._on_axis_change = on_axis_change
-        self._is_updating = False
-        self._editor: Optional[ArgumentsEditor] = None
-        self._dropdown = Dropdown()
-        self._editor_box = HBox(layout=Layout(flex="1 1 auto"))
-        self.children = [self._dropdown, self._editor_box]
-        self._show(current)
-        self._dropdown.observe(self._on_dropdown_change, names="value")
+        self._show(self._choices(), current)
         if isinstance(axis, AxisPicker):
             axis.observe(self._on_axis_picker_change, names="value")
 
-    def _show(self, current: Optional[Property]) -> None:
-        # Show the choices for the current axis, with the ``current`` property picked, if it is one of them and its
-        # arguments are valid for the axis; otherwise, with nothing picked.
-        choices = self._source.properties(axis=self._axis, slot=self._slot)
-        property_class = None if current is None else type(current)
-        if property_class not in choices:
-            current = None
-            property_class = None
-        self._is_updating = True
-        try:
-            self._dropdown.options = [("", None)] + [(choice.__name__, choice) for choice in choices]
-            self._dropdown.value = property_class
-        finally:
-            self._is_updating = False
-        self._pick(property_class, current)
-        if current is not None and self.value is None:
-            self._show(None)
+    def _choices(self) -> List[Type[Property]]:
+        # The properties which may be picked for the current axis.
+        return self._source.properties(axis=self._axis, slot=self._slot)
 
-    def _pick(self, property_class: Optional[Type[Property]], current: Optional[Property]) -> None:
-        # Pick the ``property_class``, starting its editor (if it has one) with the ``current`` property.
-        if self._editor is not None:
-            self._editor.unobserve(self._on_editor_change, names="value")
-            self._editor = None
-        if property_class is None:
-            self._editor_box.children = []
-            self.value = None
-            return
-        editor = property_class.editor(self._source, self._axis, current)
-        if editor is None:
-            self._editor_box.children = []
-            self.value = property_class()
-        else:
-            self._editor = editor
-            self._editor_box.children = [editor]
-            self.value = editor.value
-            editor.observe(self._on_editor_change, names="value")
-
-    def _on_dropdown_change(self, change: Dict) -> None:
-        if not self._is_updating:
-            _on_main_thread(lambda: self._pick(change["new"], None))
-
-    def _on_editor_change(self, change: Dict) -> None:
-        self.value = change["new"]
+    def _editor_of(self, choice: Type[Arguments], current: Optional[Arguments]) -> Optional[ArgumentsEditor]:
+        assert issubclass(choice, Property)
+        assert current is None or isinstance(current, Property)
+        return choice.editor(self._source, self._axis, current)
 
     def _on_axis_picker_change(self, change: Dict) -> None:
         old_axis = self._axis
@@ -266,4 +294,4 @@ class PropertyPicker(  # pylint: disable=too-many-ancestors,abstract-method,too-
         current = self.value
         if self._on_axis_change is not None:
             current = self._on_axis_change(old_axis, self._axis, current)
-        _on_main_thread(lambda: self._show(current))
+        _on_main_thread(lambda: self._show(self._choices(), current))

@@ -141,6 +141,15 @@
 </li>
 
 <li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.editors.ClassPicker">
+<code class="docutils literal notranslate">
+<span class="pre">ClassPicker
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l3">
 <a class="reference internal" href="#metacellswidgets.editors.GeneChoices">
 <code class="docutils literal notranslate">
 <span class="pre">GeneChoices
@@ -533,6 +542,95 @@ one of them, and with the first of them otherwise.
 </ul>
 
 </dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.editors.ClassPicker">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.editors.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">ClassPicker
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">args
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="o">
+<span class="pre">**
+</span>
+</span>
+<span class="n">
+<span class="pre">kwargs
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/editors.html#ClassPicker">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.editors.ClassPicker" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The base class of the widgets picking one of some classes of properties or of tweaks, and editing the arguments of
+the picked one. The choices start with none. Picking a class whose objects have arguments shows its editor to the
+right of the choice. The 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is the object, or 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> while nothing is picked or its arguments are
+incomplete.
+</p>
+
+<p>A subclass makes its widget, then calls 
+<code class="docutils literal notranslate">
+<span class="pre">_show
+</span>
+</code> with its choices and the object it starts with. It implements
+
+<code class="docutils literal notranslate">
+<span class="pre">_editor_of
+</span>
+</code>, which makes the editor of a choice.
+</p>
+
+<dl class="field-list simple">
 
 </dl>
 
