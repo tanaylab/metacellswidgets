@@ -52,6 +52,7 @@ from .rewrite import _claim_cell_rewrite
 from .rewrite import _current_cell_source
 from .rewrite import _rewritten_cell
 from .sources import SourceWidgets
+from .tweaks import Tweak
 
 __all__: List[str] = [
     "Branch",
@@ -64,6 +65,9 @@ class GraphForm(Arguments):
     The base class of the forms of graphs. It holds the data ``source`` the graph is drawn from, and the values of the
     graph's arguments (see :py:class:`~metacellswidgets.common.Arguments`). A graph class must derive directly from this
     class.
+
+    Every graph takes ``tweaks`` as its last argument: the tweaks which change it after it is built, in order (see
+    :py:class:`~metacellswidgets.tweaks.Tweak`), or ``None`` for none.
     """
 
     # The data source is written into the code of the cell as the receiver of the call (e.g. ``source.gene_gene(...)``),
@@ -78,8 +82,9 @@ class GraphForm(Arguments):
         super().__init_subclass__(**kwargs)
         _give_own_dispatchers(cls, GraphForm, ("exists", "base_graph"))
 
-    def __init__(self, source: SourceWidgets) -> None:
+    def __init__(self, source: SourceWidgets, tweaks: Optional[Sequence[Tweak]] = None) -> None:
         self.source = source
+        self.tweaks = None if tweaks is None else list(tweaks)
         self._bound: Dict[str, Widget] = {}
         self._is_dirty = False
         self._held_redraws = 0
@@ -101,10 +106,27 @@ class GraphForm(Arguments):
 
     def graph(self) -> Graph:
         """
-        The graph, built from the data source and the arguments: the base graph, with its slots filled. Each graph
-        implements this, according to its slots.
+        The graph, built from the data source and the arguments: the base graph, with its slots filled, then changed by
+        each of the ``tweaks``, in order.
         """
-        raise NotImplementedError(f"{type(self).__name__}.graph")
+        graph = self._untweaked_graph()
+        for tweak in self.tweaks or []:
+            tweak.apply(graph, self.source)
+        return graph
+
+    def fill_slots(self, graph: Graph) -> None:
+        """
+        Fill the slots of the base ``graph`` (e.g. its colors) from the data source, according to the arguments. Each
+        graph implements this, according to its slots.
+        """
+        raise NotImplementedError(f"{type(self).__name__}.fill_slots")
+
+    def _untweaked_graph(self) -> Graph:
+        # The base graph, with its slots filled, before the tweaks change it. This is what the editors of the tweaks start
+        # from.
+        graph = self.base_graph(self.source)
+        self.fill_slots(graph)
+        return graph
 
     def is_complete(self) -> bool:
         """

@@ -19,7 +19,14 @@ def test_gene_gene_arguments() -> None:
     """
     form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B", colors=mw.Type())
     assert isinstance(form, mw.GeneGene)
-    assert form.arguments() == {"axis": "metacell", "x_gene": "A", "y_gene": "B", "colors": mw.Type(), "sizes": None}
+    assert form.arguments() == {
+        "axis": "metacell",
+        "x_gene": "A",
+        "y_gene": "B",
+        "colors": mw.Type(),
+        "sizes": None,
+        "tweaks": None,
+    }
 
 
 def test_gene_gene_repr() -> None:
@@ -27,7 +34,24 @@ def test_gene_gene_repr() -> None:
     The ``repr`` of a form writes its properties with their bare class names.
     """
     form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B", sizes=mw.TotalUMIs())
-    assert repr(form) == "GeneGene(axis='metacell', x_gene='A', y_gene='B', colors=None, sizes=TotalUMIs())"
+    assert repr(form) == (
+        "GeneGene(axis='metacell', x_gene='A', y_gene='B', colors=None, sizes=TotalUMIs(), tweaks=None)"
+    )
+
+
+def test_gene_gene_tweaks() -> None:
+    """
+    The tweaks change the graph after it is built, in order, and are written into the code of the cell.
+    """
+    form = mw.DafWidgets(_full_daf()).gene_gene(
+        x_gene="A", y_gene="B", tweaks=[mw.Size(width=600), mw.Size(width=640), mw.Title(text="Genes")]
+    )
+    graph = form.graph()
+    assert graph.configuration.figure.width == 640
+    assert graph.data.figure_title == "Genes"
+    assert repr(form).endswith(
+        "tweaks=[Size(width=600, height=None), Size(width=640, height=None), Title(text='Genes')])"
+    )
 
 
 def test_gene_gene_equality() -> None:

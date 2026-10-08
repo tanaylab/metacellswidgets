@@ -55,7 +55,9 @@ class _Unregistered(mw.Tweak):
 
 def _points_graph() -> sg.PointsGraph:
     # A points graph of a small data set.
-    return mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B").graph()
+    graph = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B").graph()
+    assert isinstance(graph, sg.PointsGraph)
+    return graph
 
 
 def test_tweak_in_class() -> None:

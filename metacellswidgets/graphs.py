@@ -2,17 +2,19 @@
 The graphs a form can show. Each graph serves all the kinds of data sources which offer it.
 
 The part of a graph which differs between kinds (e.g. building its base graph from the data) is a dispatched method,
-which each kind implements in its own module (see :py:func:`~metacellswidgets.properties.implements`).
+which each kind implements in its own module (see :py:func:`~metacellswidgets.common.implements`).
 """
 
 from typing import List
 from typing import Optional
+from typing import Sequence
 from typing import cast
 
 from ipywidgets import HBox  # type: ignore
 from ipywidgets import Label  # type: ignore
 from ipywidgets import VBox  # type: ignore
 from ipywidgets import Widget  # type: ignore
+from somegraphspy import Graph
 from somegraphspy import PointsGraph
 
 from .editors import AxisPicker
@@ -23,6 +25,7 @@ from .forms import GraphForm
 from .properties import Property
 from .properties import Slot
 from .sources import SourceWidgets
+from .tweaks import Tweak
 
 __all__: List[str] = [
     "GeneGene",
@@ -44,8 +47,9 @@ class GeneGene(GraphForm):
         y_gene: str,
         colors: Optional[Property] = None,
         sizes: Optional[Property] = None,
+        tweaks: Optional[Sequence[Tweak]] = None,
     ) -> None:
-        super().__init__(source)
+        super().__init__(source, tweaks)
         self.axis = axis
         # While editing, a gene may not be picked yet.
         self.x_gene: Optional[str] = x_gene
@@ -70,11 +74,9 @@ class GeneGene(GraphForm):
             ]
         )
 
-    def graph(self) -> PointsGraph:
-        graph = self.base_graph(self.source)
+    def fill_slots(self, graph: Graph) -> None:
         assert isinstance(graph, PointsGraph)
         if self.colors is not None:
             self.colors.fill(self.source, graph.points_colors_vector_fields(), self.axis)
         if self.sizes is not None:
             self.sizes.fill(self.source, graph.points_sizes_vector_fields(), self.axis)
-        return graph

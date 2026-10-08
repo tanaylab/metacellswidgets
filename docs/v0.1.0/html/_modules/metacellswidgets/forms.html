@@ -125,6 +125,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_current_cell_source</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_rewritten_cell</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceWidgets</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.tweaks</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tweak</span>
 
 <span class="n">__all__</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"Branch"</span><span class="p">,</span>
@@ -139,6 +140,9 @@
 <span class="sd">    The base class of the forms of graphs. It holds the data ``source`` the graph is drawn from, and the values of the</span>
 <span class="sd">    graph's arguments (see :py:class:`~metacellswidgets.common.Arguments`). A graph class must derive directly from this</span>
 <span class="sd">    class.</span>
+
+<span class="sd">    Every graph takes ``tweaks`` as its last argument: the tweaks which change it after it is built, in order (see</span>
+<span class="sd">    :py:class:`~metacellswidgets.tweaks.Tweak`), or ``None`` for none.</span>
 <span class="sd">    """</span>
 
     <span class="c1"># The data source is written into the code of the cell as the receiver of the call (e.g. ``source.gene_gene(...)``),</span>
@@ -153,8 +157,9 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">_give_own_dispatchers</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">GraphForm</span><span class="p">,</span> <span class="p">(</span><span class="s2">"exists"</span><span class="p">,</span> <span class="s2">"base_graph"</span><span class="p">))</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">tweaks</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Tweak</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tweaks</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">tweaks</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">tweaks</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_bound</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Widget</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_dirty</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_held_redraws</span> <span class="o">=</span> <span class="mi">0</span>
@@ -184,11 +189,31 @@
 <a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.graph">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Graph</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        The graph, built from the data source and the arguments: the base graph, with its slots filled. Each graph</span>
-<span class="sd">        implements this, according to its slots.</span>
+<span class="sd">        The graph, built from the data source and the arguments: the base graph, with its slots filled, then changed by</span>
+<span class="sd">        each of the ``tweaks``, in order.</span>
 <span class="sd">        """</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.graph"</span><span class="p">)</span></div>
+        <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_untweaked_graph</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">tweak</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tweaks</span> <span class="ow">or</span> <span class="p">[]:</span>
+            <span class="n">tweak</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">graph</span></div>
 
+
+<div class="viewcode-block" id="GraphForm.fill_slots">
+<a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.fill_slots">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fill_slots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Fill the slots of the base ``graph`` (e.g. its colors) from the data source, according to the arguments. Each</span>
+<span class="sd">        graph implements this, according to its slots.</span>
+<span class="sd">        """</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.fill_slots"</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_untweaked_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Graph</span><span class="p">:</span>
+        <span class="c1"># The base graph, with its slots filled, before the tweaks change it. This is what the editors of the tweaks start</span>
+        <span class="c1"># from.</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill_slots</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">graph</span>
 
 <div class="viewcode-block" id="GraphForm.is_complete">
 <a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.is_complete">[docs]</a>

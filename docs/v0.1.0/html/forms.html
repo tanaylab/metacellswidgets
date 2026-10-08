@@ -195,6 +195,15 @@
 </li>
 
 <li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.fill_slots">
+<code class="docutils literal notranslate">
+<span class="pre">GraphForm.fill_slots()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
 <a class="reference internal" href="#metacellswidgets.forms.GraphForm.is_complete">
 <code class="docutils literal notranslate">
 <span class="pre">GraphForm.is_complete()
@@ -653,6 +662,20 @@ If nothing is left,
 <span class="pre">source
 </span>
 </span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">tweaks
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
 </em>
 <span class="sig-paren">)
 </span>
@@ -682,6 +705,24 @@ graph’s arguments (see
 class.
 </p>
 
+<p>Every graph takes 
+<code class="docutils literal notranslate">
+<span class="pre">tweaks
+</span>
+</code> as its last argument: the tweaks which change it after it is built, in order (see
+
+<a class="reference internal" href="tweaks.html#metacellswidgets.tweaks.Tweak" title="metacellswidgets.tweaks.Tweak">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">Tweak
+</span>
+</code>
+</a>), or 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> for none.
+</p>
+
 <dl class="field-list simple">
 
 <dt class="field-odd">Parameters
@@ -690,6 +731,9 @@ class.
 </dt>
 
 <dd class="field-odd">
+<ul class="simple">
+
+<li>
 <p>
 <strong>source
 </strong> (
@@ -698,6 +742,30 @@ class.
 </em>
 </a>)
 </p>
+</li>
+
+<li>
+<p>
+<strong>tweaks
+</strong> (
+<em>Sequence
+</em>
+<em>[
+</em>
+<a class="reference internal" href="tweaks.html#metacellswidgets.tweaks.Tweak" title="metacellswidgets.tweaks.Tweak">
+<em>Tweak
+</em>
+</a>
+<em>] 
+</em>
+<em>| 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
 
 </dd>
 
@@ -882,8 +950,12 @@ data source implements this for the graphs it offers; for any other, this is an 
 </dt>
 
 <dd>
-<p>The graph, built from the data source and the arguments: the base graph, with its slots filled. Each graph
-implements this, according to its slots.
+<p>The graph, built from the data source and the arguments: the base graph, with its slots filled, then changed by
+each of the 
+<code class="docutils literal notranslate">
+<span class="pre">tweaks
+</span>
+</code>, in order.
 </p>
 
 <dl class="field-list simple">
@@ -897,6 +969,77 @@ implements this, according to its slots.
 <p>
 <em>Graph
 </em>
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.forms.GraphForm.fill_slots">
+
+<span class="sig-name descname">
+<span class="pre">fill_slots
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">graph
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/forms.html#GraphForm.fill_slots">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.forms.GraphForm.fill_slots" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Fill the slots of the base 
+<code class="docutils literal notranslate">
+<span class="pre">graph
+</span>
+</code> (e.g. its colors) from the data source, according to the arguments. Each
+graph implements this, according to its slots.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>graph
+</strong> (
+<em>Graph
+</em>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>None
 </p>
 
 </dd>
