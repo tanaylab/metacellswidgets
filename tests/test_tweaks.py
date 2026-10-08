@@ -28,7 +28,7 @@ class _Width(mw.Tweak):
         graph.configuration.figure.width = self.width
 
     @classmethod
-    def editor(cls, source: mw.SourceWidgets, current: Optional[mw.Tweak]) -> Optional[Widget]:
+    def editor(cls, source: mw.SourceWidgets, graph: sg.Graph, current: Optional[mw.Tweak]) -> Optional[Widget]:
         return Widget()
 
 
@@ -84,9 +84,9 @@ def test_tweak_base() -> None:
     The base tweak applies to no graph, and has no editor.
     """
     assert not mw.Tweak.applies_to(sg.PointsGraph)
-    assert mw.Tweak.editor(mw.DafWidgets(_full_daf()), None) is None
-    assert _Heatmaps.editor(mw.DafWidgets(_full_daf()), None) is None
-    assert isinstance(_Width.editor(mw.DafWidgets(_full_daf()), None), Widget)
+    assert mw.Tweak.editor(mw.DafWidgets(_full_daf()), _points_graph(), None) is None
+    assert _Heatmaps.editor(mw.DafWidgets(_full_daf()), _points_graph(), None) is None
+    assert isinstance(_Width.editor(mw.DafWidgets(_full_daf()), _points_graph(), None), Widget)
 
 
 def test_tweak_derives_directly() -> None:
@@ -172,3 +172,93 @@ def _registered_again() -> type:
         pass
 
     return again
+
+
+def test_built_in_tweaks() -> None:
+    """
+    The built-in tweaks are offered first, for every graph.
+    """
+    assert mw.registered_tweaks(sg.PointsGraph)[:3] == [mw.Size, mw.Title, mw.Legends]
+
+
+def test_size() -> None:
+    """
+    A size sets the dimensions it gives, and leaves the others as the graph has them.
+    """
+    graph = _points_graph()
+    mw.Size(width=640).apply(graph, mw.DafWidgets(_full_daf()))
+    assert graph.configuration.figure.width == 640
+    assert graph.configuration.figure.height is None
+    mw.Size(height=480).apply(graph, mw.DafWidgets(_full_daf()))
+    assert graph.configuration.figure.width == 640
+    assert graph.configuration.figure.height == 480
+    assert mw.Size(width=640).code("mw.Size") == "mw.Size(width=640, height=None)"
+
+
+def test_size_editor() -> None:
+    """
+    A new size gives both dimensions, at Plotly's default size. Unchecking a dimension disables its number.
+    """
+    source = mw.DafWidgets(_full_daf())
+    editor = mw.Size.editor(source, _points_graph(), None)
+    assert editor.value == mw.Size(width=700, height=450)
+    width_checkbox, width_number, _height_checkbox, height_number = editor.children
+    width_checkbox.value = False
+    assert width_number.disabled
+    assert editor.value == mw.Size(width=None, height=450)
+    height_number.value = 300
+    assert editor.value == mw.Size(width=None, height=300)
+    assert mw.Size.editor(source, _points_graph(), mw.Size(height=200)).value == mw.Size(height=200)
+
+
+def test_title() -> None:
+    """
+    A title sets the title of the figure, or removes it.
+    """
+    graph = _points_graph()
+    source = mw.DafWidgets(_full_daf())
+    mw.Title(text="Genes").apply(graph, source)
+    assert graph.data.figure_title == "Genes"
+    mw.Title(text=None).apply(graph, source)
+    assert graph.data.figure_title is None
+
+
+def test_title_editor() -> None:
+    """
+    A new title starts from the title of the graph. An empty box removes the title.
+    """
+    graph = _points_graph()
+    graph.data.figure_title = "Default"
+    editor = mw.Title.editor(mw.DafWidgets(_full_daf()), graph, None)
+    assert editor.value == mw.Title(text="Default")
+    editor.children[0].value = ""
+    assert editor.value == mw.Title(text=None)
+
+
+def test_legends() -> None:
+    """
+    Hiding the legends hides all of them, including the legend of the lines of a lines graph. Showing them leaves them
+    as they are.
+    """
+    source = mw.DafWidgets(_full_daf())
+    graph = _points_graph()
+    graph.configuration.points.colors.show_legend = True
+    mw.Legends(is_shown=True).apply(graph, source)
+    assert graph.configuration.points.colors.show_legend
+    mw.Legends(is_shown=False).apply(graph, source)
+    assert not graph.configuration.points.colors.show_legend
+
+    lines = sg.lines_graph()
+    lines.configuration.show_legend = True
+    mw.Legends(is_shown=False).apply(lines, source)
+    assert not lines.configuration.show_legend
+
+
+def test_legends_editor() -> None:
+    """
+    A new legends tweak shows the legends, until its checkbox is unchecked.
+    """
+    editor = mw.Legends.editor(mw.DafWidgets(_full_daf()), _points_graph(), None)
+    assert editor.value == mw.Legends(is_shown=True)
+    editor.children[0].value = False
+    assert editor.value == mw.Legends(is_shown=False)

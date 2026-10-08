@@ -141,17 +141,26 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_type_hints</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">overload</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Checkbox</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntText</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Text</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">visit_graph_parts</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">Arguments</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">_give_own_dispatchers</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">implements</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArgumentsEditor</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceWidgets</span>
 
 <span class="n">__all__</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"Legends"</span><span class="p">,</span>
+    <span class="s2">"Size"</span><span class="p">,</span>
+    <span class="s2">"Title"</span><span class="p">,</span>
     <span class="s2">"Tweak"</span><span class="p">,</span>
     <span class="s2">"registered_tweaks"</span><span class="p">,</span>
     <span class="s2">"tweak"</span><span class="p">,</span>
@@ -197,13 +206,17 @@
 <a class="viewcode-back" href="../../tweaks.html#metacellswidgets.tweaks.Tweak.editor">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="s2">"SourceWidgets"</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">"Tweak"</span><span class="p">]</span>  <span class="c1"># pylint: disable=unused-argument</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">source</span><span class="p">:</span> <span class="s2">"SourceWidgets"</span><span class="p">,</span>  <span class="c1"># pylint: disable=unused-argument</span>
+        <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">,</span>  <span class="c1"># pylint: disable=unused-argument</span>
+        <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">"Tweak"</span><span class="p">],</span>  <span class="c1"># pylint: disable=unused-argument</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Widget</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        A widget for editing the tweak's arguments for the ``source``, starting from the ``current`` tweak (if any). Its</span>
-<span class="sd">        ``value`` is the tweak, or ``None`` while the arguments are incomplete. A tweak without arguments has no editor.</span>
-<span class="sd">        A tweak whose editor doesn't depend on the data defines this in its class. Otherwise, it implements this for</span>
-<span class="sd">        each kind of data source with :py:func:`~metacellswidgets.common.implements`.</span>
+<span class="sd">        A widget for editing the tweak's arguments for the ``source``, starting from the ``current`` tweak (if any). The</span>
+<span class="sd">        ``graph`` is the form's graph without its tweaks, e.g. for starting from its title. The widget's ``value`` is</span>
+<span class="sd">        the tweak, or ``None`` while the arguments are incomplete. A tweak without arguments has no editor. A tweak</span>
+<span class="sd">        whose editor doesn't depend on the data defines this in its class. Otherwise, it implements this for each kind</span>
+<span class="sd">        of data source with :py:func:`~metacellswidgets.common.implements`.</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 </div>
@@ -277,6 +290,195 @@
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">tweak_class</span> <span class="k">for</span> <span class="n">tweak_class</span> <span class="ow">in</span> <span class="n">_REGISTERED_TWEAKS</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">tweak_class</span><span class="o">.</span><span class="n">applies_to</span><span class="p">(</span><span class="n">graph_type</span><span class="p">)]</span></div>
 
+
+
+<span class="c1"># Plotly's own default size of a figure, which a new ``Size`` starts from when the graph gives no size of its own.</span>
+<span class="n">_DEFAULT_WIDTH</span> <span class="o">=</span> <span class="mi">700</span>
+<span class="n">_DEFAULT_HEIGHT</span> <span class="o">=</span> <span class="mi">450</span>
+
+
+<div class="viewcode-block" id="Size">
+<a class="viewcode-back" href="../../tweaks.html#metacellswidgets.tweaks.Size">[docs]</a>
+<span class="nd">@tweak</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Size</span><span class="p">(</span><span class="n">Tweak</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Set the ``width`` and the ``height`` of the figure, in pixels. A dimension which is ``None`` is left as the graph</span>
+<span class="sd">    has it.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">height</span>
+
+<div class="viewcode-block" id="Size.apply">
+<a class="viewcode-back" href="../../tweaks.html#metacellswidgets.tweaks.Size.apply">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="s2">"SourceWidgets"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument</span>
+        <span class="n">figure</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">figure</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">figure</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">figure</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span></div>
+
+
+<div class="viewcode-block" id="Size.editor">
+<a class="viewcode-back" href="../../tweaks.html#metacellswidgets.tweaks.Size.editor">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">source</span><span class="p">:</span> <span class="s2">"SourceWidgets"</span><span class="p">,</span>  <span class="c1"># pylint: disable=unused-argument</span>
+        <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">,</span>
+        <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tweak</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArgumentsEditor</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">Size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_SizeEditor</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">current</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Dimension</span><span class="p">:</span>
+    <span class="c1"># The checkbox and the number of one dimension of a ``Size``. The dimension is given while the checkbox is checked,</span>
+    <span class="c1"># and the number is disabled while it isn't.</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checkbox</span> <span class="o">=</span> <span class="n">Checkbox</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number</span> <span class="o">=</span> <span class="n">IntText</span><span class="p">(</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">start</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">disabled</span><span class="o">=</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="p">{</span><span class="s2">"description_width"</span><span class="p">:</span> <span class="s2">"initial"</span><span class="p">},</span>
+            <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s2">"10em"</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checkbox</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_checkbox_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_checkbox_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number</span><span class="o">.</span><span class="n">disabled</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>  <span class="c1"># pylint: disable=missing-function-docstring</span>
+        <span class="c1"># The dimension, or ``None`` if it isn't given.</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkbox</span><span class="o">.</span><span class="n">value</span> <span class="k">else</span> <span class="kc">None</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_SizeEditor</span><span class="p">(</span><span class="n">ArgumentsEditor</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+    <span class="c1"># The editor of a ``Size``: a checkbox and a number for each of the width and the height. A new ``Size`` gives both,</span>
+    <span class="c1"># at the size of the graph (or Plotly's default size).</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Size</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">figure</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">figure</span>
+        <span class="n">start_width</span> <span class="o">=</span> <span class="n">_DEFAULT_WIDTH</span> <span class="k">if</span> <span class="n">figure</span><span class="o">.</span><span class="n">width</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">figure</span><span class="o">.</span><span class="n">width</span>
+        <span class="n">start_height</span> <span class="o">=</span> <span class="n">_DEFAULT_HEIGHT</span> <span class="k">if</span> <span class="n">figure</span><span class="o">.</span><span class="n">height</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">figure</span><span class="o">.</span><span class="n">height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_width</span> <span class="o">=</span> <span class="n">_Dimension</span><span class="p">(</span><span class="s2">"Width"</span><span class="p">,</span> <span class="n">start_width</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">start_width</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_height</span> <span class="o">=</span> <span class="n">_Dimension</span><span class="p">(</span><span class="s2">"Height"</span><span class="p">,</span> <span class="n">start_height</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">start_height</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_width</span><span class="o">.</span><span class="n">checkbox</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_width</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_height</span><span class="o">.</span><span class="n">checkbox</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_height</span><span class="o">.</span><span class="n">number</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_value</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">widget</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="n">widget</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_value</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">Size</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_width</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_height</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Title">
+<a class="viewcode-back" href="../../tweaks.html#metacellswidgets.tweaks.Title">[docs]</a>
+<span class="nd">@tweak</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Title</span><span class="p">(</span><span class="n">Tweak</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Set the title of the figure to the ``text``, or remove the title if it is ``None``.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">text</span>
+
+<div class="viewcode-block" id="Title.apply">
+<a class="viewcode-back" href="../../tweaks.html#metacellswidgets.tweaks.Title.apply">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="s2">"SourceWidgets"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">figure_title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span></div>
+
+
+<div class="viewcode-block" id="Title.editor">
+<a class="viewcode-back" href="../../tweaks.html#metacellswidgets.tweaks.Title.editor">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">source</span><span class="p">:</span> <span class="s2">"SourceWidgets"</span><span class="p">,</span>  <span class="c1"># pylint: disable=unused-argument</span>
+        <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">,</span>
+        <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tweak</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArgumentsEditor</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">Title</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_TitleEditor</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">figure_title</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">text</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_TitleEditor</span><span class="p">(</span><span class="n">ArgumentsEditor</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+    <span class="c1"># The editor of a ``Title``: a text box, which starts with the ``text``. An empty box removes the title.</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_text</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">""</span> <span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">text</span><span class="p">,</span> <span class="n">placeholder</span><span class="o">=</span><span class="s2">"Title"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_text</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">Title</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_text</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_text_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_text_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">Title</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">]</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Legends">
+<a class="viewcode-back" href="../../tweaks.html#metacellswidgets.tweaks.Legends">[docs]</a>
+<span class="nd">@tweak</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Legends</span><span class="p">(</span><span class="n">Tweak</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Show the legends of the graph as they are (if ``is_shown``), or hide them all.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_shown</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_shown</span> <span class="o">=</span> <span class="n">is_shown</span>
+
+<div class="viewcode-block" id="Legends.apply">
+<a class="viewcode-back" href="../../tweaks.html#metacellswidgets.tweaks.Legends.apply">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="s2">"SourceWidgets"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_shown</span><span class="p">:</span>
+            <span class="n">visit_graph_parts</span><span class="p">(</span><span class="n">_hide_legend</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Legends.editor">
+<a class="viewcode-back" href="../../tweaks.html#metacellswidgets.tweaks.Legends.editor">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">source</span><span class="p">:</span> <span class="s2">"SourceWidgets"</span><span class="p">,</span>  <span class="c1"># pylint: disable=unused-argument</span>
+        <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">,</span>  <span class="c1"># pylint: disable=unused-argument</span>
+        <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tweak</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArgumentsEditor</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">Legends</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_LegendsEditor</span><span class="p">(</span><span class="kc">True</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">is_shown</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_hide_legend</span><span class="p">(</span><span class="n">part</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># Hide the legend of a part of a graph, if it has one.</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="s2">"show_legend"</span><span class="p">):</span>
+        <span class="n">part</span><span class="o">.</span><span class="n">show_legend</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_LegendsEditor</span><span class="p">(</span><span class="n">ArgumentsEditor</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+    <span class="c1"># The editor of a ``Legends``: a "Show legends" checkbox.</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_shown</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_checkbox</span> <span class="o">=</span> <span class="n">Checkbox</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">is_shown</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Show legends"</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_checkbox</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">Legends</span><span class="p">(</span><span class="n">is_shown</span><span class="o">=</span><span class="n">is_shown</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_checkbox</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_checkbox_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_checkbox_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">Legends</span><span class="p">(</span><span class="n">is_shown</span><span class="o">=</span><span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">])</span>
 </pre></div>
 
            </div>
