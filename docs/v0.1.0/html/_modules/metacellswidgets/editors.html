@@ -72,10 +72,10 @@
              
   <h1>Source code for metacellswidgets.editors</h1><div class="highlight"><pre>
 <span></span><span class="sd">"""</span>
-<span class="sd">Widgets for editing the arguments of properties, shared by all kinds of data sources.</span>
+<span class="sd">Widgets for editing the arguments of properties and tweaks, shared by all kinds of data sources.</span>
 
 <span class="sd">A kind of data source supplies the data these widgets show (e.g., its genes); the widgets don't depend on the kind.</span>
-<span class="sd">Each widget has an observable ``value``: the editors' is the property (or ``None`` while its arguments are</span>
+<span class="sd">Each widget has an observable ``value``: the editors' is the property or the tweak (or ``None`` while its arguments are</span>
 <span class="sd">incomplete), and the pickers' is the chosen string (or ``None`` while nothing is chosen).</span>
 <span class="sd">"""</span>
 
@@ -102,14 +102,14 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceWidgets</span>
 
 <span class="n">__all__</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">"ArgumentEditor"</span><span class="p">,</span>
+    <span class="s2">"ArgumentsEditor"</span><span class="p">,</span>
     <span class="s2">"AxisPicker"</span><span class="p">,</span>
     <span class="s2">"GeneChoices"</span><span class="p">,</span>
     <span class="s2">"GenePicker"</span><span class="p">,</span>
     <span class="s2">"NamePicker"</span><span class="p">,</span>
     <span class="s2">"OnAxisChange"</span><span class="p">,</span>
     <span class="s2">"Picker"</span><span class="p">,</span>
-    <span class="s2">"PropertyEditor"</span><span class="p">,</span>
+    <span class="s2">"PickerEditor"</span><span class="p">,</span>
     <span class="s2">"PropertyPicker"</span><span class="p">,</span>
 <span class="p">]</span>
 
@@ -131,12 +131,12 @@
 
 
 
-<div class="viewcode-block" id="PropertyEditor">
-<a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.PropertyEditor">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">PropertyEditor</span><span class="p">(</span><span class="n">HBox</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+<div class="viewcode-block" id="ArgumentsEditor">
+<a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.ArgumentsEditor">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ArgumentsEditor</span><span class="p">(</span><span class="n">HBox</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    The base class of the widgets editing the arguments of a property. Its ``value`` is the property, or ``None`` while</span>
-<span class="sd">    its arguments are incomplete.</span>
+<span class="sd">    The base class of the widgets editing the arguments of a property or a tweak. Its ``value`` is the property or the</span>
+<span class="sd">    tweak, or ``None`` while its arguments are incomplete.</span>
 <span class="sd">    """</span>
 
     <span class="n">value</span> <span class="o">=</span> <span class="n">traitlets</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
@@ -228,9 +228,9 @@
 
 
 
-<div class="viewcode-block" id="ArgumentEditor">
-<a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.ArgumentEditor">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">ArgumentEditor</span><span class="p">(</span><span class="n">PropertyEditor</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+<div class="viewcode-block" id="PickerEditor">
+<a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.PickerEditor">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PickerEditor</span><span class="p">(</span><span class="n">ArgumentsEditor</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Edit a property with a single argument, picked by a ``picker``. The ``build`` function makes the property from the</span>
 <span class="sd">    picked string.</span>
@@ -277,7 +277,9 @@
 
 <div class="viewcode-block" id="PropertyPicker">
 <a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.PropertyPicker">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">PropertyPicker</span><span class="p">(</span><span class="n">PropertyEditor</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method,too-many-instance-attributes</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PropertyPicker</span><span class="p">(</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method,too-many-instance-attributes</span>
+    <span class="n">ArgumentsEditor</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Pick a property of the ``source`` for a ``slot``, for the entries of the ``axis``, starting with the ``current``</span>
 <span class="sd">    property (if any). The choices are the properties registered for the source's kind and the axis, which suit the</span>
@@ -304,7 +306,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="o">=</span> <span class="n">axis</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">axis</span><span class="o">.</span><span class="n">value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_on_axis_change</span> <span class="o">=</span> <span class="n">on_axis_change</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_updating</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_editor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PropertyEditor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_editor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ArgumentsEditor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dropdown</span> <span class="o">=</span> <span class="n">Dropdown</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_editor_box</span> <span class="o">=</span> <span class="n">HBox</span><span class="p">(</span><span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">flex</span><span class="o">=</span><span class="s2">"1 1 auto"</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_dropdown</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_editor_box</span><span class="p">]</span>

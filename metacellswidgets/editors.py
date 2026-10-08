@@ -1,8 +1,8 @@
 """
-Widgets for editing the arguments of properties, shared by all kinds of data sources.
+Widgets for editing the arguments of properties and tweaks, shared by all kinds of data sources.
 
 A kind of data source supplies the data these widgets show (e.g., its genes); the widgets don't depend on the kind.
-Each widget has an observable ``value``: the editors' is the property (or ``None`` while its arguments are
+Each widget has an observable ``value``: the editors' is the property or the tweak (or ``None`` while its arguments are
 incomplete), and the pickers' is the chosen string (or ``None`` while nothing is chosen).
 """
 
@@ -29,14 +29,14 @@ from .properties import Slot
 from .sources import SourceWidgets
 
 __all__: List[str] = [
-    "ArgumentEditor",
+    "ArgumentsEditor",
     "AxisPicker",
     "GeneChoices",
     "GenePicker",
     "NamePicker",
     "OnAxisChange",
     "Picker",
-    "PropertyEditor",
+    "PickerEditor",
     "PropertyPicker",
 ]
 
@@ -52,10 +52,10 @@ class GeneChoices(Protocol):  # pylint: disable=too-few-public-methods
         """
 
 
-class PropertyEditor(HBox):  # pylint: disable=too-many-ancestors,abstract-method
+class ArgumentsEditor(HBox):  # pylint: disable=too-many-ancestors,abstract-method
     """
-    The base class of the widgets editing the arguments of a property. Its ``value`` is the property, or ``None`` while
-    its arguments are incomplete.
+    The base class of the widgets editing the arguments of a property or a tweak. Its ``value`` is the property or the
+    tweak, or ``None`` while its arguments are incomplete.
     """
 
     value = traitlets.Any(None, allow_none=True)
@@ -137,7 +137,7 @@ class NamePicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
         self.value = change["new"]
 
 
-class ArgumentEditor(PropertyEditor):  # pylint: disable=too-many-ancestors,abstract-method
+class PickerEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
     """
     Edit a property with a single argument, picked by a ``picker``. The ``build`` function makes the property from the
     picked string.
@@ -178,7 +178,9 @@ class AxisPicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
 OnAxisChange = Callable[[str, str, Optional[Property]], Optional[Property]]
 
 
-class PropertyPicker(PropertyEditor):  # pylint: disable=too-many-ancestors,abstract-method,too-many-instance-attributes
+class PropertyPicker(  # pylint: disable=too-many-ancestors,abstract-method,too-many-instance-attributes
+    ArgumentsEditor
+):
     """
     Pick a property of the ``source`` for a ``slot``, for the entries of the ``axis``, starting with the ``current``
     property (if any). The choices are the properties registered for the source's kind and the axis, which suit the
@@ -205,7 +207,7 @@ class PropertyPicker(PropertyEditor):  # pylint: disable=too-many-ancestors,abst
         self._axis = axis if isinstance(axis, str) else axis.value
         self._on_axis_change = on_axis_change
         self._is_updating = False
-        self._editor: Optional[PropertyEditor] = None
+        self._editor: Optional[ArgumentsEditor] = None
         self._dropdown = Dropdown()
         self._editor_box = HBox(layout=Layout(flex="1 1 auto"))
         self.children = [self._dropdown, self._editor_box]

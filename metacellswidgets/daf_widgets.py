@@ -14,9 +14,9 @@ from somegraphspy import PointsGraph
 from somegraphspy import VectorDataSinks
 
 from .common import implements
-from .editors import ArgumentEditor
 from .editors import GenePicker
 from .editors import NamePicker
+from .editors import PickerEditor
 from .forms import Branch
 from .graphs import GeneGene
 from .properties import Block
@@ -145,8 +145,8 @@ def _fill_gene_expression(self: GeneExpression, source: DafWidgets, sinks: Vecto
 @implements(GeneExpression.editor, DafWidgets)
 def _gene_expression_editor(
     _cls: type, source: DafWidgets, _axis: str, current: Optional[GeneExpression]
-) -> ArgumentEditor:
-    return ArgumentEditor(GenePicker(source, None if current is None else current.gene), GeneExpression)
+) -> PickerEditor:
+    return PickerEditor(GenePicker(source, None if current is None else current.gene), GeneExpression)
 
 
 @implements(TotalUMIs.exists, DafWidgets)
@@ -226,9 +226,9 @@ def _fill_boolean_mask(self: BooleanMask, source: DafWidgets, sinks: VectorDataS
 
 
 @implements(BooleanMask.editor, DafWidgets)
-def _boolean_mask_editor(_cls: type, source: DafWidgets, axis: str, current: Optional[BooleanMask]) -> ArgumentEditor:
+def _boolean_mask_editor(_cls: type, source: DafWidgets, axis: str, current: Optional[BooleanMask]) -> PickerEditor:
     current_name = None if current is None else current.name
-    return ArgumentEditor(NamePicker(source.boolean_vectors(axis), current_name), BooleanMask)
+    return PickerEditor(NamePicker(source.boolean_vectors(axis), current_name), BooleanMask)
 
 
 @implements(GlobalFlowOrder.exists, DafWidgets)

@@ -17,8 +17,8 @@ from somegraphspy import PointsGraph
 from somegraphspy import VectorDataSinks
 
 from .common import implements
-from .editors import ArgumentEditor
 from .editors import GenePicker
+from .editors import PickerEditor
 from .forms import Branch
 from .graphs import GeneGene
 from .properties import GeneExpression
@@ -97,8 +97,8 @@ def _fill_gene_expression(self: GeneExpression, source: AnnDataWidgets, sinks: V
 @implements(GeneExpression.editor, AnnDataWidgets)
 def _gene_expression_editor(
     _cls: type, source: AnnDataWidgets, _axis: str, current: Optional[GeneExpression]
-) -> ArgumentEditor:
-    return ArgumentEditor(GenePicker(source, None if current is None else current.gene), GeneExpression)
+) -> PickerEditor:
+    return PickerEditor(GenePicker(source, None if current is None else current.gene), GeneExpression)
 
 
 @implements(GeneGene.exists, AnnDataWidgets)

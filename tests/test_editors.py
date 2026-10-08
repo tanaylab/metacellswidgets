@@ -6,9 +6,9 @@ from typing import List
 from typing import Tuple
 
 import metacellswidgets as mw
-from metacellswidgets.editors import ArgumentEditor
 from metacellswidgets.editors import GenePicker
 from metacellswidgets.editors import NamePicker
+from metacellswidgets.editors import PickerEditor
 
 
 class _Genes:
@@ -80,7 +80,7 @@ def test_argument_editor() -> None:
     The editor's value is the property built from the picked argument.
     """
     picker = GenePicker(_Genes())
-    editor = ArgumentEditor(picker, mw.GeneExpression)
+    editor = PickerEditor(picker, mw.GeneExpression)
     assert editor.value is None
 
     picker._combobox.value = "A M"
@@ -89,4 +89,4 @@ def test_argument_editor() -> None:
     picker._combobox.value = ""
     assert editor.value is None
 
-    assert ArgumentEditor(GenePicker(_Genes(), "B"), mw.GeneExpression).value == mw.GeneExpression("B")
+    assert PickerEditor(GenePicker(_Genes(), "B"), mw.GeneExpression).value == mw.GeneExpression("B")

@@ -123,9 +123,9 @@
 <ul>
 
 <li class="toctree-l3">
-<a class="reference internal" href="#metacellswidgets.editors.ArgumentEditor">
+<a class="reference internal" href="#metacellswidgets.editors.ArgumentsEditor">
 <code class="docutils literal notranslate">
-<span class="pre">ArgumentEditor
+<span class="pre">ArgumentsEditor
 </span>
 </code>
 </a>
@@ -199,9 +199,9 @@
 </li>
 
 <li class="toctree-l3">
-<a class="reference internal" href="#metacellswidgets.editors.PropertyEditor">
+<a class="reference internal" href="#metacellswidgets.editors.PickerEditor">
 <code class="docutils literal notranslate">
-<span class="pre">PropertyEditor
+<span class="pre">PickerEditor
 </span>
 </code>
 </a>
@@ -319,7 +319,7 @@
 </a>
 </h1>
 
-<p>Widgets for editing the arguments of properties, shared by all kinds of data sources.
+<p>Widgets for editing the arguments of properties and tweaks, shared by all kinds of data sources.
 </p>
 
 <p>A kind of data source supplies the data these widgets show (e.g., its genes); the widgets don’t depend on the kind.
@@ -327,7 +327,7 @@ Each widget has an observable
 <code class="docutils literal notranslate">
 <span class="pre">value
 </span>
-</code>: the editors’ is the property (or 
+</code>: the editors’ is the property or the tweak (or 
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
@@ -341,7 +341,7 @@ incomplete), and the pickers’ is the chosen string (or
 
 <dl class="py class">
 
-<dt class="sig sig-object py" id="metacellswidgets.editors.ArgumentEditor">
+<dt class="sig sig-object py" id="metacellswidgets.editors.ArgumentsEditor">
 
 <span class="property">
 <span class="k">
@@ -356,7 +356,7 @@ incomplete), and the pickers’ is the chosen string (or
 </span>
 </span>
 <span class="sig-name descname">
-<span class="pre">ArgumentEditor
+<span class="pre">ArgumentsEditor
 </span>
 </span>
 <span class="sig-paren">(
@@ -383,80 +383,28 @@ incomplete), and the pickers’ is the chosen string (or
 </em>
 <span class="sig-paren">)
 </span>
-<a class="reference internal" href="_modules/metacellswidgets/editors.html#ArgumentEditor">
+<a class="reference internal" href="_modules/metacellswidgets/editors.html#ArgumentsEditor">
 <span class="viewcode-link">
 <span class="pre">[source]
 </span>
 </span>
 </a>
-<a class="headerlink" href="#metacellswidgets.editors.ArgumentEditor" title="Link to this definition">
+<a class="headerlink" href="#metacellswidgets.editors.ArgumentsEditor" title="Link to this definition">
 </a>
 </dt>
 
 <dd>
-<p>Edit a property with a single argument, picked by a 
+<p>The base class of the widgets editing the arguments of a property or a tweak. Its 
 <code class="docutils literal notranslate">
-<span class="pre">picker
+<span class="pre">value
 </span>
-</code>. The 
+</code> is the property or the
+tweak, or 
 <code class="docutils literal notranslate">
-<span class="pre">build
+<span class="pre">None
 </span>
-</code> function makes the property from the
-picked string.
+</code> while its arguments are incomplete.
 </p>
-
-<dl class="field-list simple">
-
-<dt class="field-odd">Parameters
-<span class="colon">:
-</span>
-</dt>
-
-<dd class="field-odd">
-<ul class="simple">
-
-<li>
-<p>
-<strong>picker
-</strong> (
-<a class="reference internal" href="#metacellswidgets.editors.Picker" title="metacellswidgets.editors.Picker">
-<em>Picker
-</em>
-</a>)
-</p>
-</li>
-
-<li>
-<p>
-<strong>build
-</strong> (
-<em>Callable
-</em>
-<em>[
-</em>
-<em>[
-</em>
-<em>str
-</em>
-<em>]
-</em>
-<em>, 
-</em>
-<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
-<em>Property
-</em>
-</a>
-<em>]
-</em>)
-</p>
-</li>
-
-</ul>
-
-</dd>
-
-</dl>
 
 </dd>
 </dl>
@@ -1098,7 +1046,7 @@ nothing is chosen.
 
 <dl class="py class">
 
-<dt class="sig sig-object py" id="metacellswidgets.editors.PropertyEditor">
+<dt class="sig sig-object py" id="metacellswidgets.editors.PickerEditor">
 
 <span class="property">
 <span class="k">
@@ -1113,7 +1061,7 @@ nothing is chosen.
 </span>
 </span>
 <span class="sig-name descname">
-<span class="pre">PropertyEditor
+<span class="pre">PickerEditor
 </span>
 </span>
 <span class="sig-paren">(
@@ -1140,28 +1088,80 @@ nothing is chosen.
 </em>
 <span class="sig-paren">)
 </span>
-<a class="reference internal" href="_modules/metacellswidgets/editors.html#PropertyEditor">
+<a class="reference internal" href="_modules/metacellswidgets/editors.html#PickerEditor">
 <span class="viewcode-link">
 <span class="pre">[source]
 </span>
 </span>
 </a>
-<a class="headerlink" href="#metacellswidgets.editors.PropertyEditor" title="Link to this definition">
+<a class="headerlink" href="#metacellswidgets.editors.PickerEditor" title="Link to this definition">
 </a>
 </dt>
 
 <dd>
-<p>The base class of the widgets editing the arguments of a property. Its 
+<p>Edit a property with a single argument, picked by a 
 <code class="docutils literal notranslate">
-<span class="pre">value
+<span class="pre">picker
 </span>
-</code> is the property, or 
+</code>. The 
 <code class="docutils literal notranslate">
-<span class="pre">None
+<span class="pre">build
 </span>
-</code> while
-its arguments are incomplete.
+</code> function makes the property from the
+picked string.
 </p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>picker
+</strong> (
+<a class="reference internal" href="#metacellswidgets.editors.Picker" title="metacellswidgets.editors.Picker">
+<em>Picker
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>build
+</strong> (
+<em>Callable
+</em>
+<em>[
+</em>
+<em>[
+</em>
+<em>str
+</em>
+<em>]
+</em>
+<em>, 
+</em>
+<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
+<em>Property
+</em>
+</a>
+<em>]
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
 
 </dd>
 </dl>
