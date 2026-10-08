@@ -264,3 +264,19 @@ def test_legends_editor() -> None:
     assert editor.value == mw.Legends(is_shown=True)
     editor.children[0].value = False
     assert editor.value == mw.Legends(is_shown=False)
+
+
+def test_tweak_picker() -> None:
+    """
+    A tweak picker offers the tweaks of the graph's type, the built-in ones first, after an empty choice. Picking one
+    shows its editor, which starts from the graph.
+    """
+    source = mw.DafWidgets(_full_daf())
+    graph = _points_graph()
+    picker = mw.TweakPicker(source, graph)
+    assert picker.value is None
+    dropdown = picker.children[0]
+    assert [label for label, _choice in dropdown.options][:4] == ["", "Size", "Title", "Legends"]
+    dropdown.value = mw.Size
+    assert picker.value == mw.Size(width=700, height=450)
+    assert mw.TweakPicker(source, graph, mw.Title(text="Genes")).value == mw.Title(text="Genes")

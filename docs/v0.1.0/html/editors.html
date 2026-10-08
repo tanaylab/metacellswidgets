@@ -181,6 +181,15 @@
 </li>
 
 <li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.editors.ListEditor">
+<code class="docutils literal notranslate">
+<span class="pre">ListEditor
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l3">
 <a class="reference internal" href="#metacellswidgets.editors.NamePicker">
 <code class="docutils literal notranslate">
 <span class="pre">NamePicker
@@ -883,6 +892,175 @@ restricts the choices to the marker genes.
 <em> | 
 </em>
 <em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.editors.ListEditor">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.editors.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">ListEditor
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">args
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="o">
+<span class="pre">**
+</span>
+</span>
+<span class="n">
+<span class="pre">kwargs
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/editors.html#ListEditor">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.editors.ListEditor" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Edit a list of properties or tweaks, a row per object. Each row is a picker made by 
+<code class="docutils literal notranslate">
+<span class="pre">make_row
+</span>
+</code>, which gets the
+object the row starts with, or 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> for a new, empty row. The list starts with a row per object of the
+
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> list (if any). Each row has buttons to move it up or down, or to remove it. The 
+<code class="docutils literal notranslate">
+<span class="pre">add
+</span>
+</code> button appends
+a new row.
+</p>
+
+<p>The 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is the list of the values of the rows, leaving out the rows without one, or 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> if there are none.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>make_row
+</strong> (
+<em>Callable
+</em>
+<em>[
+</em>
+<em>[
+</em>
+<a class="reference internal" href="common.html#metacellswidgets.common.Arguments" title="metacellswidgets.common.Arguments">
+<em>Arguments
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>
+<em>]
+</em>
+<em>, 
+</em>
+<a class="reference internal" href="#metacellswidgets.editors.ArgumentsEditor" title="metacellswidgets.editors.ArgumentsEditor">
+<em>ArgumentsEditor
+</em>
+</a>
+<em>]
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<em>Sequence
+</em>
+<em>[
+</em>
+<a class="reference internal" href="common.html#metacellswidgets.common.Arguments" title="metacellswidgets.common.Arguments">
+<em>Arguments
+</em>
+</a>
+<em>] 
+</em>
+<em>| 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>add
+</strong> (
+<em>str
 </em>)
 </p>
 </li>

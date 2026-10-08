@@ -17,11 +17,13 @@ from typing import Type
 from typing import Union
 
 import traitlets  # type: ignore
+from ipywidgets import Button  # type: ignore
 from ipywidgets import Checkbox  # type: ignore
 from ipywidgets import Combobox  # type: ignore
 from ipywidgets import Dropdown  # type: ignore
 from ipywidgets import HBox  # type: ignore
 from ipywidgets import Layout  # type: ignore
+from ipywidgets import VBox  # type: ignore
 
 from .common import Arguments
 from .kernel import _on_main_thread
@@ -35,6 +37,7 @@ __all__: List[str] = [
     "ClassPicker",
     "GeneChoices",
     "GenePicker",
+    "ListEditor",
     "NamePicker",
     "OnAxisChange",
     "Picker",
@@ -295,3 +298,82 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
         if self._on_axis_change is not None:
             current = self._on_axis_change(old_axis, self._axis, current)
         _on_main_thread(lambda: self._show(self._choices(), current))
+
+
+# The layout of the small buttons of each row of a list editor.
+_ROW_BUTTON_LAYOUT = Layout(width="2.5em")
+
+
+class ListEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
+    """
+    Edit a list of properties or tweaks, a row per object. Each row is a picker made by ``make_row``, which gets the
+    object the row starts with, or ``None`` for a new, empty row. The list starts with a row per object of the
+    ``current`` list (if any). Each row has buttons to move it up or down, or to remove it. The ``add`` button appends
+    a new row.
+
+    The ``value`` is the list of the values of the rows, leaving out the rows without one, or ``None`` if there are none.
+    """
+
+    def __init__(
+        self,
+        make_row: Callable[[Optional[Arguments]], ArgumentsEditor],
+        current: Optional[Sequence[Arguments]] = None,
+        *,
+        add: str = "Add",
+    ) -> None:
+        super().__init__()
+        self._make_row = make_row
+        self._rows: List[ArgumentsEditor] = []
+        self._row_boxes: List[HBox] = []
+        self._rows_box = VBox()
+        add_button = Button(description=add)
+        add_button.on_click(self._on_add)
+        self.children = [VBox([self._rows_box, add_button])]
+        for item in current or []:
+            self._append(make_row(item))
+        self._update()
+
+    def _append(self, row: ArgumentsEditor) -> None:
+        # Append the ``row``, with its buttons.
+        move_up = Button(description="↑", layout=_ROW_BUTTON_LAYOUT)
+        move_down = Button(description="↓", layout=_ROW_BUTTON_LAYOUT)
+        remove = Button(description="✕", layout=_ROW_BUTTON_LAYOUT)
+        move_up.on_click(lambda _button: self._move(row, -1))
+        move_down.on_click(lambda _button: self._move(row, 1))
+        remove.on_click(lambda _button: self._remove(row))
+        row.observe(self._on_row_change, names="value")
+        self._rows.append(row)
+        self._row_boxes.append(HBox([row, move_up, move_down, remove], layout=Layout(align_items="flex-start")))
+
+    def _move(self, row: ArgumentsEditor, offset: int) -> None:
+        # Move the ``row`` by the ``offset``, unless that would move it past either end.
+        index = self._rows.index(row)
+        other_index = index + offset
+        if 0 <= other_index < len(self._rows):
+            rows, row_boxes = self._rows, self._row_boxes
+            rows[index], rows[other_index] = rows[other_index], rows[index]
+            row_boxes[index], row_boxes[other_index] = row_boxes[other_index], row_boxes[index]
+            self._update()
+
+    def _remove(self, row: ArgumentsEditor) -> None:
+        index = self._rows.index(row)
+        row.unobserve(self._on_row_change, names="value")
+        del self._rows[index]
+        del self._row_boxes[index]
+        self._update()
+
+    def _on_add(self, _button: Button) -> None:
+        def add_row() -> None:
+            self._append(self._make_row(None))
+            self._update()
+
+        _on_main_thread(add_row)
+
+    def _on_row_change(self, _change: Dict) -> None:
+        self._update()
+
+    def _update(self) -> None:
+        # Show the rows in their order, and set the value from them.
+        self._rows_box.children = list(self._row_boxes)
+        values = [row.value for row in self._rows if row.value is not None]
+        self.value = values or None

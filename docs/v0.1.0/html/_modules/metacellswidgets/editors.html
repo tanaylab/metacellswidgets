@@ -90,11 +90,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">traitlets</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Button</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Checkbox</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Combobox</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dropdown</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HBox</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">VBox</span>  <span class="c1"># type: ignore</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">Arguments</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.kernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">_on_main_thread</span>
@@ -108,6 +110,7 @@
     <span class="s2">"ClassPicker"</span><span class="p">,</span>
     <span class="s2">"GeneChoices"</span><span class="p">,</span>
     <span class="s2">"GenePicker"</span><span class="p">,</span>
+    <span class="s2">"ListEditor"</span><span class="p">,</span>
     <span class="s2">"NamePicker"</span><span class="p">,</span>
     <span class="s2">"OnAxisChange"</span><span class="p">,</span>
     <span class="s2">"Picker"</span><span class="p">,</span>
@@ -397,6 +400,88 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_axis_change</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_axis_change</span><span class="p">(</span><span class="n">old_axis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">,</span> <span class="n">current</span><span class="p">)</span>
         <span class="n">_on_main_thread</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_show</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_choices</span><span class="p">(),</span> <span class="n">current</span><span class="p">))</span></div>
+
+
+
+<span class="c1"># The layout of the small buttons of each row of a list editor.</span>
+<span class="n">_ROW_BUTTON_LAYOUT</span> <span class="o">=</span> <span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s2">"2.5em"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ListEditor">
+<a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.ListEditor">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ListEditor</span><span class="p">(</span><span class="n">ArgumentsEditor</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Edit a list of properties or tweaks, a row per object. Each row is a picker made by ``make_row``, which gets the</span>
+<span class="sd">    object the row starts with, or ``None`` for a new, empty row. The list starts with a row per object of the</span>
+<span class="sd">    ``current`` list (if any). Each row has buttons to move it up or down, or to remove it. The ``add`` button appends</span>
+<span class="sd">    a new row.</span>
+
+<span class="sd">    The ``value`` is the list of the values of the rows, leaving out the rows without one, or ``None`` if there are none.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">make_row</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Arguments</span><span class="p">]],</span> <span class="n">ArgumentsEditor</span><span class="p">],</span>
+        <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Arguments</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">add</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Add"</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_make_row</span> <span class="o">=</span> <span class="n">make_row</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ArgumentsEditor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_row_boxes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">HBox</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rows_box</span> <span class="o">=</span> <span class="n">VBox</span><span class="p">()</span>
+        <span class="n">add_button</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="n">add</span><span class="p">)</span>
+        <span class="n">add_button</span><span class="o">.</span><span class="n">on_click</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_add</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="n">VBox</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows_box</span><span class="p">,</span> <span class="n">add_button</span><span class="p">])]</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">current</span> <span class="ow">or</span> <span class="p">[]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_append</span><span class="p">(</span><span class="n">make_row</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">ArgumentsEditor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Append the ``row``, with its buttons.</span>
+        <span class="n">move_up</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"↑"</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">_ROW_BUTTON_LAYOUT</span><span class="p">)</span>
+        <span class="n">move_down</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"↓"</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">_ROW_BUTTON_LAYOUT</span><span class="p">)</span>
+        <span class="n">remove</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"✕"</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">_ROW_BUTTON_LAYOUT</span><span class="p">)</span>
+        <span class="n">move_up</span><span class="o">.</span><span class="n">on_click</span><span class="p">(</span><span class="k">lambda</span> <span class="n">_button</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_move</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">move_down</span><span class="o">.</span><span class="n">on_click</span><span class="p">(</span><span class="k">lambda</span> <span class="n">_button</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_move</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">remove</span><span class="o">.</span><span class="n">on_click</span><span class="p">(</span><span class="k">lambda</span> <span class="n">_button</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remove</span><span class="p">(</span><span class="n">row</span><span class="p">))</span>
+        <span class="n">row</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_row_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_row_boxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">HBox</span><span class="p">([</span><span class="n">row</span><span class="p">,</span> <span class="n">move_up</span><span class="p">,</span> <span class="n">move_down</span><span class="p">,</span> <span class="n">remove</span><span class="p">],</span> <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">align_items</span><span class="o">=</span><span class="s2">"flex-start"</span><span class="p">)))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_move</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">ArgumentsEditor</span><span class="p">,</span> <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Move the ``row`` by the ``offset``, unless that would move it past either end.</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="n">other_index</span> <span class="o">=</span> <span class="n">index</span> <span class="o">+</span> <span class="n">offset</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">other_index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">):</span>
+            <span class="n">rows</span><span class="p">,</span> <span class="n">row_boxes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_row_boxes</span>
+            <span class="n">rows</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">rows</span><span class="p">[</span><span class="n">other_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="n">other_index</span><span class="p">],</span> <span class="n">rows</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">row_boxes</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">row_boxes</span><span class="p">[</span><span class="n">other_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">row_boxes</span><span class="p">[</span><span class="n">other_index</span><span class="p">],</span> <span class="n">row_boxes</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">ArgumentsEditor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="n">row</span><span class="o">.</span><span class="n">unobserve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_row_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_row_boxes</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_button</span><span class="p">:</span> <span class="n">Button</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">add_row</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_row</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">()</span>
+
+        <span class="n">_on_main_thread</span><span class="p">(</span><span class="n">add_row</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_row_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Show the rows in their order, and set the value from them.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rows_box</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_row_boxes</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">values</span> <span class="ow">or</span> <span class="kc">None</span></div>
 
 </pre></div>
 

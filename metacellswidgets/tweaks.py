@@ -80,6 +80,7 @@ from .common import Arguments
 from .common import _give_own_dispatchers
 from .common import implements
 from .editors import ArgumentsEditor
+from .editors import ClassPicker
 
 if TYPE_CHECKING:
     from .sources import SourceWidgets
@@ -89,6 +90,7 @@ __all__: List[str] = [
     "Size",
     "Title",
     "Tweak",
+    "TweakPicker",
     "registered_tweaks",
     "tweak",
 ]
@@ -199,6 +201,25 @@ def registered_tweaks(graph_type: Type[Graph]) -> List[Type[Tweak]]:
     The registered tweaks which apply to the ``graph_type``, in the order they were registered.
     """
     return [tweak_class for tweak_class in _REGISTERED_TWEAKS.values() if tweak_class.applies_to(graph_type)]
+
+
+class TweakPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstract-method
+    """
+    Pick a tweak of the ``graph``, starting with the ``current`` tweak (if any). The choices are the registered tweaks
+    which apply to the type of the graph; or none. Picking a tweak with arguments shows its editor, which gets the
+    ``source`` and the ``graph``.
+    """
+
+    def __init__(self, source: "SourceWidgets", graph: Graph, current: Optional[Tweak] = None) -> None:
+        super().__init__()
+        self._source = source
+        self._graph = graph
+        self._show(registered_tweaks(type(graph)), current)
+
+    def _editor_of(self, choice: Type[Arguments], current: Optional[Arguments]) -> Optional[ArgumentsEditor]:
+        assert issubclass(choice, Tweak)
+        assert current is None or isinstance(current, Tweak)
+        return choice.editor(self._source, self._graph, current)
 
 
 # Plotly's own default size of a figure, which a new ``Size`` starts from when the graph gives no size of its own.

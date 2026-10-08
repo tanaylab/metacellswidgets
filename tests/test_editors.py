@@ -1,14 +1,56 @@
 """
-Test the widgets for editing the arguments of properties.
+Test the widgets for editing the arguments of properties and tweaks.
 """
 
 from typing import List
+from typing import Optional
 from typing import Tuple
 
 import metacellswidgets as mw
+from metacellswidgets.common import Arguments
+from metacellswidgets.editors import ArgumentsEditor
 from metacellswidgets.editors import GenePicker
+from metacellswidgets.editors import ListEditor
 from metacellswidgets.editors import NamePicker
 from metacellswidgets.editors import PickerEditor
+
+
+class _Row(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
+    """
+    A row of a list, whose value is set directly.
+    """
+
+    def __init__(self, current: Optional[Arguments]) -> None:
+        super().__init__()
+        self.value = current
+
+
+def test_list_editor() -> None:
+    """
+    A list editor starts with a row per object. A new row is empty until it gets a value. Rows move up and down (but not
+    past either end), and are removed. Without any value, the list's value is ``None``.
+    """
+    first, second, third = mw.Title(text="A"), mw.Title(text="B"), mw.Title(text="C")
+    editor = ListEditor(_Row, [first, second], add="Add title")
+    assert editor.value == [first, second]
+    rows_box, add_button = editor.children[0].children
+    assert add_button.description == "Add title"
+
+    add_button.click()
+    assert len(rows_box.children) == 3
+    assert editor.value == [first, second]
+    rows_box.children[2].children[0].value = third
+    assert editor.value == [first, second, third]
+
+    rows_box.children[2].children[1].click()
+    assert editor.value == [first, third, second]
+    rows_box.children[0].children[1].click()
+    rows_box.children[2].children[2].click()
+    assert editor.value == [first, third, second]
+
+    for _ in range(3):
+        rows_box.children[0].children[3].click()
+    assert editor.value is None
 
 
 class _Genes:
