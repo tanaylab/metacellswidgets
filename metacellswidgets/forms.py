@@ -31,6 +31,7 @@ from typing import Union
 
 from IPython import get_ipython
 from IPython.display import display as display_in_cell
+from ipywidgets import Accordion  # type: ignore
 from ipywidgets import Button  # type: ignore
 from ipywidgets import HBox  # type: ignore
 from ipywidgets import Output  # type: ignore
@@ -42,6 +43,7 @@ from somegraphspy import Graph
 
 from .common import Arguments
 from .common import _give_own_dispatchers
+from .editors import ListEditor
 from .kernel import _MainThreadJobs
 from .kernel import _owned_subshell_id
 from .kernel import _route_to_subshell
@@ -53,6 +55,7 @@ from .rewrite import _current_cell_source
 from .rewrite import _rewritten_cell
 from .sources import SourceWidgets
 from .tweaks import Tweak
+from .tweaks import TweakPicker
 
 __all__: List[str] = [
     "Branch",
@@ -199,6 +202,17 @@ class GraphForm(Arguments):
         display_in_cell(self.graph().figure)
         return self
 
+    def _tweaks_editor(self) -> Accordion:
+        # The editor of the tweaks: a list of them, under a "Tweaks" header, collapsed. A new tweak's editor starts from
+        # the graph as it is when the tweak is added.
+        def make_row(current: Optional[Arguments]) -> TweakPicker:
+            assert current is None or isinstance(current, Tweak)
+            return TweakPicker(self.source, self._untweaked_graph(), current)
+
+        tweaks = ListEditor(make_row, self.tweaks, add="Add tweak")
+        self.bind(tweaks=tweaks)
+        return Accordion(children=[tweaks], titles=("Tweaks",), selected_index=None)
+
     def _edit(self, display_site: Optional[_CallSite]) -> None:
         # Show the editor until "Done" is clicked, then rewrite the cell.
         call_site = self._call_site
@@ -212,7 +226,7 @@ class GraphForm(Arguments):
         figure = FigureWidget(self.graph().figure)
         done = Button(description="Done", button_style="primary")
         errors = Output()
-        editor = VBox([HBox([done]), self.editor(), figure, errors])
+        editor = VBox([HBox([done]), self.editor(), self._tweaks_editor(), figure, errors])
         _route_to_subshell(editor, _owned_subshell_id())
         display_in_cell(editor)
 

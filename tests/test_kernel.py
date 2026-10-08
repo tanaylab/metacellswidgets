@@ -183,9 +183,9 @@ def _is_done_button(state: Dict[str, Any]) -> bool:
     return state.get("_model_name") == "ButtonModel" and state.get("description") == "Done"
 
 
-def _is_property_choice(state: Dict[str, Any]) -> bool:
-    # Whether the widget state is of the dropdown of a property picker. It is opened with no options, which are set
-    # right after (unlike the axis picker's dropdown).
+def _is_class_choice(state: Dict[str, Any]) -> bool:
+    # Whether the widget state is of the dropdown of a picker of a property or of a tweak. It is opened with no options,
+    # which are set right after (unlike the axis picker's dropdown).
     return state.get("_model_name") == "DropdownModel" and not state.get("_options_labels")
 
 
@@ -215,45 +215,27 @@ def _send_state(client: Any, widget: Dict[str, Any], state: Dict[str, Any]) -> N
     time.sleep(1)
 
 
-def test_interactive_display_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
-    """
-    An interactive form blocks its cell; after editing a gene, coloring by the expression of another gene (whose picker
-    is created while the cell blocks), and clicking "Done", the cell is rewritten with the edited arguments, keeping
-    the receiver of the form's call.
-    """
-    _, client = kernel
-    _execute(
-        client,
-        "import numpy as np\n"
-        "import dafpy as dp\n"
-        "import metacellswidgets as mw\n"
-        "daf = dp.memory_daf(name='genes')\n"
-        "daf.add_axis('gene', ['A', 'B', 'D'])\n"
-        "daf.add_axis('metacell', ['M1', 'M2'])\n"
-        "daf.set_matrix('gene', 'metacell', 'linear_fraction', "
-        "np.array([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]], dtype='float32', order='F'))\n",
-    )
+# Makes a small ``daf`` of the expression of three genes in two metacells, for the interactive forms to show.
+_DAF_SETUP = (
+    "import numpy as np\n"
+    "import dafpy as dp\n"
+    "import metacellswidgets as mw\n"
+    "daf = dp.memory_daf(name='genes')\n"
+    "daf.add_axis('gene', ['A', 'B', 'D'])\n"
+    "daf.add_axis('metacell', ['M1', 'M2'])\n"
+    "daf.set_matrix('gene', 'metacell', 'linear_fraction', "
+    "np.array([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]], dtype='float32', order='F'))\n"
+)
 
-    cell = "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.display(interactive=True)\n"
-    message_id = client.execute(cell)
-    widgets = _opened_widgets(
-        client, lambda state: _is_done_button(state) or _is_gene_picker(state) or _is_property_choice(state), 5
-    )
-    done = next(widget for widget in widgets if _is_done_button(widget))
-    _x_gene, y_gene = [widget for widget in widgets if _is_gene_picker(widget)]
-    colors, _sizes = [widget for widget in widgets if _is_property_choice(widget)]
 
-    time.sleep(1)
-    _send_state(client, y_gene, {"value": "D"})
-    # The only property of the metacells which may color them is the gene expression, after the empty choice.
-    _send_state(client, colors, {"index": 1})
-    colors_gene = _opened_widgets(client, _is_gene_picker, 1)[0]
-    _send_state(client, colors_gene, {"value": "D"})
-    click = client.session.msg(
-        "comm_msg", {"comm_id": done["comm_id"], "data": {"method": "custom", "content": {"event": "click"}}}
-    )
-    client.shell_channel.send(click)
+def _click(client: Any, widget: Dict[str, Any]) -> None:
+    # Click a button, as the browser does.
+    message = {"comm_id": widget["comm_id"], "data": {"method": "custom", "content": {"event": "click"}}}
+    client.shell_channel.send(client.session.msg("comm_msg", message))
 
+
+def _rewritten_text(client: Any, message_id: str) -> str:
+    # The code the execution rewrote its cell to, once it is done.
     deadline = time.time() + 120
     while True:
         reply = client.get_shell_msg(timeout=max(deadline - time.time(), 0.1))
@@ -262,8 +244,75 @@ def test_interactive_display_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
     assert reply["content"]["status"] == "ok"
     payloads = [payload for payload in reply["content"]["payload"] if payload["source"] == "set_next_input"]
     assert payloads[-1]["replace"]
-    assert payloads[-1]["text"] == (
+    return payloads[-1]["text"]
+
+
+def test_interactive_display_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
+    """
+    An interactive form blocks its cell; after editing a gene, coloring by the expression of another gene (whose picker
+    is created while the cell blocks), and clicking "Done", the cell is rewritten with the edited arguments, keeping
+    the receiver of the form's call.
+    """
+    _, client = kernel
+    _execute(client, _DAF_SETUP)
+
+    cell = "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.display(interactive=True)\n"
+    message_id = client.execute(cell)
+    widgets = _opened_widgets(
+        client, lambda state: _is_done_button(state) or _is_gene_picker(state) or _is_class_choice(state), 5
+    )
+    done = next(widget for widget in widgets if _is_done_button(widget))
+    _x_gene, y_gene = [widget for widget in widgets if _is_gene_picker(widget)]
+    colors, _sizes = [widget for widget in widgets if _is_class_choice(widget)]
+
+    time.sleep(1)
+    _send_state(client, y_gene, {"value": "D"})
+    # The only property of the metacells which may color them is the gene expression, after the empty choice.
+    _send_state(client, colors, {"index": 1})
+    colors_gene = _opened_widgets(client, _is_gene_picker, 1)[0]
+    _send_state(client, colors_gene, {"value": "D"})
+    _click(client, done)
+    assert _rewritten_text(client, message_id) == (
         "form = mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='D', "
         "colors=mw.GeneExpression(gene='D'))\n"
+        "form.display(interactive=False)"
+    )
+
+
+def _is_add_tweak_button(state: Dict[str, Any]) -> bool:
+    # Whether the widget state is of the "Add tweak" button.
+    return state.get("_model_name") == "ButtonModel" and state.get("description") == "Add tweak"
+
+
+def _is_show_legends(state: Dict[str, Any]) -> bool:
+    # Whether the widget state is of the "Show legends" checkbox of a legends tweak.
+    return state.get("_model_name") == "CheckboxModel" and state.get("description") == "Show legends"
+
+
+def test_interactive_tweaks_rewrite_the_cell(kernel: Tuple[Any, Any]) -> None:
+    """
+    Adding a tweak while editing (whose row and editor are created while the cell blocks), and clicking "Done", writes
+    the tweak into the cell.
+    """
+    _, client = kernel
+    _execute(client, _DAF_SETUP)
+
+    cell = "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.display(interactive=True)\n"
+    message_id = client.execute(cell)
+    widgets = _opened_widgets(client, lambda state: _is_done_button(state) or _is_add_tweak_button(state), 2)
+    done = next(widget for widget in widgets if _is_done_button(widget))
+    add_tweak = next(widget for widget in widgets if _is_add_tweak_button(widget))
+
+    time.sleep(1)
+    _click(client, add_tweak)
+    # The new row's dropdown is opened with no options, which are set right after: "", Size, Title, Legends, ...
+    tweak_choice = _opened_widgets(client, _is_class_choice, 1)[0]
+    _send_state(client, tweak_choice, {"index": 3})
+    show_legends = _opened_widgets(client, _is_show_legends, 1)[0]
+    _send_state(client, show_legends, {"value": False})
+    _click(client, done)
+    assert _rewritten_text(client, message_id) == (
+        "form = mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='B', "
+        "tweaks=[mw.Legends(is_shown=False)])\n"
         "form.display(interactive=False)"
     )
