@@ -1361,6 +1361,20 @@ argument, and the graph is redrawn.
 <span class="pre">False
 </span>
 </span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">format
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">'plotly'
+</span>
+</span>
 </em>
 <span class="sig-paren">)
 </span>
@@ -1375,7 +1389,25 @@ argument, and the graph is redrawn.
 </dt>
 
 <dd>
-<p>Show the graph in the notebook cell. Returns the form, so it can be chained to its creation.
+<p>Show the graph in the notebook cell. Returns the form, so it can be chained to its creation. The 
+<code class="docutils literal notranslate">
+<span class="pre">format
+</span>
+</code> is
+
+<code class="docutils literal notranslate">
+<span class="pre">&quot;plotly&quot;
+</span>
+</code> for an interactive figure, or 
+<code class="docutils literal notranslate">
+<span class="pre">&quot;svg&quot;
+</span>
+</code> or 
+<code class="docutils literal notranslate">
+<span class="pre">&quot;png&quot;
+</span>
+</code> for a static image, which obeys the size of the
+graph.
 </p>
 
 <p>If 
@@ -1393,7 +1425,12 @@ top level, by a method of a kind of data source (e.g.
 <code class="docutils literal notranslate">
 <span class="pre">source.gene_gene(...)
 </span>
-</code>).
+</code>). The editor always shows an
+interactive figure. The 
+<code class="docutils literal notranslate">
+<span class="pre">format
+</span>
+</code> applies to the graph shown after “Done”.
 </p>
 
 <dl class="field-list simple">
@@ -1404,12 +1441,41 @@ top level, by a method of a kind of data source (e.g.
 </dt>
 
 <dd class="field-odd">
+<ul class="simple">
+
+<li>
 <p>
 <strong>interactive
 </strong> (
 <em>bool
 </em>)
 </p>
+</li>
+
+<li>
+<p>
+<strong>format
+</strong> (
+<em>Literal
+</em>
+<em>[
+</em>
+<em>'plotly'
+</em>
+<em>, 
+</em>
+<em>'svg'
+</em>
+<em>, 
+</em>
+<em>'png'
+</em>
+<em>]
+</em>)
+</p>
+</li>
+
+</ul>
 
 </dd>
 

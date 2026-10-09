@@ -97,12 +97,15 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenSet</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ipython</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">SVG</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span> <span class="k">as</span> <span class="n">display_in_cell</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Accordion</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Button</span>  <span class="c1"># type: ignore</span>
@@ -292,18 +295,34 @@
 
 <div class="viewcode-block" id="GraphForm.display">
 <a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.display">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"GraphForm"</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="nb">format</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"plotly"</span><span class="p">,</span> <span class="s2">"svg"</span><span class="p">,</span> <span class="s2">"png"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"plotly"</span><span class="p">,</span>  <span class="c1"># pylint: disable=redefined-builtin</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"GraphForm"</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Show the graph in the notebook cell. Returns the form, so it can be chained to its creation.</span>
+<span class="sd">        Show the graph in the notebook cell. Returns the form, so it can be chained to its creation. The ``format`` is</span>
+<span class="sd">        ``"plotly"`` for an interactive figure, or ``"svg"`` or ``"png"`` for a static image, which obeys the size of the</span>
+<span class="sd">        graph.</span>
 
 <span class="sd">        If ``interactive``, show an editor of the arguments and the graph instead, and block the cell until "Done" is</span>
 <span class="sd">        clicked. Then rewrite the code of the cell so that it creates the form with the edited arguments, and displays</span>
 <span class="sd">        it with ``interactive=False``, and show the graph. This requires the form to be created in the same cell, at its</span>
-<span class="sd">        top level, by a method of a kind of data source (e.g. ``source.gene_gene(...)``).</span>
+<span class="sd">        top level, by a method of a kind of data source (e.g. ``source.gene_gene(...)``). The editor always shows an</span>
+<span class="sd">        interactive figure. The ``format`` applies to the graph shown after "Done".</span>
 <span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">format</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"plotly"</span><span class="p">,</span> <span class="s2">"svg"</span><span class="p">,</span> <span class="s2">"png"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unknown format: </span><span class="si">{</span><span class="nb">format</span><span class="si">}</span><span class="s2"> (expected plotly, svg or png)"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">interactive</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_edit</span><span class="p">(</span><span class="n">_cell_site</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span>  <span class="c1"># pylint: disable=protected-access</span>
-        <span class="n">display_in_cell</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">()</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">"svg"</span><span class="p">:</span>
+            <span class="n">display_in_cell</span><span class="p">(</span><span class="n">SVG</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">svg</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">"png"</span><span class="p">:</span>
+            <span class="n">display_in_cell</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">png</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"png"</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">display_in_cell</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 

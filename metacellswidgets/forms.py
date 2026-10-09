@@ -24,12 +24,15 @@ from typing import Dict
 from typing import FrozenSet
 from typing import Iterator
 from typing import List
+from typing import Literal
 from typing import Optional
 from typing import Sequence
 from typing import Type
 from typing import Union
 
 from IPython import get_ipython
+from IPython.display import SVG
+from IPython.display import Image
 from IPython.display import display as display_in_cell
 from ipywidgets import Accordion  # type: ignore
 from ipywidgets import Button  # type: ignore
@@ -188,18 +191,34 @@ class GraphForm(Arguments):
             self._is_dirty = False
             redraw(self.graph())
 
-    def display(self, *, interactive: bool = False) -> "GraphForm":
+    def display(
+        self,
+        *,
+        interactive: bool = False,
+        format: Literal["plotly", "svg", "png"] = "plotly",  # pylint: disable=redefined-builtin
+    ) -> "GraphForm":
         """
-        Show the graph in the notebook cell. Returns the form, so it can be chained to its creation.
+        Show the graph in the notebook cell. Returns the form, so it can be chained to its creation. The ``format`` is
+        ``"plotly"`` for an interactive figure, or ``"svg"`` or ``"png"`` for a static image, which obeys the size of the
+        graph.
 
         If ``interactive``, show an editor of the arguments and the graph instead, and block the cell until "Done" is
         clicked. Then rewrite the code of the cell so that it creates the form with the edited arguments, and displays
         it with ``interactive=False``, and show the graph. This requires the form to be created in the same cell, at its
-        top level, by a method of a kind of data source (e.g. ``source.gene_gene(...)``).
+        top level, by a method of a kind of data source (e.g. ``source.gene_gene(...)``). The editor always shows an
+        interactive figure. The ``format`` applies to the graph shown after "Done".
         """
+        if format not in ("plotly", "svg", "png"):
+            raise ValueError(f"unknown format: {format} (expected plotly, svg or png)")
         if interactive:
             self._edit(_cell_site(sys._getframe(1)))  # pylint: disable=protected-access
-        display_in_cell(self.graph().figure)
+        graph = self.graph()
+        if format == "svg":
+            display_in_cell(SVG(graph.svg))
+        elif format == "png":
+            display_in_cell(Image(data=graph.png, format="png"))
+        else:
+            display_in_cell(graph.figure)
         return self
 
     def _tweaks_editor(self) -> Accordion:

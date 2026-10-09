@@ -5,6 +5,7 @@ Test the graphs.
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 import metacellswidgets as mw
 
@@ -112,3 +113,14 @@ def test_display() -> None:
     """
     form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B")
     assert form.display() is form
+
+
+def test_display_formats() -> None:
+    """
+    The graph may be shown as a static image, and any other format is an error.
+    """
+    form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B")
+    assert form.display(format="svg") is form
+    assert form.display(format="png") is form
+    with pytest.raises(ValueError, match="unknown format: jpeg"):
+        form.display(format="jpeg")  # type: ignore
