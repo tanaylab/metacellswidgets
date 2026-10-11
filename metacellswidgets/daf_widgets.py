@@ -222,7 +222,7 @@ def _has_boolean_mask(_cls: type, source: DafWidgets, axis: str) -> bool:
 
 @implements(BooleanMask.fill, DafWidgets)
 def _fill_boolean_mask(self: BooleanMask, source: DafWidgets, sinks: VectorDataSinks, axis: str) -> None:
-    mg.fill_boolean_annotation(sinks, source.daf, axis=axis, property=self.name)
+    mg.fill_boolean(sinks, source.daf, axis=axis, property=self.name)
 
 
 @implements(BooleanMask.editor, DafWidgets)
