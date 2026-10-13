@@ -34,9 +34,9 @@ def test_property_picker_choices() -> None:
     assert [label for label, _choice in picker._dropdown.options] == [
         "",
         "GeneExpression",
-        "TotalUMIs",
-        "NCells",
         "MeanTotalUMIsPerCell",
+        "NCells",
+        "TotalUMIs",
     ]
     assert picker.value is None
 

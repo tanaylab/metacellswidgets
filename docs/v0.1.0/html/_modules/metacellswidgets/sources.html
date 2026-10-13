@@ -271,13 +271,17 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">slot</span><span class="p">:</span> <span class="n">Slot</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Property</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        The properties this data source can show in the ``slot`` for the entries of the ``axis``: those registered for</span>
-<span class="sd">        its kind and the ``axis``, which suit the ``slot``, and which this data source has.</span>
+<span class="sd">        its kind and the ``axis``, which suit the ``slot``, and which this data source has. They are sorted by name, so</span>
+<span class="sd">        every form offers them in the same order.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="p">[</span>
-            <span class="n">property_class</span>
-            <span class="k">for</span> <span class="n">property_class</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">registered_properties</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">property_class</span><span class="o">.</span><span class="n">suits</span><span class="p">(</span><span class="n">slot</span><span class="p">)</span> <span class="ow">and</span> <span class="n">property_class</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
-        <span class="p">]</span></div>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">property_class</span>
+                <span class="k">for</span> <span class="n">property_class</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">registered_properties</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">property_class</span><span class="o">.</span><span class="n">suits</span><span class="p">(</span><span class="n">slot</span><span class="p">)</span> <span class="ow">and</span> <span class="n">property_class</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">property_class</span><span class="p">:</span> <span class="n">property_class</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+        <span class="p">)</span></div>
 </div>
 
 </pre></div>

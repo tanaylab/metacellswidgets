@@ -35,7 +35,7 @@ def test_properties(tmp_path: Path) -> None:
     The metacells have their types and the expression of genes.
     """
     source = _source(tmp_path)
-    assert source.properties(axis="metacell", slot=Slot.COLORS) == [mw.Type, mw.GeneExpression]
+    assert source.properties(axis="metacell", slot=Slot.COLORS) == [mw.GeneExpression, mw.Type]
     assert source.properties(axis="metacell", slot=Slot.SIZES) == [mw.GeneExpression]
     assert not source.properties(axis="block", slot=Slot.COLORS)
 

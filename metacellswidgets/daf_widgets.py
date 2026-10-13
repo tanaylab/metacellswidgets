@@ -2,9 +2,11 @@
 The ``Daf`` kind of data source: a single ``Daf`` data set of metacells.
 """
 
+from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Sequence
 from typing import Tuple
 
 import metacellsgraphspy as mg
@@ -28,6 +30,7 @@ from .properties import MeanTotalUMIsPerCell
 from .properties import MeanTotalUMIsPerMetacell
 from .properties import NCells
 from .properties import NMetacells
+from .properties import Property
 from .properties import TotalUMIs
 from .properties import Type
 from .sources import SourceWidgets
@@ -108,24 +111,59 @@ class DafWidgets(SourceWidgets):
         return self.daf.has_axis(axis) and all(self.daf.has_vector(axis, name) for name in names)
 
 
-@implements(Type.exists, DafWidgets)
-def _has_type(_cls: type, source: DafWidgets, axis: str) -> bool:
-    return source._has_vectors(axis, "type") and source._has_vectors("type", "color")
+# A table line of the properties of a bucket: the property, its ``metacellsgraphspy`` fill, and the axes it is offered
+# for.
+_BucketLine = Tuple[type[Property], Callable[..., None], Tuple[str, ...]]
+
+# The properties which are counts.
+_SIZE_PROPERTIES: Sequence[_BucketLine] = (
+    (TotalUMIs, mg.fill_total_UMIs, ("metacell", "block")),
+    (NCells, mg.fill_n_cells, ("metacell", "block")),
+    (NMetacells, mg.fill_n_metacells, ("block",)),
+)
+
+# The properties which name a category.
+_CATEGORY_PROPERTIES: Sequence[_BucketLine] = (
+    (Type, mg.fill_type, ("metacell", "block")),
+    (Block, mg.fill_block, ("metacell",)),
+)
+
+# The other properties, which are derived or take arguments, and the axes each is offered for. Each is implemented
+# below on its own.
+_OTHER_PROPERTIES: Sequence[Tuple[type[Property], Tuple[str, ...]]] = (
+    (GeneExpression, ("metacell", "block")),
+    (MeanCellsPerMetacell, ("block",)),
+    (MeanTotalUMIsPerMetacell, ("block",)),
+    (MeanTotalUMIsPerCell, ("metacell", "block")),
+    (BooleanMask, ("metacell", "block")),
+    (GlobalFlowOrder, ("metacell", "block")),
+)
 
 
-@implements(Type.fill, DafWidgets)
-def _fill_type(_self: Type, source: DafWidgets, sinks: VectorDataSinks, axis: str) -> None:
-    mg.fill_type(sinks, source.daf, axis=axis)
+def _has_size(cls: type[Property], source: DafWidgets, axis: str) -> bool:
+    return source._has_vectors(axis, cls.property_name)
 
 
-@implements(Block.exists, DafWidgets)
-def _has_block(_cls: type, source: DafWidgets, axis: str) -> bool:
-    return source._has_vectors(axis, "block")
+def _has_category(cls: type[Property], source: DafWidgets, axis: str) -> bool:
+    # The palette of a category comes from the axis of the same name (e.g., the ``type`` axis of the types).
+    return source._has_vectors(axis, cls.property_name) and source.daf.has_axis(cls.property_name)
 
 
-@implements(Block.fill, DafWidgets)
-def _fill_block(_self: Block, source: DafWidgets, sinks: VectorDataSinks, axis: str) -> None:
-    mg.fill_block(sinks, source.daf, axis=axis)
+# The implementation of ``fill`` for a table line, which calls the line's ``fill`` function.
+def _line_fill(fill: Callable[..., None]) -> Callable[[Property, DafWidgets, VectorDataSinks, str], None]:
+    def fill_line(_self: Property, source: DafWidgets, sinks: VectorDataSinks, axis: str) -> None:
+        fill(sinks, source.daf, axis=axis)
+
+    return fill_line
+
+
+for _property_class, _fill, _axes in _SIZE_PROPERTIES:
+    implements(_property_class.exists, DafWidgets)(_has_size)
+    implements(_property_class.fill, DafWidgets)(_line_fill(_fill))
+
+for _property_class, _fill, _axes in _CATEGORY_PROPERTIES:
+    implements(_property_class.exists, DafWidgets)(_has_category)
+    implements(_property_class.fill, DafWidgets)(_line_fill(_fill))
 
 
 @implements(GeneExpression.exists, DafWidgets)
@@ -147,36 +185,6 @@ def _gene_expression_editor(
     _cls: type, source: DafWidgets, _axis: str, current: Optional[GeneExpression]
 ) -> PickerEditor:
     return PickerEditor(GenePicker(source, None if current is None else current.gene), GeneExpression)
-
-
-@implements(TotalUMIs.exists, DafWidgets)
-def _has_total_umis(_cls: type, source: DafWidgets, axis: str) -> bool:
-    return source._has_vectors(axis, "total_UMIs")
-
-
-@implements(TotalUMIs.fill, DafWidgets)
-def _fill_total_umis(_self: TotalUMIs, source: DafWidgets, sinks: VectorDataSinks, axis: str) -> None:
-    mg.fill_total_UMIs(sinks, source.daf, axis=axis)
-
-
-@implements(NCells.exists, DafWidgets)
-def _has_n_cells(_cls: type, source: DafWidgets, axis: str) -> bool:
-    return source._has_vectors(axis, "n_cells")
-
-
-@implements(NCells.fill, DafWidgets)
-def _fill_n_cells(_self: NCells, source: DafWidgets, sinks: VectorDataSinks, axis: str) -> None:
-    mg.fill_n_cells(sinks, source.daf, axis=axis)
-
-
-@implements(NMetacells.exists, DafWidgets)
-def _has_n_metacells(_cls: type, source: DafWidgets, axis: str) -> bool:
-    return source._has_vectors(axis, "n_metacells")
-
-
-@implements(NMetacells.fill, DafWidgets)
-def _fill_n_metacells(_self: NMetacells, source: DafWidgets, sinks: VectorDataSinks, axis: str) -> None:
-    mg.fill_n_metacells(sinks, source.daf, axis=axis)
 
 
 @implements(MeanCellsPerMetacell.exists, DafWidgets)
@@ -252,23 +260,10 @@ def _gene_gene_base_graph(self: GeneGene, source: DafWidgets) -> PointsGraph:
     return mg.gene_gene_graph(source.daf, axis=self.axis, x_gene=self.x_gene, y_gene=self.y_gene)
 
 
-DafWidgets.register_properties(
-    axis="metacell",
-    properties=[Type, Block, GeneExpression, TotalUMIs, NCells, MeanTotalUMIsPerCell, BooleanMask, GlobalFlowOrder],
-)
+for _property_class, _fill, _axes in (*_SIZE_PROPERTIES, *_CATEGORY_PROPERTIES):
+    for _axis in _axes:
+        DafWidgets.register_properties(axis=_axis, properties=[_property_class])
 
-DafWidgets.register_properties(
-    axis="block",
-    properties=[
-        Type,
-        GeneExpression,
-        TotalUMIs,
-        NCells,
-        NMetacells,
-        MeanCellsPerMetacell,
-        MeanTotalUMIsPerMetacell,
-        MeanTotalUMIsPerCell,
-        BooleanMask,
-        GlobalFlowOrder,
-    ],
-)
+for _property_class, _axes in _OTHER_PROPERTIES:
+    for _axis in _axes:
+        DafWidgets.register_properties(axis=_axis, properties=[_property_class])

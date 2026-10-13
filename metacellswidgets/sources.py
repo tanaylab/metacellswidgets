@@ -173,10 +173,14 @@ class SourceWidgets:
     def properties(self, *, axis: str, slot: Slot) -> List[Type[Property]]:
         """
         The properties this data source can show in the ``slot`` for the entries of the ``axis``: those registered for
-        its kind and the ``axis``, which suit the ``slot``, and which this data source has.
+        its kind and the ``axis``, which suit the ``slot``, and which this data source has. They are sorted by name, so
+        every form offers them in the same order.
         """
-        return [
-            property_class
-            for property_class in self.registered_properties(axis)
-            if property_class.suits(slot) and property_class.exists(self, axis)
-        ]
+        return sorted(
+            (
+                property_class
+                for property_class in self.registered_properties(axis)
+                if property_class.suits(slot) and property_class.exists(self, axis)
+            ),
+            key=lambda property_class: property_class.__name__,
+        )

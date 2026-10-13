@@ -72,7 +72,7 @@ def test_registered_properties() -> None:
     """
     The properties offered for each axis.
     """
-    assert mw.DafWidgets.registered_properties("metacell") == [
+    assert set(mw.DafWidgets.registered_properties("metacell")) == {
         mw.Type,
         mw.Block,
         mw.GeneExpression,
@@ -81,33 +81,41 @@ def test_registered_properties() -> None:
         mw.MeanTotalUMIsPerCell,
         mw.BooleanMask,
         mw.GlobalFlowOrder,
-    ]
+    }
     assert mw.NMetacells in mw.DafWidgets.registered_properties("block")
     assert mw.Block not in mw.DafWidgets.registered_properties("block")
 
 
 def test_properties_of_full_daf() -> None:
     """
-    All the registered properties exist in the full data set, offered per slot.
+    All the registered properties exist in the full data set, offered per slot, sorted by name.
     """
     source = mw.DafWidgets(_full_daf())
-    assert source.properties(axis="metacell", slot=Slot.COLORS) == mw.DafWidgets.registered_properties("metacell")[:-1]
+    assert source.properties(axis="metacell", slot=Slot.COLORS) == [
+        mw.Block,
+        mw.BooleanMask,
+        mw.GeneExpression,
+        mw.MeanTotalUMIsPerCell,
+        mw.NCells,
+        mw.TotalUMIs,
+        mw.Type,
+    ]
     assert source.properties(axis="metacell", slot=Slot.SIZES) == [
         mw.GeneExpression,
-        mw.TotalUMIs,
-        mw.NCells,
         mw.MeanTotalUMIsPerCell,
+        mw.NCells,
+        mw.TotalUMIs,
     ]
-    assert source.properties(axis="metacell", slot=Slot.GROUPS) == [mw.Type, mw.Block, mw.GlobalFlowOrder]
+    assert source.properties(axis="metacell", slot=Slot.GROUPS) == [mw.Block, mw.GlobalFlowOrder, mw.Type]
     assert source.properties(axis="metacell", slot=Slot.MASK) == [mw.BooleanMask]
     assert source.properties(axis="block", slot=Slot.SIZES) == [
         mw.GeneExpression,
-        mw.TotalUMIs,
+        mw.MeanCellsPerMetacell,
+        mw.MeanTotalUMIsPerCell,
+        mw.MeanTotalUMIsPerMetacell,
         mw.NCells,
         mw.NMetacells,
-        mw.MeanCellsPerMetacell,
-        mw.MeanTotalUMIsPerMetacell,
-        mw.MeanTotalUMIsPerCell,
+        mw.TotalUMIs,
     ]
 
 

@@ -92,10 +92,10 @@ def test_register_twice() -> None:
 
 def test_properties() -> None:
     """
-    A slot offers the registered properties which suit it and which the data source has.
+    A slot offers the registered properties which suit it and which the data source has, sorted by name.
     """
     toys = _Toys({"category of cell", "amount of cell"})
-    assert toys.properties(axis="cell", slot=Slot.COLORS) == [_Category, _Amount]
+    assert toys.properties(axis="cell", slot=Slot.COLORS) == [_Amount, _Category]
     assert toys.properties(axis="cell", slot=Slot.SIZES) == [_Amount]
     assert toys.properties(axis="cell", slot=Slot.GROUPS) == [_Category]
     assert not toys.properties(axis="cell", slot=Slot.MASK)

@@ -22,6 +22,7 @@ from .editors import PickerEditor
 from .forms import Branch
 from .graphs import GeneGene
 from .properties import GeneExpression
+from .properties import Property
 from .properties import Type
 from .sources import SourceWidgets
 from .sources import graph_constructor
@@ -80,7 +81,7 @@ def _has_type(_cls: type, source: AnnDataWidgets, axis: str) -> bool:
 
 
 @implements(Type.fill, AnnDataWidgets)
-def _fill_type(_self: Type, source: AnnDataWidgets, sinks: VectorDataSinks, _axis: str) -> None:
+def _fill_type(_self: Property, source: AnnDataWidgets, sinks: VectorDataSinks, _axis: str) -> None:
     mg.ad_fill_type(sinks, source.adata, type_property=source.type_property, type_colors_csv=source.type_colors_csv)
 
 

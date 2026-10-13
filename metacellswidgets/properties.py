@@ -39,6 +39,9 @@ __all__: List[str] = [
     "Slot",
     "TotalUMIs",
     "Type",
+    "boolean_property",
+    "category_property",
+    "size_property",
 ]
 
 
@@ -119,6 +122,9 @@ class Property(Arguments):
     #: The shape of the values the property produces.
     shape: Shape
 
+    #: The name the data gives the property, for a property made by a factory (e.g., :py:func:`size_property`).
+    property_name: str
+
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
         _give_own_dispatchers(cls, Property, ("exists", "fill", "editor"))
@@ -157,22 +163,63 @@ class Property(Arguments):
         return None
 
 
-class Type(Property):
+def size_property(
+    class_name: str,
+    *,
+    property: str,  # pylint: disable=redefined-builtin
+    doc: str,
+) -> type[Property]:
     """
-    The type of each entry, such as the cell type of each metacell, shown in the colors of its type.
+    Make the class of a property which is a count, such as UMIs, named ``class_name`` and documented by the ``doc``.
+    The data gives it the name ``property``.
     """
-
-    eltype = Eltype.CATEGORICAL
-    shape = Shape.VECTOR
+    return _factory_property(class_name, eltype=Eltype.NUMBER, property_name=property, doc=doc)
 
 
-class Block(Property):
+def category_property(
+    class_name: str,
+    *,
+    property: str,  # pylint: disable=redefined-builtin
+    doc: str,
+) -> type[Property]:
     """
-    The block each entry belongs to.
+    Make the class of a property which names a category, such as a type, named ``class_name`` and documented by the
+    ``doc``. The data gives it the name ``property``.
     """
+    return _factory_property(class_name, eltype=Eltype.CATEGORICAL, property_name=property, doc=doc)
 
-    eltype = Eltype.CATEGORICAL
-    shape = Shape.VECTOR
+
+def boolean_property(
+    class_name: str,
+    *,
+    property: str,  # pylint: disable=redefined-builtin
+    doc: str,
+) -> type[Property]:
+    """
+    Make the class of a property which is a Boolean flag, named ``class_name`` and documented by the ``doc``. The data
+    gives it the name ``property``.
+    """
+    return _factory_property(class_name, eltype=Eltype.BOOLEAN, property_name=property, doc=doc)
+
+
+# Make the class of a property without arguments, as a factory does.
+def _factory_property(class_name: str, *, eltype: Eltype, property_name: str, doc: str) -> type[Property]:
+    namespace = {
+        "__doc__": doc,
+        "__module__": __name__,
+        "__qualname__": class_name,
+        "eltype": eltype,
+        "shape": Shape.VECTOR,
+        "property_name": property_name,
+    }
+    return type(class_name, (Property,), namespace)
+
+
+Type = category_property(
+    "Type", property="type", doc="The type of each entry, such as the cell type of each metacell, shown in its color."
+)
+
+Block = category_property("Block", property="block", doc="The block each entry belongs to.")
 
 
 class GeneExpression(Property):
@@ -187,31 +234,11 @@ class GeneExpression(Property):
         self.gene = gene
 
 
-class TotalUMIs(Property):
-    """
-    The total number of UMIs of each entry.
-    """
+TotalUMIs = size_property("TotalUMIs", property="total_UMIs", doc="The total number of UMIs of each entry.")
 
-    eltype = Eltype.NUMBER
-    shape = Shape.VECTOR
+NCells = size_property("NCells", property="n_cells", doc="The number of cells of each entry.")
 
-
-class NCells(Property):
-    """
-    The number of cells of each entry.
-    """
-
-    eltype = Eltype.NUMBER
-    shape = Shape.VECTOR
-
-
-class NMetacells(Property):
-    """
-    The number of metacells of each entry.
-    """
-
-    eltype = Eltype.NUMBER
-    shape = Shape.VECTOR
+NMetacells = size_property("NMetacells", property="n_metacells", doc="The number of metacells of each entry.")
 
 
 class MeanCellsPerMetacell(Property):

@@ -146,3 +146,25 @@ def test_builtin_properties(prop: Property, code: str, eltype: Eltype) -> None:
     assert not type(prop).exists(_Unknown(), "metacell")
     with pytest.raises(TypeError, match=f"{type(prop).__name__}.fill is not implemented for: _Unknown"):
         prop.fill(_Unknown(), sinks, "metacell")
+
+
+def test_factories() -> None:
+    """
+    A factory makes a property class without arguments, named and documented as given, which a cell writes back as it
+    would a hand-written one.
+    """
+    for factory, eltype in (
+        (mw.size_property, Eltype.NUMBER),
+        (mw.category_property, Eltype.CATEGORICAL),
+        (mw.boolean_property, Eltype.BOOLEAN),
+    ):
+        made = factory("Made", property="made", doc="Something made.")
+        assert made.__name__ == "Made"
+        assert made.__doc__ == "Something made."
+        assert made.__module__ == "metacellswidgets.properties"
+        assert made.property_name == "made"
+        assert made.eltype == eltype
+        assert made.shape == Shape.VECTOR
+        assert made().code("mw.Made") == "mw.Made()"
+        assert made() == made()
+        assert made.exists is not Property.exists

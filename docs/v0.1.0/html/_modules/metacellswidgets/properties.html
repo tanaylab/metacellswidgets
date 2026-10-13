@@ -112,6 +112,9 @@
     <span class="s2">"Slot"</span><span class="p">,</span>
     <span class="s2">"TotalUMIs"</span><span class="p">,</span>
     <span class="s2">"Type"</span><span class="p">,</span>
+    <span class="s2">"boolean_property"</span><span class="p">,</span>
+    <span class="s2">"category_property"</span><span class="p">,</span>
+    <span class="s2">"size_property"</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -203,6 +206,9 @@
     <span class="c1">#: The shape of the values the property produces.</span>
     <span class="n">shape</span><span class="p">:</span> <span class="n">Shape</span>
 
+    <span class="c1">#: The name the data gives the property, for a property made by a factory (e.g., :py:func:`size_property`).</span>
+    <span class="n">property_name</span><span class="p">:</span> <span class="nb">str</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">_give_own_dispatchers</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">Property</span><span class="p">,</span> <span class="p">(</span><span class="s2">"exists"</span><span class="p">,</span> <span class="s2">"fill"</span><span class="p">,</span> <span class="s2">"editor"</span><span class="p">))</span>
@@ -254,28 +260,72 @@
 
 
 
-<div class="viewcode-block" id="Type">
-<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Type">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">Type</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
+<div class="viewcode-block" id="size_property">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.size_property">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">size_property</span><span class="p">(</span>
+    <span class="n">class_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="nb">property</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c1"># pylint: disable=redefined-builtin</span>
+    <span class="n">doc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    The type of each entry, such as the cell type of each metacell, shown in the colors of its type.</span>
+<span class="sd">    Make the class of a property which is a count, such as UMIs, named ``class_name`` and documented by the ``doc``.</span>
+<span class="sd">    The data gives it the name ``property``.</span>
 <span class="sd">    """</span>
-
-    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">CATEGORICAL</span>
-    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
+    <span class="k">return</span> <span class="n">_factory_property</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="n">eltype</span><span class="o">=</span><span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span><span class="p">,</span> <span class="n">property_name</span><span class="o">=</span><span class="nb">property</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="n">doc</span><span class="p">)</span></div>
 
 
 
-<div class="viewcode-block" id="Block">
-<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Block">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">Block</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
+<div class="viewcode-block" id="category_property">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.category_property">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">category_property</span><span class="p">(</span>
+    <span class="n">class_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="nb">property</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c1"># pylint: disable=redefined-builtin</span>
+    <span class="n">doc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    The block each entry belongs to.</span>
+<span class="sd">    Make the class of a property which names a category, such as a type, named ``class_name`` and documented by the</span>
+<span class="sd">    ``doc``. The data gives it the name ``property``.</span>
 <span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_factory_property</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="n">eltype</span><span class="o">=</span><span class="n">Eltype</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,</span> <span class="n">property_name</span><span class="o">=</span><span class="nb">property</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="n">doc</span><span class="p">)</span></div>
 
-    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">CATEGORICAL</span>
-    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
 
+
+<div class="viewcode-block" id="boolean_property">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.boolean_property">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">boolean_property</span><span class="p">(</span>
+    <span class="n">class_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="nb">property</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c1"># pylint: disable=redefined-builtin</span>
+    <span class="n">doc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Make the class of a property which is a Boolean flag, named ``class_name`` and documented by the ``doc``. The data</span>
+<span class="sd">    gives it the name ``property``.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_factory_property</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="n">eltype</span><span class="o">=</span><span class="n">Eltype</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">,</span> <span class="n">property_name</span><span class="o">=</span><span class="nb">property</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="n">doc</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># Make the class of a property without arguments, as a factory does.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_factory_property</span><span class="p">(</span><span class="n">class_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">eltype</span><span class="p">:</span> <span class="n">Eltype</span><span class="p">,</span> <span class="n">property_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">doc</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">]:</span>
+    <span class="n">namespace</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"__doc__"</span><span class="p">:</span> <span class="n">doc</span><span class="p">,</span>
+        <span class="s2">"__module__"</span><span class="p">:</span> <span class="vm">__name__</span><span class="p">,</span>
+        <span class="s2">"__qualname__"</span><span class="p">:</span> <span class="n">class_name</span><span class="p">,</span>
+        <span class="s2">"eltype"</span><span class="p">:</span> <span class="n">eltype</span><span class="p">,</span>
+        <span class="s2">"shape"</span><span class="p">:</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span><span class="p">,</span>
+        <span class="s2">"property_name"</span><span class="p">:</span> <span class="n">property_name</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="p">(</span><span class="n">Property</span><span class="p">,),</span> <span class="n">namespace</span><span class="p">)</span>
+
+
+<span class="n">Type</span> <span class="o">=</span> <span class="n">category_property</span><span class="p">(</span>
+    <span class="s2">"Type"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"type"</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"The type of each entry, such as the cell type of each metacell, shown in its color."</span>
+<span class="p">)</span>
+
+<span class="n">Block</span> <span class="o">=</span> <span class="n">category_property</span><span class="p">(</span><span class="s2">"Block"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"block"</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"The block each entry belongs to."</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="GeneExpression">
@@ -293,40 +343,11 @@
 
 
 
-<div class="viewcode-block" id="TotalUMIs">
-<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.TotalUMIs">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">TotalUMIs</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    The total number of UMIs of each entry.</span>
-<span class="sd">    """</span>
+<span class="n">TotalUMIs</span> <span class="o">=</span> <span class="n">size_property</span><span class="p">(</span><span class="s2">"TotalUMIs"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"total_UMIs"</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"The total number of UMIs of each entry."</span><span class="p">)</span>
 
-    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
-    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
+<span class="n">NCells</span> <span class="o">=</span> <span class="n">size_property</span><span class="p">(</span><span class="s2">"NCells"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"n_cells"</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"The number of cells of each entry."</span><span class="p">)</span>
 
-
-
-<div class="viewcode-block" id="NCells">
-<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.NCells">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">NCells</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    The number of cells of each entry.</span>
-<span class="sd">    """</span>
-
-    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
-    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
-
-
-
-<div class="viewcode-block" id="NMetacells">
-<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.NMetacells">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">NMetacells</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    The number of metacells of each entry.</span>
-<span class="sd">    """</span>
-
-    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
-    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
-
+<span class="n">NMetacells</span> <span class="o">=</span> <span class="n">size_property</span><span class="p">(</span><span class="s2">"NMetacells"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"n_metacells"</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"The number of metacells of each entry."</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="MeanCellsPerMetacell">
