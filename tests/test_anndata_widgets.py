@@ -94,6 +94,23 @@ def test_umap(tmp_path: Path) -> None:
     assert list(coordinates) == [0.0, 1.0, 2.0]
 
 
+def test_gene_flags(tmp_path: Path) -> None:
+    """
+    The lateral and marker flags are offered for the genes when the ``var`` has their columns, and fill as Booleans.
+    """
+    source = _source(tmp_path)
+    assert source.properties(axis="gene", slot=Slot.COLORS) == [mw.IsMarker]
+    source.adata.var["lateral_gene"] = [False, True, False]
+    assert source.properties(axis="gene", slot=Slot.MASK) == [mw.IsLateral, mw.IsMarker]
+    assert mw.IsMarker not in source.properties(axis="metacell", slot=Slot.COLORS)
+    heatmap = sg.heatmap_graph()
+    sinks: Any = heatmap.rows_annotations_colors_vector_fields(heatmap.add_rows_annotation())
+    mw.IsLateral().fill(source, sinks, "gene")
+    flags = heatmap.data.rows.annotations[0].values.vector
+    assert flags is not None
+    assert list(flags) == ["false", "true", "false"]
+
+
 def test_gene_choices(tmp_path: Path) -> None:
     """
     Excluded genes are never offered, and markers are those of the marker column.

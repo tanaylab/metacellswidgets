@@ -26,6 +26,8 @@ from .properties import Block
 from .properties import BooleanMask
 from .properties import GeneExpression
 from .properties import GlobalFlowOrder
+from .properties import IsLateral
+from .properties import IsMarker
 from .properties import MeanCellsPerMetacell
 from .properties import MeanTotalUMIsPerCell
 from .properties import MeanTotalUMIsPerMetacell
@@ -129,6 +131,12 @@ _CATEGORY_PROPERTIES: Sequence[_BucketLine] = (
     (Block, mg.fill_block, ("metacell",)),
 )
 
+# The properties which are Boolean flags.
+_BOOLEAN_PROPERTIES: Sequence[_BucketLine] = (
+    (IsLateral, mg.fill_is_lateral, ("gene",)),
+    (IsMarker, mg.fill_is_marker, ("gene",)),
+)
+
 # The other properties, which are derived or take arguments, and the axes each is offered for. Each is implemented
 # below on its own.
 _OTHER_PROPERTIES: Sequence[Tuple[type[Property], Tuple[str, ...]]] = (
@@ -142,7 +150,7 @@ _OTHER_PROPERTIES: Sequence[Tuple[type[Property], Tuple[str, ...]]] = (
 )
 
 
-def _has_size(cls: type[Property], source: DafWidgets, axis: str) -> bool:
+def _has_vector(cls: type[Property], source: DafWidgets, axis: str) -> bool:
     return source._has_vectors(axis, cls.property_name)
 
 
@@ -159,8 +167,8 @@ def _line_fill(fill: Callable[..., None]) -> Callable[[Property, DafWidgets, Vec
     return fill_line
 
 
-for _property_class, _fill, _axes in _SIZE_PROPERTIES:
-    implements(_property_class.exists, DafWidgets)(_has_size)
+for _property_class, _fill, _axes in (*_SIZE_PROPERTIES, *_BOOLEAN_PROPERTIES):
+    implements(_property_class.exists, DafWidgets)(_has_vector)
     implements(_property_class.fill, DafWidgets)(_line_fill(_fill))
 
 for _property_class, _fill, _axes in _CATEGORY_PROPERTIES:
@@ -277,7 +285,7 @@ def _gene_gene_base_graph(self: GeneGene, source: DafWidgets) -> PointsGraph:
     return mg.gene_gene_graph(source.daf, axis=self.axis, x_gene=self.x_gene, y_gene=self.y_gene)
 
 
-for _property_class, _fill, _axes in (*_SIZE_PROPERTIES, *_CATEGORY_PROPERTIES):
+for _property_class, _fill, _axes in (*_SIZE_PROPERTIES, *_CATEGORY_PROPERTIES, *_BOOLEAN_PROPERTIES):
     for _axis in _axes:
         DafWidgets.register_properties(axis=_axis, properties=[_property_class])
 

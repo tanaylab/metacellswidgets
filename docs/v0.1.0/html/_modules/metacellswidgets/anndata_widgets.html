@@ -75,7 +75,7 @@
 <span class="sd">The ``AnnData`` kind of data source: a metacells ``AnnData`` (e.g., read from an ``h5ad`` file).</span>
 
 <span class="sd">Each ``obs`` entry is a metacell, and ``X`` holds the expression level of each gene in each metacell (typically a</span>
-<span class="sd">geometric mean, used as it is stored). This kind offers only a few properties, of the metacells.</span>
+<span class="sd">geometric mean, used as it is stored). This kind offers only a few properties, of the metacells and of the genes.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
@@ -99,6 +99,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.graphs</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneGene</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">UMAP</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneExpression</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">IsLateral</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">IsMarker</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">Property</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">TotalUMIs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span>
@@ -132,7 +134,7 @@
 <div class="viewcode-block" id="AnnDataWidgets.has_axis">
 <a class="viewcode-back" href="../../anndata_widgets.html#metacellswidgets.anndata_widgets.AnnDataWidgets.has_axis">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">has_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">"metacell"</span></div>
+        <span class="k">return</span> <span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"metacell"</span><span class="p">,</span> <span class="s2">"gene"</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="AnnDataWidgets.gene_choices">
@@ -162,22 +164,30 @@
 
 
 
-<span class="c1"># A table line of the properties of a bucket: the property, its column of the ``obs``, and its ``metacellsgraphspy``</span>
-<span class="c1"># fill.</span>
-<span class="n">_BucketLine</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]</span>
+<span class="c1"># A table line of the properties of a bucket: the property, the axis it is offered for, its column (of the ``obs`` for</span>
+<span class="c1"># the metacells, of the ``var`` for the genes), and its ``metacellsgraphspy`` fill.</span>
+<span class="n">_BucketLine</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]</span>
 
 <span class="c1"># The properties which are counts.</span>
-<span class="n">_SIZE_PROPERTIES</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_BucketLine</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">TotalUMIs</span><span class="p">,</span> <span class="s2">"total_umis"</span><span class="p">,</span> <span class="n">mg</span><span class="o">.</span><span class="n">ad_fill_total_UMIs</span><span class="p">),)</span>
+<span class="n">_SIZE_PROPERTIES</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_BucketLine</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">TotalUMIs</span><span class="p">,</span> <span class="s2">"metacell"</span><span class="p">,</span> <span class="s2">"total_umis"</span><span class="p">,</span> <span class="n">mg</span><span class="o">.</span><span class="n">ad_fill_total_UMIs</span><span class="p">),)</span>
 
-<span class="c1"># The other properties, which need more than a column (e.g., the type colors) or take arguments. Each is implemented</span>
-<span class="c1"># below on its own.</span>
+<span class="c1"># The properties which are Boolean flags.</span>
+<span class="n">_BOOLEAN_PROPERTIES</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_BucketLine</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="n">IsLateral</span><span class="p">,</span> <span class="s2">"gene"</span><span class="p">,</span> <span class="s2">"lateral_gene"</span><span class="p">,</span> <span class="n">mg</span><span class="o">.</span><span class="n">ad_fill_is_lateral</span><span class="p">),</span>
+    <span class="p">(</span><span class="n">IsMarker</span><span class="p">,</span> <span class="s2">"gene"</span><span class="p">,</span> <span class="s2">"marker_gene"</span><span class="p">,</span> <span class="n">mg</span><span class="o">.</span><span class="n">ad_fill_is_marker</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># The other properties of the metacells, which need more than a column (e.g., the type colors) or take arguments. Each</span>
+<span class="c1"># is implemented below on its own.</span>
 <span class="n">_OTHER_PROPERTIES</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Type</span><span class="p">,</span> <span class="n">GeneExpression</span><span class="p">,</span> <span class="n">UMAP</span><span class="p">)</span>
 
 
-<span class="c1"># The implementation of ``exists`` for a table line, which checks for the line's ``column``.</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">_line_exists</span><span class="p">(</span><span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">],</span> <span class="n">AnnDataWidgets</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="c1"># The implementation of ``exists`` for a table line, which checks for the line's ``column`` on the line's</span>
+<span class="c1"># ``line_axis``.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_line_exists</span><span class="p">(</span><span class="n">line_axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">],</span> <span class="n">AnnDataWidgets</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]:</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">exists_line</span><span class="p">(</span><span class="n">_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">],</span> <span class="n">source</span><span class="p">:</span> <span class="n">AnnDataWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">"metacell"</span> <span class="ow">and</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">source</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span> <span class="k">if</span> <span class="n">line_axis</span> <span class="o">==</span> <span class="s2">"metacell"</span> <span class="k">else</span> <span class="n">source</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">var</span>
+        <span class="k">return</span> <span class="n">axis</span> <span class="o">==</span> <span class="n">line_axis</span> <span class="ow">and</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">frame</span>
 
     <span class="k">return</span> <span class="n">exists_line</span>
 
@@ -190,8 +200,8 @@
     <span class="k">return</span> <span class="n">fill_line</span>
 
 
-<span class="k">for</span> <span class="n">_property_class</span><span class="p">,</span> <span class="n">_column</span><span class="p">,</span> <span class="n">_fill</span> <span class="ow">in</span> <span class="n">_SIZE_PROPERTIES</span><span class="p">:</span>
-    <span class="n">implements</span><span class="p">(</span><span class="n">_property_class</span><span class="o">.</span><span class="n">exists</span><span class="p">,</span> <span class="n">AnnDataWidgets</span><span class="p">)(</span><span class="n">_line_exists</span><span class="p">(</span><span class="n">_column</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">_property_class</span><span class="p">,</span> <span class="n">_axis</span><span class="p">,</span> <span class="n">_column</span><span class="p">,</span> <span class="n">_fill</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="n">_SIZE_PROPERTIES</span><span class="p">,</span> <span class="o">*</span><span class="n">_BOOLEAN_PROPERTIES</span><span class="p">):</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">_property_class</span><span class="o">.</span><span class="n">exists</span><span class="p">,</span> <span class="n">AnnDataWidgets</span><span class="p">)(</span><span class="n">_line_exists</span><span class="p">(</span><span class="n">_axis</span><span class="p">,</span> <span class="n">_column</span><span class="p">))</span>
     <span class="n">implements</span><span class="p">(</span><span class="n">_property_class</span><span class="o">.</span><span class="n">fill</span><span class="p">,</span> <span class="n">AnnDataWidgets</span><span class="p">)(</span><span class="n">_line_fill</span><span class="p">(</span><span class="n">_fill</span><span class="p">))</span>
 
 
@@ -248,10 +258,10 @@
     <span class="k">return</span> <span class="n">mg</span><span class="o">.</span><span class="n">ad_gene_gene_graph</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">adata</span><span class="p">,</span> <span class="n">x_gene</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">x_gene</span><span class="p">,</span> <span class="n">y_gene</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">y_gene</span><span class="p">)</span>
 
 
-<span class="n">AnnDataWidgets</span><span class="o">.</span><span class="n">register_properties</span><span class="p">(</span>
-    <span class="n">axis</span><span class="o">=</span><span class="s2">"metacell"</span><span class="p">,</span>
-    <span class="n">properties</span><span class="o">=</span><span class="p">[</span><span class="n">property_class</span> <span class="k">for</span> <span class="n">property_class</span><span class="p">,</span> <span class="n">_column</span><span class="p">,</span> <span class="n">_fill</span> <span class="ow">in</span> <span class="n">_SIZE_PROPERTIES</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">_OTHER_PROPERTIES</span><span class="p">),</span>
-<span class="p">)</span>
+<span class="k">for</span> <span class="n">_property_class</span><span class="p">,</span> <span class="n">_axis</span><span class="p">,</span> <span class="n">_column</span><span class="p">,</span> <span class="n">_fill</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="n">_SIZE_PROPERTIES</span><span class="p">,</span> <span class="o">*</span><span class="n">_BOOLEAN_PROPERTIES</span><span class="p">):</span>
+    <span class="n">AnnDataWidgets</span><span class="o">.</span><span class="n">register_properties</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">_axis</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="p">[</span><span class="n">_property_class</span><span class="p">])</span>
+
+<span class="n">AnnDataWidgets</span><span class="o">.</span><span class="n">register_properties</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">"metacell"</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">_OTHER_PROPERTIES</span><span class="p">)</span>
 </pre></div>
 
            </div>

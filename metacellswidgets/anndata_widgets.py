@@ -2,7 +2,7 @@
 The ``AnnData`` kind of data source: a metacells ``AnnData`` (e.g., read from an ``h5ad`` file).
 
 Each ``obs`` entry is a metacell, and ``X`` holds the expression level of each gene in each metacell (typically a
-geometric mean, used as it is stored). This kind offers only a few properties, of the metacells.
+geometric mean, used as it is stored). This kind offers only a few properties, of the metacells and of the genes.
 """
 
 from typing import Callable
@@ -26,6 +26,8 @@ from .forms import Branch
 from .graphs import GeneGene
 from .properties import UMAP
 from .properties import GeneExpression
+from .properties import IsLateral
+from .properties import IsMarker
 from .properties import Property
 from .properties import TotalUMIs
 from .properties import Type
@@ -55,7 +57,7 @@ class AnnDataWidgets(SourceWidgets):
         self._gene_choices: Dict[bool, List[Tuple[str, str]]] = {}
 
     def has_axis(self, axis: str) -> bool:
-        return axis == "metacell"
+        return axis in ("metacell", "gene")
 
     def gene_choices(self, *, markers_only: bool = False) -> List[Tuple[str, str]]:
         """
@@ -80,22 +82,30 @@ class AnnDataWidgets(SourceWidgets):
         return np.asarray(self.adata.var[column], dtype="bool")
 
 
-# A table line of the properties of a bucket: the property, its column of the ``obs``, and its ``metacellsgraphspy``
-# fill.
-_BucketLine = Tuple[type[Property], str, Callable[..., None]]
+# A table line of the properties of a bucket: the property, the axis it is offered for, its column (of the ``obs`` for
+# the metacells, of the ``var`` for the genes), and its ``metacellsgraphspy`` fill.
+_BucketLine = Tuple[type[Property], str, str, Callable[..., None]]
 
 # The properties which are counts.
-_SIZE_PROPERTIES: Sequence[_BucketLine] = ((TotalUMIs, "total_umis", mg.ad_fill_total_UMIs),)
+_SIZE_PROPERTIES: Sequence[_BucketLine] = ((TotalUMIs, "metacell", "total_umis", mg.ad_fill_total_UMIs),)
 
-# The other properties, which need more than a column (e.g., the type colors) or take arguments. Each is implemented
-# below on its own.
+# The properties which are Boolean flags.
+_BOOLEAN_PROPERTIES: Sequence[_BucketLine] = (
+    (IsLateral, "gene", "lateral_gene", mg.ad_fill_is_lateral),
+    (IsMarker, "gene", "marker_gene", mg.ad_fill_is_marker),
+)
+
+# The other properties of the metacells, which need more than a column (e.g., the type colors) or take arguments. Each
+# is implemented below on its own.
 _OTHER_PROPERTIES: Sequence[type[Property]] = (Type, GeneExpression, UMAP)
 
 
-# The implementation of ``exists`` for a table line, which checks for the line's ``column``.
-def _line_exists(column: str) -> Callable[[type[Property], AnnDataWidgets, str], bool]:
+# The implementation of ``exists`` for a table line, which checks for the line's ``column`` on the line's
+# ``line_axis``.
+def _line_exists(line_axis: str, column: str) -> Callable[[type[Property], AnnDataWidgets, str], bool]:
     def exists_line(_cls: type[Property], source: AnnDataWidgets, axis: str) -> bool:
-        return axis == "metacell" and column in source.adata.obs
+        frame = source.adata.obs if line_axis == "metacell" else source.adata.var
+        return axis == line_axis and column in frame
 
     return exists_line
 
@@ -108,8 +118,8 @@ def _line_fill(fill: Callable[..., None]) -> Callable[[Property, AnnDataWidgets,
     return fill_line
 
 
-for _property_class, _column, _fill in _SIZE_PROPERTIES:
-    implements(_property_class.exists, AnnDataWidgets)(_line_exists(_column))
+for _property_class, _axis, _column, _fill in (*_SIZE_PROPERTIES, *_BOOLEAN_PROPERTIES):
+    implements(_property_class.exists, AnnDataWidgets)(_line_exists(_axis, _column))
     implements(_property_class.fill, AnnDataWidgets)(_line_fill(_fill))
 
 
@@ -166,7 +176,7 @@ def _gene_gene_base_graph(self: GeneGene, source: AnnDataWidgets) -> PointsGraph
     return mg.ad_gene_gene_graph(source.adata, x_gene=self.x_gene, y_gene=self.y_gene)
 
 
-AnnDataWidgets.register_properties(
-    axis="metacell",
-    properties=[property_class for property_class, _column, _fill in _SIZE_PROPERTIES] + list(_OTHER_PROPERTIES),
-)
+for _property_class, _axis, _column, _fill in (*_SIZE_PROPERTIES, *_BOOLEAN_PROPERTIES):
+    AnnDataWidgets.register_properties(axis=_axis, properties=[_property_class])
+
+AnnDataWidgets.register_properties(axis="metacell", properties=_OTHER_PROPERTIES)

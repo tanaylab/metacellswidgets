@@ -29,6 +29,8 @@ __all__: List[str] = [
     "Eltype",
     "GeneExpression",
     "GlobalFlowOrder",
+    "IsLateral",
+    "IsMarker",
     "MeanCellsPerMetacell",
     "MeanTotalUMIsPerCell",
     "MeanTotalUMIsPerMetacell",
@@ -243,6 +245,10 @@ TotalUMIs = size_property("TotalUMIs", property="total_UMIs", doc="The total num
 NCells = size_property("NCells", property="n_cells", doc="The number of cells of each entry.")
 
 NMetacells = size_property("NMetacells", property="n_metacells", doc="The number of metacells of each entry.")
+
+IsLateral = boolean_property("IsLateral", property="is_lateral", doc="Whether each gene is lateral.")
+
+IsMarker = boolean_property("IsMarker", property="is_marker", doc="Whether each gene is a marker gene.")
 
 
 class MeanCellsPerMetacell(Property):

@@ -99,6 +99,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">BooleanMask</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneExpression</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">GlobalFlowOrder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">IsLateral</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">IsMarker</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeanCellsPerMetacell</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeanTotalUMIsPerCell</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeanTotalUMIsPerMetacell</span>
@@ -214,6 +216,12 @@
     <span class="p">(</span><span class="n">Block</span><span class="p">,</span> <span class="n">mg</span><span class="o">.</span><span class="n">fill_block</span><span class="p">,</span> <span class="p">(</span><span class="s2">"metacell"</span><span class="p">,)),</span>
 <span class="p">)</span>
 
+<span class="c1"># The properties which are Boolean flags.</span>
+<span class="n">_BOOLEAN_PROPERTIES</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_BucketLine</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="n">IsLateral</span><span class="p">,</span> <span class="n">mg</span><span class="o">.</span><span class="n">fill_is_lateral</span><span class="p">,</span> <span class="p">(</span><span class="s2">"gene"</span><span class="p">,)),</span>
+    <span class="p">(</span><span class="n">IsMarker</span><span class="p">,</span> <span class="n">mg</span><span class="o">.</span><span class="n">fill_is_marker</span><span class="p">,</span> <span class="p">(</span><span class="s2">"gene"</span><span class="p">,)),</span>
+<span class="p">)</span>
+
 <span class="c1"># The other properties, which are derived or take arguments, and the axes each is offered for. Each is implemented</span>
 <span class="c1"># below on its own.</span>
 <span class="n">_OTHER_PROPERTIES</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">(</span>
@@ -227,7 +235,7 @@
 <span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_has_size</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">],</span> <span class="n">source</span><span class="p">:</span> <span class="n">DafWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_vector</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">],</span> <span class="n">source</span><span class="p">:</span> <span class="n">DafWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="n">_has_vectors</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">property_name</span><span class="p">)</span>
 
 
@@ -244,8 +252,8 @@
     <span class="k">return</span> <span class="n">fill_line</span>
 
 
-<span class="k">for</span> <span class="n">_property_class</span><span class="p">,</span> <span class="n">_fill</span><span class="p">,</span> <span class="n">_axes</span> <span class="ow">in</span> <span class="n">_SIZE_PROPERTIES</span><span class="p">:</span>
-    <span class="n">implements</span><span class="p">(</span><span class="n">_property_class</span><span class="o">.</span><span class="n">exists</span><span class="p">,</span> <span class="n">DafWidgets</span><span class="p">)(</span><span class="n">_has_size</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">_property_class</span><span class="p">,</span> <span class="n">_fill</span><span class="p">,</span> <span class="n">_axes</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="n">_SIZE_PROPERTIES</span><span class="p">,</span> <span class="o">*</span><span class="n">_BOOLEAN_PROPERTIES</span><span class="p">):</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">_property_class</span><span class="o">.</span><span class="n">exists</span><span class="p">,</span> <span class="n">DafWidgets</span><span class="p">)(</span><span class="n">_has_vector</span><span class="p">)</span>
     <span class="n">implements</span><span class="p">(</span><span class="n">_property_class</span><span class="o">.</span><span class="n">fill</span><span class="p">,</span> <span class="n">DafWidgets</span><span class="p">)(</span><span class="n">_line_fill</span><span class="p">(</span><span class="n">_fill</span><span class="p">))</span>
 
 <span class="k">for</span> <span class="n">_property_class</span><span class="p">,</span> <span class="n">_fill</span><span class="p">,</span> <span class="n">_axes</span> <span class="ow">in</span> <span class="n">_CATEGORY_PROPERTIES</span><span class="p">:</span>
@@ -362,7 +370,7 @@
     <span class="k">return</span> <span class="n">mg</span><span class="o">.</span><span class="n">gene_gene_graph</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">daf</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="n">x_gene</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">x_gene</span><span class="p">,</span> <span class="n">y_gene</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">y_gene</span><span class="p">)</span>
 
 
-<span class="k">for</span> <span class="n">_property_class</span><span class="p">,</span> <span class="n">_fill</span><span class="p">,</span> <span class="n">_axes</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="n">_SIZE_PROPERTIES</span><span class="p">,</span> <span class="o">*</span><span class="n">_CATEGORY_PROPERTIES</span><span class="p">):</span>
+<span class="k">for</span> <span class="n">_property_class</span><span class="p">,</span> <span class="n">_fill</span><span class="p">,</span> <span class="n">_axes</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="n">_SIZE_PROPERTIES</span><span class="p">,</span> <span class="o">*</span><span class="n">_CATEGORY_PROPERTIES</span><span class="p">,</span> <span class="o">*</span><span class="n">_BOOLEAN_PROPERTIES</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">_axis</span> <span class="ow">in</span> <span class="n">_axes</span><span class="p">:</span>
         <span class="n">DafWidgets</span><span class="o">.</span><span class="n">register_properties</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">_axis</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="p">[</span><span class="n">_property_class</span><span class="p">])</span>
 

@@ -102,6 +102,8 @@
     <span class="s2">"Eltype"</span><span class="p">,</span>
     <span class="s2">"GeneExpression"</span><span class="p">,</span>
     <span class="s2">"GlobalFlowOrder"</span><span class="p">,</span>
+    <span class="s2">"IsLateral"</span><span class="p">,</span>
+    <span class="s2">"IsMarker"</span><span class="p">,</span>
     <span class="s2">"MeanCellsPerMetacell"</span><span class="p">,</span>
     <span class="s2">"MeanTotalUMIsPerCell"</span><span class="p">,</span>
     <span class="s2">"MeanTotalUMIsPerMetacell"</span><span class="p">,</span>
@@ -352,6 +354,10 @@
 <span class="n">NCells</span> <span class="o">=</span> <span class="n">size_property</span><span class="p">(</span><span class="s2">"NCells"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"n_cells"</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"The number of cells of each entry."</span><span class="p">)</span>
 
 <span class="n">NMetacells</span> <span class="o">=</span> <span class="n">size_property</span><span class="p">(</span><span class="s2">"NMetacells"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"n_metacells"</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"The number of metacells of each entry."</span><span class="p">)</span>
+
+<span class="n">IsLateral</span> <span class="o">=</span> <span class="n">boolean_property</span><span class="p">(</span><span class="s2">"IsLateral"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"is_lateral"</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"Whether each gene is lateral."</span><span class="p">)</span>
+
+<span class="n">IsMarker</span> <span class="o">=</span> <span class="n">boolean_property</span><span class="p">(</span><span class="s2">"IsMarker"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"is_marker"</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"Whether each gene is a marker gene."</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="MeanCellsPerMetacell">

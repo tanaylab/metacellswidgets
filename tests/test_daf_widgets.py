@@ -209,6 +209,23 @@ def test_boolean_vectors() -> None:
     assert not source.boolean_vectors("block")
 
 
+def test_gene_flags() -> None:
+    """
+    The lateral and marker flags are offered for the genes, as colors or as a mask, and fill as Booleans.
+    """
+    source = mw.DafWidgets(_full_daf())
+    assert source.properties(axis="gene", slot=Slot.COLORS) == [mw.IsLateral, mw.IsMarker]
+    assert source.properties(axis="gene", slot=Slot.MASK) == [mw.IsLateral, mw.IsMarker]
+    assert mw.IsLateral not in source.properties(axis="metacell", slot=Slot.COLORS)
+    assert not mw.IsMarker.exists(mw.DafWidgets(_sparse_daf()), "gene")
+    heatmap = sg.heatmap_graph()
+    sinks: Any = heatmap.rows_annotations_colors_vector_fields(heatmap.add_rows_annotation())
+    mw.IsMarker().fill(source, sinks, "gene")
+    flags = heatmap.data.rows.annotations[0].values.vector
+    assert flags is not None
+    assert list(flags) == ["true", "false", "true", "true"]
+
+
 def test_umap() -> None:
     """
     The UMAP fills a coordinate along an axis without ticks, and its editor picks the coordinate.
