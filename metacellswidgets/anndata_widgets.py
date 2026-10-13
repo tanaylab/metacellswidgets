@@ -1,13 +1,15 @@
 """
 The ``AnnData`` kind of data source: a metacells ``AnnData`` (e.g., read from an ``h5ad`` file).
 
-Each ``obs`` entry is a metacell, and ``X`` holds the fraction of the UMIs of each metacell in each gene. This kind
-is an example for now; it offers only a few properties, of the metacells.
+Each ``obs`` entry is a metacell, and ``X`` holds the expression level of each gene in each metacell (typically a
+geometric mean, used as it is stored). This kind offers only a few properties, of the metacells.
 """
 
+from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Sequence
 from typing import Tuple
 
 import metacellsgraphspy as mg
@@ -18,11 +20,14 @@ from somegraphspy import VectorDataSinks
 
 from .common import implements
 from .editors import GenePicker
+from .editors import NamePicker
 from .editors import PickerEditor
 from .forms import Branch
 from .graphs import GeneGene
+from .properties import UMAP
 from .properties import GeneExpression
 from .properties import Property
+from .properties import TotalUMIs
 from .properties import Type
 from .sources import SourceWidgets
 from .sources import graph_constructor
@@ -75,6 +80,39 @@ class AnnDataWidgets(SourceWidgets):
         return np.asarray(self.adata.var[column], dtype="bool")
 
 
+# A table line of the properties of a bucket: the property, its column of the ``obs``, and its ``metacellsgraphspy``
+# fill.
+_BucketLine = Tuple[type[Property], str, Callable[..., None]]
+
+# The properties which are counts.
+_SIZE_PROPERTIES: Sequence[_BucketLine] = ((TotalUMIs, "total_umis", mg.ad_fill_total_UMIs),)
+
+# The other properties, which need more than a column (e.g., the type colors) or take arguments. Each is implemented
+# below on its own.
+_OTHER_PROPERTIES: Sequence[type[Property]] = (Type, GeneExpression, UMAP)
+
+
+# The implementation of ``exists`` for a table line, which checks for the line's ``column``.
+def _line_exists(column: str) -> Callable[[type[Property], AnnDataWidgets, str], bool]:
+    def exists_line(_cls: type[Property], source: AnnDataWidgets, axis: str) -> bool:
+        return axis == "metacell" and column in source.adata.obs
+
+    return exists_line
+
+
+# The implementation of ``fill`` for a table line, which calls the line's ``fill`` function.
+def _line_fill(fill: Callable[..., None]) -> Callable[[Property, AnnDataWidgets, VectorDataSinks, str], None]:
+    def fill_line(_self: Property, source: AnnDataWidgets, sinks: VectorDataSinks, _axis: str) -> None:
+        fill(sinks, source.adata)
+
+    return fill_line
+
+
+for _property_class, _column, _fill in _SIZE_PROPERTIES:
+    implements(_property_class.exists, AnnDataWidgets)(_line_exists(_column))
+    implements(_property_class.fill, AnnDataWidgets)(_line_fill(_fill))
+
+
 @implements(Type.exists, AnnDataWidgets)
 def _has_type(_cls: type, source: AnnDataWidgets, axis: str) -> bool:
     return axis == "metacell" and source.type_property in source.adata.obs
@@ -102,6 +140,21 @@ def _gene_expression_editor(
     return PickerEditor(GenePicker(source, None if current is None else current.gene), GeneExpression)
 
 
+@implements(UMAP.exists, AnnDataWidgets)
+def _has_umap(_cls: type, source: AnnDataWidgets, axis: str) -> bool:
+    return axis == "metacell" and "x" in source.adata.obs and "y" in source.adata.obs
+
+
+@implements(UMAP.fill, AnnDataWidgets)
+def _fill_umap(self: UMAP, source: AnnDataWidgets, sinks: VectorDataSinks, _axis: str) -> None:
+    mg.ad_fill_umap(sinks, source.adata, coordinate=self.coordinate)
+
+
+@implements(UMAP.editor, AnnDataWidgets)
+def _umap_editor(_cls: type, _source: AnnDataWidgets, _axis: str, current: Optional[UMAP]) -> PickerEditor:
+    return PickerEditor(NamePicker(["x", "y"], None if current is None else current.coordinate), UMAP)
+
+
 @implements(GeneGene.exists, AnnDataWidgets)
 def _has_gene_gene(_cls: type, _source: AnnDataWidgets) -> bool:
     return True
@@ -113,4 +166,7 @@ def _gene_gene_base_graph(self: GeneGene, source: AnnDataWidgets) -> PointsGraph
     return mg.ad_gene_gene_graph(source.adata, x_gene=self.x_gene, y_gene=self.y_gene)
 
 
-AnnDataWidgets.register_properties(axis="metacell", properties=[Type, GeneExpression])
+AnnDataWidgets.register_properties(
+    axis="metacell",
+    properties=[property_class for property_class, _column, _fill in _SIZE_PROPERTIES] + list(_OTHER_PROPERTIES),
+)

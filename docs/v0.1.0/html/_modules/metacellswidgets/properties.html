@@ -112,6 +112,7 @@
     <span class="s2">"Slot"</span><span class="p">,</span>
     <span class="s2">"TotalUMIs"</span><span class="p">,</span>
     <span class="s2">"Type"</span><span class="p">,</span>
+    <span class="s2">"UMAP"</span><span class="p">,</span>
     <span class="s2">"boolean_property"</span><span class="p">,</span>
     <span class="s2">"category_property"</span><span class="p">,</span>
     <span class="s2">"size_property"</span><span class="p">,</span>
@@ -135,7 +136,10 @@
     <span class="n">BOOLEAN</span> <span class="o">=</span> <span class="s2">"boolean"</span>
 
     <span class="c1">#: Numbers which say how to lay out entries (which go together, and in what order), such as a global flow order.</span>
-    <span class="n">ARRANGEMENT</span> <span class="o">=</span> <span class="s2">"arrangement"</span></div>
+    <span class="n">ARRANGEMENT</span> <span class="o">=</span> <span class="s2">"arrangement"</span>
+
+    <span class="c1">#: Positions in an embedding, such as a UMAP, which mean something only relative to each other.</span>
+    <span class="n">COORDINATE</span> <span class="o">=</span> <span class="s2">"coordinate"</span></div>
 
 
 
@@ -183,12 +187,12 @@
 
 <span class="c1"># The kinds of values each slot can show.</span>
 <span class="n">_SLOT_ELTYPES</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">Slot</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">Eltype</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="n">Slot</span><span class="o">.</span><span class="n">COORDINATES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span><span class="p">]),</span>
+    <span class="n">Slot</span><span class="o">.</span><span class="n">COORDINATES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">COORDINATE</span><span class="p">]),</span>
     <span class="n">Slot</span><span class="o">.</span><span class="n">SIZES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span><span class="p">]),</span>
     <span class="n">Slot</span><span class="o">.</span><span class="n">COLORS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">]),</span>
     <span class="n">Slot</span><span class="o">.</span><span class="n">GROUPS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">Eltype</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">ARRANGEMENT</span><span class="p">]),</span>
     <span class="n">Slot</span><span class="o">.</span><span class="n">MASK</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">Eltype</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">]),</span>
-    <span class="n">Slot</span><span class="o">.</span><span class="n">HOVERS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">ARRANGEMENT</span><span class="p">]),</span>
+    <span class="n">Slot</span><span class="o">.</span><span class="n">HOVERS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">ARRANGEMENT</span><span class="p">,</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">COORDINATE</span><span class="p">]),</span>
 <span class="p">}</span>
 
 
@@ -410,6 +414,21 @@
 
     <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">ARRANGEMENT</span>
     <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
+
+
+
+<div class="viewcode-block" id="UMAP">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.UMAP">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UMAP</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The UMAP ``coordinate`` (``x`` or ``y``) of each entry, shown along an axis without ticks or a grid.</span>
+<span class="sd">    """</span>
+
+    <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">COORDINATE</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinate</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coordinate</span> <span class="o">=</span> <span class="n">coordinate</span></div>
 
 </pre></div>
 

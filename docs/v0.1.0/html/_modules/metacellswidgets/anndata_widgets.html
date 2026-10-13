@@ -74,13 +74,15 @@
 <span></span><span class="sd">"""</span>
 <span class="sd">The ``AnnData`` kind of data source: a metacells ``AnnData`` (e.g., read from an ``h5ad`` file).</span>
 
-<span class="sd">Each ``obs`` entry is a metacell, and ``X`` holds the fraction of the UMIs of each metacell in each gene. This kind</span>
-<span class="sd">is an example for now; it offers only a few properties, of the metacells.</span>
+<span class="sd">Each ``obs`` entry is a metacell, and ``X`` holds the expression level of each gene in each metacell (typically a</span>
+<span class="sd">geometric mean, used as it is stored). This kind offers only a few properties, of the metacells.</span>
 <span class="sd">"""</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">metacellsgraphspy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mg</span>
@@ -91,11 +93,14 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">implements</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">GenePicker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamePicker</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">PickerEditor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">Branch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.graphs</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneGene</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">UMAP</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneExpression</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">Property</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">TotalUMIs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceWidgets</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph_constructor</span>
@@ -157,6 +162,39 @@
 
 
 
+<span class="c1"># A table line of the properties of a bucket: the property, its column of the ``obs``, and its ``metacellsgraphspy``</span>
+<span class="c1"># fill.</span>
+<span class="n">_BucketLine</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]</span>
+
+<span class="c1"># The properties which are counts.</span>
+<span class="n">_SIZE_PROPERTIES</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_BucketLine</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">TotalUMIs</span><span class="p">,</span> <span class="s2">"total_umis"</span><span class="p">,</span> <span class="n">mg</span><span class="o">.</span><span class="n">ad_fill_total_UMIs</span><span class="p">),)</span>
+
+<span class="c1"># The other properties, which need more than a column (e.g., the type colors) or take arguments. Each is implemented</span>
+<span class="c1"># below on its own.</span>
+<span class="n">_OTHER_PROPERTIES</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Type</span><span class="p">,</span> <span class="n">GeneExpression</span><span class="p">,</span> <span class="n">UMAP</span><span class="p">)</span>
+
+
+<span class="c1"># The implementation of ``exists`` for a table line, which checks for the line's ``column``.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_line_exists</span><span class="p">(</span><span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">],</span> <span class="n">AnnDataWidgets</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">exists_line</span><span class="p">(</span><span class="n">_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">],</span> <span class="n">source</span><span class="p">:</span> <span class="n">AnnDataWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">"metacell"</span> <span class="ow">and</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">source</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span>
+
+    <span class="k">return</span> <span class="n">exists_line</span>
+
+
+<span class="c1"># The implementation of ``fill`` for a table line, which calls the line's ``fill`` function.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_line_fill</span><span class="p">(</span><span class="n">fill</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Property</span><span class="p">,</span> <span class="n">AnnDataWidgets</span><span class="p">,</span> <span class="n">VectorDataSinks</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fill_line</span><span class="p">(</span><span class="n">_self</span><span class="p">:</span> <span class="n">Property</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">AnnDataWidgets</span><span class="p">,</span> <span class="n">sinks</span><span class="p">:</span> <span class="n">VectorDataSinks</span><span class="p">,</span> <span class="n">_axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fill</span><span class="p">(</span><span class="n">sinks</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">adata</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fill_line</span>
+
+
+<span class="k">for</span> <span class="n">_property_class</span><span class="p">,</span> <span class="n">_column</span><span class="p">,</span> <span class="n">_fill</span> <span class="ow">in</span> <span class="n">_SIZE_PROPERTIES</span><span class="p">:</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">_property_class</span><span class="o">.</span><span class="n">exists</span><span class="p">,</span> <span class="n">AnnDataWidgets</span><span class="p">)(</span><span class="n">_line_exists</span><span class="p">(</span><span class="n">_column</span><span class="p">))</span>
+    <span class="n">implements</span><span class="p">(</span><span class="n">_property_class</span><span class="o">.</span><span class="n">fill</span><span class="p">,</span> <span class="n">AnnDataWidgets</span><span class="p">)(</span><span class="n">_line_fill</span><span class="p">(</span><span class="n">_fill</span><span class="p">))</span>
+
+
 <span class="nd">@implements</span><span class="p">(</span><span class="n">Type</span><span class="o">.</span><span class="n">exists</span><span class="p">,</span> <span class="n">AnnDataWidgets</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">_has_type</span><span class="p">(</span><span class="n">_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">AnnDataWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">"metacell"</span> <span class="ow">and</span> <span class="n">source</span><span class="o">.</span><span class="n">type_property</span> <span class="ow">in</span> <span class="n">source</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span>
@@ -184,6 +222,21 @@
     <span class="k">return</span> <span class="n">PickerEditor</span><span class="p">(</span><span class="n">GenePicker</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">gene</span><span class="p">),</span> <span class="n">GeneExpression</span><span class="p">)</span>
 
 
+<span class="nd">@implements</span><span class="p">(</span><span class="n">UMAP</span><span class="o">.</span><span class="n">exists</span><span class="p">,</span> <span class="n">AnnDataWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_umap</span><span class="p">(</span><span class="n">_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">AnnDataWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">"metacell"</span> <span class="ow">and</span> <span class="s2">"x"</span> <span class="ow">in</span> <span class="n">source</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span> <span class="ow">and</span> <span class="s2">"y"</span> <span class="ow">in</span> <span class="n">source</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span>
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">UMAP</span><span class="o">.</span><span class="n">fill</span><span class="p">,</span> <span class="n">AnnDataWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_fill_umap</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">UMAP</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">AnnDataWidgets</span><span class="p">,</span> <span class="n">sinks</span><span class="p">:</span> <span class="n">VectorDataSinks</span><span class="p">,</span> <span class="n">_axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">mg</span><span class="o">.</span><span class="n">ad_fill_umap</span><span class="p">(</span><span class="n">sinks</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">adata</span><span class="p">,</span> <span class="n">coordinate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">coordinate</span><span class="p">)</span>
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">UMAP</span><span class="o">.</span><span class="n">editor</span><span class="p">,</span> <span class="n">AnnDataWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_umap_editor</span><span class="p">(</span><span class="n">_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">_source</span><span class="p">:</span> <span class="n">AnnDataWidgets</span><span class="p">,</span> <span class="n">_axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UMAP</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">PickerEditor</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">PickerEditor</span><span class="p">(</span><span class="n">NamePicker</span><span class="p">([</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">],</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">coordinate</span><span class="p">),</span> <span class="n">UMAP</span><span class="p">)</span>
+
+
 <span class="nd">@implements</span><span class="p">(</span><span class="n">GeneGene</span><span class="o">.</span><span class="n">exists</span><span class="p">,</span> <span class="n">AnnDataWidgets</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">_has_gene_gene</span><span class="p">(</span><span class="n">_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">_source</span><span class="p">:</span> <span class="n">AnnDataWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="k">return</span> <span class="kc">True</span>
@@ -195,7 +248,10 @@
     <span class="k">return</span> <span class="n">mg</span><span class="o">.</span><span class="n">ad_gene_gene_graph</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">adata</span><span class="p">,</span> <span class="n">x_gene</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">x_gene</span><span class="p">,</span> <span class="n">y_gene</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">y_gene</span><span class="p">)</span>
 
 
-<span class="n">AnnDataWidgets</span><span class="o">.</span><span class="n">register_properties</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">"metacell"</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="p">[</span><span class="n">Type</span><span class="p">,</span> <span class="n">GeneExpression</span><span class="p">])</span>
+<span class="n">AnnDataWidgets</span><span class="o">.</span><span class="n">register_properties</span><span class="p">(</span>
+    <span class="n">axis</span><span class="o">=</span><span class="s2">"metacell"</span><span class="p">,</span>
+    <span class="n">properties</span><span class="o">=</span><span class="p">[</span><span class="n">property_class</span> <span class="k">for</span> <span class="n">property_class</span><span class="p">,</span> <span class="n">_column</span><span class="p">,</span> <span class="n">_fill</span> <span class="ow">in</span> <span class="n">_SIZE_PROPERTIES</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">_OTHER_PROPERTIES</span><span class="p">),</span>
+<span class="p">)</span>
 </pre></div>
 
            </div>

@@ -21,6 +21,7 @@ from .editors import NamePicker
 from .editors import PickerEditor
 from .forms import Branch
 from .graphs import GeneGene
+from .properties import UMAP
 from .properties import Block
 from .properties import BooleanMask
 from .properties import GeneExpression
@@ -137,6 +138,7 @@ _OTHER_PROPERTIES: Sequence[Tuple[type[Property], Tuple[str, ...]]] = (
     (MeanTotalUMIsPerCell, ("metacell", "block")),
     (BooleanMask, ("metacell", "block")),
     (GlobalFlowOrder, ("metacell", "block")),
+    (UMAP, ("metacell", "block")),
 )
 
 
@@ -247,6 +249,21 @@ def _has_global_flow_order(_cls: type, source: DafWidgets, axis: str) -> bool:
 @implements(GlobalFlowOrder.fill, DafWidgets)
 def _fill_global_flow_order(_self: GlobalFlowOrder, source: DafWidgets, sinks: VectorDataSinks, axis: str) -> None:
     mg.fill_global_flow_order(sinks, source.daf, axis=axis)
+
+
+@implements(UMAP.exists, DafWidgets)
+def _has_umap(_cls: type, source: DafWidgets, axis: str) -> bool:
+    return source._has_vectors(axis, "umap_x", "umap_y")
+
+
+@implements(UMAP.fill, DafWidgets)
+def _fill_umap(self: UMAP, source: DafWidgets, sinks: VectorDataSinks, axis: str) -> None:
+    mg.fill_umap(sinks, source.daf, axis=axis, coordinate=self.coordinate)
+
+
+@implements(UMAP.editor, DafWidgets)
+def _umap_editor(_cls: type, _source: DafWidgets, _axis: str, current: Optional[UMAP]) -> PickerEditor:
+    return PickerEditor(NamePicker(["x", "y"], None if current is None else current.coordinate), UMAP)
 
 
 @implements(GeneGene.exists, DafWidgets)

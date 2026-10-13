@@ -36,6 +36,8 @@ def _full_daf() -> dp.DafWriter:
     daf.set_vector("metacell", "n_cells", np.array([10, 20, 30], dtype="uint32"))
     daf.set_vector("metacell", "total_UMIs", np.array([100, 200, 300], dtype="uint32"))
     daf.set_vector("metacell", "is_doublet", np.array([False, True, False]))
+    daf.set_vector("metacell", "umap_x", np.array([0.0, 1.0, 2.0], dtype="float32"))
+    daf.set_vector("metacell", "umap_y", np.array([2.0, 1.0, 0.0], dtype="float32"))
 
     daf.set_vector("block", "type", np.array(["T1", "T2"]))
     daf.set_vector("block", "n_cells", np.array([30, 30], dtype="uint32"))
@@ -81,6 +83,7 @@ def test_registered_properties() -> None:
         mw.MeanTotalUMIsPerCell,
         mw.BooleanMask,
         mw.GlobalFlowOrder,
+        mw.UMAP,
     }
     assert mw.NMetacells in mw.DafWidgets.registered_properties("block")
     assert mw.Block not in mw.DafWidgets.registered_properties("block")
@@ -108,6 +111,13 @@ def test_properties_of_full_daf() -> None:
     ]
     assert source.properties(axis="metacell", slot=Slot.GROUPS) == [mw.Block, mw.GlobalFlowOrder, mw.Type]
     assert source.properties(axis="metacell", slot=Slot.MASK) == [mw.BooleanMask]
+    assert source.properties(axis="metacell", slot=Slot.COORDINATES) == [
+        mw.GeneExpression,
+        mw.MeanTotalUMIsPerCell,
+        mw.NCells,
+        mw.TotalUMIs,
+        mw.UMAP,
+    ]
     assert source.properties(axis="block", slot=Slot.SIZES) == [
         mw.GeneExpression,
         mw.MeanCellsPerMetacell,
@@ -197,3 +207,21 @@ def test_boolean_vectors() -> None:
     source = mw.DafWidgets(_full_daf())
     assert source.boolean_vectors("metacell") == ["is_doublet"]
     assert not source.boolean_vectors("block")
+
+
+def test_umap() -> None:
+    """
+    The UMAP fills a coordinate along an axis without ticks, and its editor picks the coordinate.
+    """
+    source = mw.DafWidgets(_full_daf())
+    assert not mw.UMAP.exists(source, "block")
+    graph = sg.points_graph()
+    sinks: Any = graph.x_axis_vector_fields()
+    mw.UMAP("y").fill(source, sinks, "metacell")
+    assert graph.data.x.vector is not None
+    assert list(graph.data.x.vector) == [2.0, 1.0, 0.0]
+    assert not graph.configuration.x_axis.show_ticks
+
+    editor = mw.UMAP.editor(source, "metacell", mw.UMAP("x"))
+    assert editor is not None
+    assert editor.value == mw.UMAP("x")

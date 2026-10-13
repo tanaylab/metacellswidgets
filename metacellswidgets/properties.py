@@ -39,6 +39,7 @@ __all__: List[str] = [
     "Slot",
     "TotalUMIs",
     "Type",
+    "UMAP",
     "boolean_property",
     "category_property",
     "size_property",
@@ -61,6 +62,9 @@ class Eltype(Enum):
 
     #: Numbers which say how to lay out entries (which go together, and in what order), such as a global flow order.
     ARRANGEMENT = "arrangement"
+
+    #: Positions in an embedding, such as a UMAP, which mean something only relative to each other.
+    COORDINATE = "coordinate"
 
 
 class Shape(Enum):
@@ -101,12 +105,12 @@ class Slot(Enum):
 
 # The kinds of values each slot can show.
 _SLOT_ELTYPES: Mapping[Slot, FrozenSet[Eltype]] = {
-    Slot.COORDINATES: frozenset([Eltype.NUMBER]),
+    Slot.COORDINATES: frozenset([Eltype.NUMBER, Eltype.COORDINATE]),
     Slot.SIZES: frozenset([Eltype.NUMBER]),
     Slot.COLORS: frozenset([Eltype.NUMBER, Eltype.CATEGORICAL, Eltype.BOOLEAN]),
     Slot.GROUPS: frozenset([Eltype.CATEGORICAL, Eltype.ARRANGEMENT]),
     Slot.MASK: frozenset([Eltype.BOOLEAN]),
-    Slot.HOVERS: frozenset([Eltype.NUMBER, Eltype.CATEGORICAL, Eltype.BOOLEAN, Eltype.ARRANGEMENT]),
+    Slot.HOVERS: frozenset([Eltype.NUMBER, Eltype.CATEGORICAL, Eltype.BOOLEAN, Eltype.ARRANGEMENT, Eltype.COORDINATE]),
 }
 
 
@@ -287,3 +291,15 @@ class GlobalFlowOrder(Property):
 
     eltype = Eltype.ARRANGEMENT
     shape = Shape.VECTOR
+
+
+class UMAP(Property):
+    """
+    The UMAP ``coordinate`` (``x`` or ``y``) of each entry, shown along an axis without ticks or a grid.
+    """
+
+    eltype = Eltype.COORDINATE
+    shape = Shape.VECTOR
+
+    def __init__(self, coordinate: str) -> None:
+        self.coordinate = coordinate

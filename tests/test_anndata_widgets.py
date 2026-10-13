@@ -61,6 +61,39 @@ def test_fill(tmp_path: Path) -> None:
         assert len(graph.data.points.colors.vector) == 3
 
 
+def test_total_umis(tmp_path: Path) -> None:
+    """
+    The total UMIs are offered when the ``obs`` has their column, and fill as a size.
+    """
+    source = _source(tmp_path)
+    source.adata.obs["total_umis"] = [100.0, 200.0, 300.0]
+    assert source.properties(axis="metacell", slot=Slot.SIZES) == [mw.GeneExpression, mw.TotalUMIs]
+    graph = sg.points_graph()
+    sinks: Any = graph.points_sizes_vector_fields()
+    mw.TotalUMIs().fill(source, sinks, "metacell")
+    sizes = graph.data.points.sizes.vector
+    assert sizes is not None
+    assert list(sizes) == [100.0, 200.0, 300.0]
+
+
+def test_umap(tmp_path: Path) -> None:
+    """
+    The UMAP is offered for coordinates only, when the ``obs`` has its ``x`` and ``y``.
+    """
+    source = _source(tmp_path)
+    assert mw.UMAP not in source.properties(axis="metacell", slot=Slot.COORDINATES)
+    source.adata.obs["x"] = [0.0, 1.0, 2.0]
+    source.adata.obs["y"] = [2.0, 1.0, 0.0]
+    assert mw.UMAP in source.properties(axis="metacell", slot=Slot.COORDINATES)
+    assert mw.UMAP not in source.properties(axis="metacell", slot=Slot.COLORS)
+    graph = sg.points_graph()
+    sinks: Any = graph.y_axis_vector_fields()
+    mw.UMAP("x").fill(source, sinks, "metacell")
+    coordinates = graph.data.y.vector
+    assert coordinates is not None
+    assert list(coordinates) == [0.0, 1.0, 2.0]
+
+
 def test_gene_choices(tmp_path: Path) -> None:
     """
     Excluded genes are never offered, and markers are those of the marker column.
