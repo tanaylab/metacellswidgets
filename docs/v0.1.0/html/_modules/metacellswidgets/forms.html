@@ -107,7 +107,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">SVG</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span> <span class="k">as</span> <span class="n">display_in_cell</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Accordion</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Button</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HBox</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Output</span>  <span class="c1"># type: ignore</span>
@@ -326,16 +325,16 @@
         <span class="k">return</span> <span class="bp">self</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_tweaks_editor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Accordion</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_tweaks_editor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ListEditor</span><span class="p">:</span>
         <span class="c1"># The editor of the tweaks: a list of them, under a "Tweaks" header, collapsed. A new tweak's editor starts from</span>
         <span class="c1"># the graph as it is when the tweak is added.</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">make_row</span><span class="p">(</span><span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Arguments</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">TweakPicker</span><span class="p">:</span>
             <span class="k">assert</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">Tweak</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">TweakPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_untweaked_graph</span><span class="p">(),</span> <span class="n">current</span><span class="p">)</span>
 
-        <span class="n">tweaks</span> <span class="o">=</span> <span class="n">ListEditor</span><span class="p">(</span><span class="n">make_row</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tweaks</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="s2">"Add tweak"</span><span class="p">)</span>
+        <span class="n">tweaks</span> <span class="o">=</span> <span class="n">ListEditor</span><span class="p">(</span><span class="n">make_row</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tweaks</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"Tweaks"</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">tweaks</span><span class="o">=</span><span class="n">tweaks</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">Accordion</span><span class="p">(</span><span class="n">children</span><span class="o">=</span><span class="p">[</span><span class="n">tweaks</span><span class="p">],</span> <span class="n">titles</span><span class="o">=</span><span class="p">(</span><span class="s2">"Tweaks"</span><span class="p">,),</span> <span class="n">selected_index</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tweaks</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">display_site</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_CallSite</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Show the editor until "Done" is clicked, then rewrite the cell.</span>

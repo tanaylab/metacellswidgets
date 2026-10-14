@@ -17,6 +17,7 @@ from typing import Type
 from typing import Union
 
 import traitlets  # type: ignore
+from ipywidgets import Accordion  # type: ignore
 from ipywidgets import Button  # type: ignore
 from ipywidgets import Checkbox  # type: ignore
 from ipywidgets import Combobox  # type: ignore
@@ -60,10 +61,13 @@ class GeneChoices(Protocol):  # pylint: disable=too-few-public-methods
 class ArgumentsEditor(HBox):  # pylint: disable=too-many-ancestors,abstract-method
     """
     The base class of the widgets editing the arguments of a property or a tweak. Its ``value`` is the property or the
-    tweak, or ``None`` while its arguments are incomplete.
+    tweak, or ``None`` while its arguments are incomplete. It is ``is_blank`` while nothing is picked at all (e.g., a
+    class picked whose arguments are still missing is not blank).
     """
 
     value = traitlets.Any(None, allow_none=True)
+
+    is_blank = traitlets.Bool(True)
 
 
 class Picker(HBox):  # pylint: disable=too-many-ancestors,abstract-method
@@ -153,10 +157,12 @@ class PickerEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstr
         self._build = build
         self.children = [picker]
         self.value = None if picker.value is None else build(picker.value)
+        self.is_blank = picker.value is None
         picker.observe(self._on_picker_change, names="value")
 
     def _on_picker_change(self, change: Dict) -> None:
         self.value = None if change["new"] is None else self._build(change["new"])
+        self.is_blank = change["new"] is None
 
 
 class AxisPicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
@@ -183,24 +189,34 @@ class AxisPicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
 OnAxisChange = Callable[[str, str, Optional[Property]], Optional[Property]]
 
 
-class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
+class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method,too-many-instance-attributes
     """
     The base class of the widgets picking one of some classes of properties or of tweaks, and editing the arguments of
     the picked one. The choices start with none. Picking a class whose objects have arguments shows its editor to the
     right of the choice. The ``value`` is the object, or ``None`` while nothing is picked or its arguments are
     incomplete.
 
+    A picker may have a ``default`` object. While nothing was given or changed, the picker shows the ``default`` (picked,
+    with its arguments), and its ``value`` stays ``None`` until the first change. A "Reset to default" button, shown
+    while the ``value`` isn't ``None``, goes back to showing the ``default``. A given object which isn't one of the
+    choices (e.g., after the axis changed), or whose arguments aren't valid, gives way to the ``default``.
+
     A subclass makes its widget, then calls ``_show`` with its choices and the object it starts with. It implements
     ``_editor_of``, which makes the editor of a choice.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, *, default: Optional[Arguments] = None) -> None:
         super().__init__(layout=Layout(align_items="flex-start"))
+        self._default = default
+        self._shown_choices: Sequence[Type[Arguments]] = ()
+        self._is_default = False
         self._is_updating = False
         self._editor: Optional[ArgumentsEditor] = None
         self._dropdown = Dropdown()
         self._editor_box = HBox(layout=Layout(flex="1 1 auto"))
-        self.children = [self._dropdown, self._editor_box]
+        self._reset = Button(description="Reset to default")
+        self._reset.on_click(self._on_reset)
+        self.children = [self._dropdown, self._editor_box, self._reset]
         self._dropdown.observe(self._on_dropdown_change, names="value")
 
     def _editor_of(self, choice: Type[Arguments], current: Optional[Arguments]) -> Optional[ArgumentsEditor]:
@@ -210,11 +226,18 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
 
     def _show(self, choices: Sequence[Type[Arguments]], current: Optional[Arguments]) -> None:
         # Show the ``choices``, with the ``current`` object picked if it is one of them and its arguments are valid.
-        # Otherwise, nothing is picked.
+        # Otherwise, show the default (if it is one of them), or nothing.
+        self._shown_choices = choices
         choice = None if current is None else type(current)
         if choice not in choices:
             current = None
             choice = None
+        default = self._default
+        self._is_default = current is None and default is not None and type(default) in choices
+        if self._is_default:
+            assert default is not None
+            current = default
+            choice = type(default)
         self._is_updating = True
         try:
             self._dropdown.options = [("", None)] + [(each_choice.__name__, each_choice) for each_choice in choices]
@@ -222,7 +245,7 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
         finally:
             self._is_updating = False
         self._pick(choice, current)
-        if current is not None and self.value is None:
+        if not self._is_default and current is not None and self.value is None:
             self._show(choices, None)
 
     def _pick(self, choice: Optional[Type[Arguments]], current: Optional[Arguments]) -> None:
@@ -230,26 +253,37 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
         if self._editor is not None:
             self._editor.unobserve(self._on_editor_change, names="value")
             self._editor = None
+        self.is_blank = choice is None
         if choice is None:
             self._editor_box.children = []
-            self.value = None
+            self._set_value(None)
             return
         editor = self._editor_of(choice, current)
         if editor is None:
             self._editor_box.children = []
-            self.value = choice()
+            self._set_value(choice())
         else:
             self._editor = editor
             self._editor_box.children = [editor]
-            self.value = editor.value
+            self._set_value(editor.value)
             editor.observe(self._on_editor_change, names="value")
+
+    def _set_value(self, picked: Optional[Arguments]) -> None:
+        # The ``value`` is the ``picked`` object, unless the default is shown and wasn't changed.
+        self.value = None if self._is_default else picked
+        self._reset.layout.display = None if self.value is not None and self._default is not None else "none"
 
     def _on_dropdown_change(self, change: Dict) -> None:
         if not self._is_updating:
+            self._is_default = False
             _on_main_thread(lambda: self._pick(change["new"], None))
 
     def _on_editor_change(self, change: Dict) -> None:
-        self.value = change["new"]
+        self._is_default = False
+        self._set_value(change["new"])
+
+    def _on_reset(self, _button: Button) -> None:
+        _on_main_thread(lambda: self._show(self._shown_choices, None))
 
 
 class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstract-method
@@ -261,7 +295,8 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
 
     The ``axis`` may be an :py:class:`AxisPicker` to follow. When its axis changes, the choices change with it. A
     property which is still one of them is kept, with its arguments, if they are valid for the new axis. Otherwise, the
-    slot is emptied. An ``on_axis_change`` function may decide this instead.
+    slot gets its ``default`` (see :py:class:`ClassPicker`), or is emptied. An ``on_axis_change`` function may decide
+    this instead.
     """
 
     def __init__(
@@ -271,9 +306,10 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
         axis: Union[str, AxisPicker],
         current: Optional[Property] = None,
         *,
+        default: Optional[Property] = None,
         on_axis_change: Optional[OnAxisChange] = None,
     ) -> None:
-        super().__init__()
+        super().__init__(default=default)
         self._source = source
         self._slot = slot
         self._axis = axis if isinstance(axis, str) else axis.value
@@ -304,14 +340,17 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
 _ROW_BUTTON_LAYOUT = Layout(width="2.5em")
 
 
-class ListEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
+class ListEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method,too-many-instance-attributes
     """
-    Edit a list of properties or tweaks, a row per object. Each row is a picker made by ``make_row``, which gets the
-    object the row starts with, or ``None`` for a new, empty row. The list starts with a row per object of the
-    ``current`` list (if any). Each row has buttons to move it up or down, or to remove it. The ``add`` button appends
-    a new row.
+    Edit a list of properties or tweaks, a row per object, in a collapsible section named ``title`` (collapsed at
+    first). Each row is a picker made by ``make_row``, which gets the object the row starts with, or ``None`` for a
+    blank row. The list always ends with a blank row; picking something in it makes it a row of the list, and appends a
+    new blank row. Each row of the list has buttons to move it up or down, or to remove it.
 
-    The ``value`` is the list of the values of the rows, leaving out the rows without one, or ``None`` if there are none.
+    The list starts with a row per object of the ``current`` list. If there is no ``current`` list, it shows the
+    ``default`` list (if any), and its ``value`` stays ``None`` until the first change. Otherwise, the ``value`` is the
+    list of the values of the rows, leaving out the rows without one (so it may be empty). A "Reset to default" button,
+    shown while the ``value`` isn't ``None``, sets it back to ``None`` and shows the ``default`` again.
     """
 
     def __init__(
@@ -319,19 +358,41 @@ class ListEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstrac
         make_row: Callable[[Optional[Arguments]], ArgumentsEditor],
         current: Optional[Sequence[Arguments]] = None,
         *,
-        add: str = "Add",
+        default: Optional[Sequence[Arguments]] = None,
+        title: str,
     ) -> None:
         super().__init__()
         self._make_row = make_row
+        self._default = default
+        self._is_default = current is None
         self._rows: List[ArgumentsEditor] = []
         self._row_boxes: List[HBox] = []
+        self._blank_row: Optional[ArgumentsEditor] = None
         self._rows_box = VBox()
-        add_button = Button(description=add)
-        add_button.on_click(self._on_add)
-        self.children = [VBox([self._rows_box, add_button])]
-        for item in current or []:
-            self._append(make_row(item))
+        self._reset = Button(description="Reset to default")
+        self._reset.on_click(self._on_reset)
+        self.children = [
+            Accordion(children=[VBox([self._reset, self._rows_box])], titles=(title,), selected_index=None)
+        ]
+        self._fill(default if current is None else current)
+
+    def _fill(self, items: Optional[Sequence[Arguments]]) -> None:
+        # Show a row per object of the ``items``, and then a blank row.
+        for row in self._rows:
+            row.unobserve(self._on_row_change, names="value")
+        if self._blank_row is not None:
+            self._blank_row.unobserve(self._on_blank_row_change, names="is_blank")
+        self._rows = []
+        self._row_boxes = []
+        for item in items or []:
+            self._append(self._make_row(item))
+        self._new_blank_row()
         self._update()
+
+    def _new_blank_row(self) -> None:
+        # Make the blank row at the end of the list, which becomes a row of the list once something is picked in it.
+        self._blank_row = self._make_row(None)
+        self._blank_row.observe(self._on_blank_row_change, names="is_blank")
 
     def _append(self, row: ArgumentsEditor) -> None:
         # Append the ``row``, with its buttons.
@@ -353,6 +414,7 @@ class ListEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstrac
             rows, row_boxes = self._rows, self._row_boxes
             rows[index], rows[other_index] = rows[other_index], rows[index]
             row_boxes[index], row_boxes[other_index] = row_boxes[other_index], row_boxes[index]
+            self._is_default = False
             self._update()
 
     def _remove(self, row: ArgumentsEditor) -> None:
@@ -360,20 +422,39 @@ class ListEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstrac
         row.unobserve(self._on_row_change, names="value")
         del self._rows[index]
         del self._row_boxes[index]
+        self._is_default = False
         self._update()
 
-    def _on_add(self, _button: Button) -> None:
-        def add_row() -> None:
-            self._append(self._make_row(None))
-            self._update()
+    def _on_blank_row_change(self, change: Dict) -> None:
+        if not change["new"]:
+            _on_main_thread(self._adopt_blank_row)
 
-        _on_main_thread(add_row)
+    def _adopt_blank_row(self) -> None:
+        # Make the blank row, in which something was picked, a row of the list, and add a new blank row.
+        row = self._blank_row
+        assert row is not None
+        row.unobserve(self._on_blank_row_change, names="is_blank")
+        self._append(row)
+        self._new_blank_row()
+        self._is_default = False
+        self._update()
 
     def _on_row_change(self, _change: Dict) -> None:
+        self._is_default = False
         self._update()
 
+    def _on_reset(self, _button: Button) -> None:
+        def reset() -> None:
+            self._is_default = True
+            self._fill(self._default)
+
+        _on_main_thread(reset)
+
     def _update(self) -> None:
-        # Show the rows in their order, and set the value from them.
-        self._rows_box.children = list(self._row_boxes)
-        values = [row.value for row in self._rows if row.value is not None]
-        self.value = values or None
+        # Show the rows in their order, then the blank row, and set the value from them.
+        self._rows_box.children = [*self._row_boxes, self._blank_row]
+        if self._is_default:
+            self.value = None
+        else:
+            self.value = [row.value for row in self._rows if row.value is not None]
+        self._reset.layout.display = "none" if self.value is None else None

@@ -421,7 +421,12 @@ tweak, or
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
-</code> while its arguments are incomplete.
+</code> while its arguments are incomplete. It is 
+<code class="docutils literal notranslate">
+<span class="pre">is_blank
+</span>
+</code> while nothing is picked at all (e.g., a
+class picked whose arguments are still missing is not blank).
 </p>
 
 </dd>
@@ -627,6 +632,44 @@ right of the choice. The
 incomplete.
 </p>
 
+<p>A picker may have a 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> object. While nothing was given or changed, the picker shows the 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> (picked,
+with its arguments), and its 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> stays 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> until the first change. A “Reset to default” button, shown
+while the 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> isn’t 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code>, goes back to showing the 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code>. A given object which isn’t one of the
+choices (e.g., after the axis changed), or whose arguments aren’t valid, gives way to the 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code>.
+</p>
+
 <p>A subclass makes its widget, then calls 
 <code class="docutils literal notranslate">
 <span class="pre">_show
@@ -640,6 +683,27 @@ incomplete.
 </p>
 
 <dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>default
+</strong> (
+<a class="reference internal" href="common.html#metacellswidgets.common.Arguments" title="metacellswidgets.common.Arguments">
+<em>Arguments
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+
+</dd>
 
 </dl>
 
@@ -961,37 +1025,68 @@ restricts the choices to the marker genes.
 </dt>
 
 <dd>
-<p>Edit a list of properties or tweaks, a row per object. Each row is a picker made by 
+<p>Edit a list of properties or tweaks, a row per object, in a collapsible section named 
+<code class="docutils literal notranslate">
+<span class="pre">title
+</span>
+</code> (collapsed at
+first). Each row is a picker made by 
 <code class="docutils literal notranslate">
 <span class="pre">make_row
 </span>
-</code>, which gets the
-object the row starts with, or 
+</code>, which gets the object the row starts with, or 
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
-</code> for a new, empty row. The list starts with a row per object of the
+</code> for a
+blank row. The list always ends with a blank row; picking something in it makes it a row of the list, and appends a
+new blank row. Each row of the list has buttons to move it up or down, or to remove it.
+</p>
 
+<p>The list starts with a row per object of the 
 <code class="docutils literal notranslate">
 <span class="pre">current
 </span>
-</code> list (if any). Each row has buttons to move it up or down, or to remove it. The 
+</code> list. If there is no 
 <code class="docutils literal notranslate">
-<span class="pre">add
+<span class="pre">current
 </span>
-</code> button appends
-a new row.
-</p>
+</code> list, it shows the
 
-<p>The 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> list (if any), and its 
 <code class="docutils literal notranslate">
 <span class="pre">value
 </span>
-</code> is the list of the values of the rows, leaving out the rows without one, or 
+</code> stays 
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
-</code> if there are none.
+</code> until the first change. Otherwise, the 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is the
+list of the values of the rows, leaving out the rows without one (so it may be empty). A “Reset to default” button,
+shown while the 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> isn’t 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code>, sets it back to 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> and shows the 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> again.
 </p>
 
 <dl class="field-list simple">
@@ -1058,7 +1153,28 @@ a new row.
 
 <li>
 <p>
-<strong>add
+<strong>default
+</strong> (
+<em>Sequence
+</em>
+<em>[
+</em>
+<a class="reference internal" href="common.html#metacellswidgets.common.Arguments" title="metacellswidgets.common.Arguments">
+<em>Arguments
+</em>
+</a>
+<em>] 
+</em>
+<em>| 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>title
 </strong> (
 <em>str
 </em>)
@@ -1532,11 +1648,22 @@ to the right of the choice.
 </code>
 </a> to follow. When its axis changes, the choices change with it. A
 property which is still one of them is kept, with its arguments, if they are valid for the new axis. Otherwise, the
-slot is emptied. An 
+slot gets its 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> (see 
+<a class="reference internal" href="#metacellswidgets.editors.ClassPicker" title="metacellswidgets.editors.ClassPicker">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">ClassPicker
+</span>
+</code>
+</a>), or is emptied. An 
 <code class="docutils literal notranslate">
 <span class="pre">on_axis_change
 </span>
-</code> function may decide this instead.
+</code> function may decide
+this instead.
 </p>
 
 <dl class="field-list simple">
@@ -1589,6 +1716,21 @@ slot is emptied. An
 <li>
 <p>
 <strong>current
+</strong> (
+<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
+<em>Property
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>default
 </strong> (
 <a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
 <em>Property

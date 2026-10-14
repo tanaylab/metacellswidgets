@@ -279,11 +279,6 @@ def test_interactive_display_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
     )
 
 
-def _is_add_tweak_button(state: Dict[str, Any]) -> bool:
-    # Whether the widget state is of the "Add tweak" button.
-    return state.get("_model_name") == "ButtonModel" and state.get("description") == "Add tweak"
-
-
 def _is_show_legends(state: Dict[str, Any]) -> bool:
     # Whether the widget state is of the "Show legends" checkbox of a legends tweak.
     return state.get("_model_name") == "CheckboxModel" and state.get("description") == "Show legends"
@@ -291,22 +286,21 @@ def _is_show_legends(state: Dict[str, Any]) -> bool:
 
 def test_interactive_tweaks_rewrite_the_cell(kernel: Tuple[Any, Any]) -> None:
     """
-    Adding a tweak while editing (whose row and editor are created while the cell blocks), and clicking "Done", writes
-    the tweak into the cell.
+    Picking a tweak in the blank row of the tweaks while editing (whose editor is created while the cell blocks), and
+    clicking "Done", writes the tweak into the cell.
     """
     _, client = kernel
     _execute(client, _DAF_SETUP)
 
     cell = "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.display(interactive=True)\n"
     message_id = client.execute(cell)
-    widgets = _opened_widgets(client, lambda state: _is_done_button(state) or _is_add_tweak_button(state), 2)
+    # The class choices are those of the colors, the sizes, and the blank row of the tweaks, in this order.
+    widgets = _opened_widgets(client, lambda state: _is_done_button(state) or _is_class_choice(state), 4)
     done = next(widget for widget in widgets if _is_done_button(widget))
-    add_tweak = next(widget for widget in widgets if _is_add_tweak_button(widget))
+    tweak_choice = [widget for widget in widgets if _is_class_choice(widget)][2]
 
     time.sleep(1)
-    _click(client, add_tweak)
-    # The new row's dropdown is opened with no options, which are set right after: "", Size, Title, Legends, ...
-    tweak_choice = _opened_widgets(client, _is_class_choice, 1)[0]
+    # The choices of the blank row are: "", Size, Title, Legends, ...
     _send_state(client, tweak_choice, {"index": 3})
     show_legends = _opened_widgets(client, _is_show_legends, 1)[0]
     _send_state(client, show_legends, {"value": False})

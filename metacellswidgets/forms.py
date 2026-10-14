@@ -34,7 +34,6 @@ from IPython import get_ipython
 from IPython.display import SVG
 from IPython.display import Image
 from IPython.display import display as display_in_cell
-from ipywidgets import Accordion  # type: ignore
 from ipywidgets import Button  # type: ignore
 from ipywidgets import HBox  # type: ignore
 from ipywidgets import Output  # type: ignore
@@ -221,16 +220,16 @@ class GraphForm(Arguments):
             display_in_cell(graph.figure)
         return self
 
-    def _tweaks_editor(self) -> Accordion:
+    def _tweaks_editor(self) -> ListEditor:
         # The editor of the tweaks: a list of them, under a "Tweaks" header, collapsed. A new tweak's editor starts from
         # the graph as it is when the tweak is added.
         def make_row(current: Optional[Arguments]) -> TweakPicker:
             assert current is None or isinstance(current, Tweak)
             return TweakPicker(self.source, self._untweaked_graph(), current)
 
-        tweaks = ListEditor(make_row, self.tweaks, add="Add tweak")
+        tweaks = ListEditor(make_row, self.tweaks, title="Tweaks")
         self.bind(tweaks=tweaks)
-        return Accordion(children=[tweaks], titles=("Tweaks",), selected_index=None)
+        return tweaks
 
     def _edit(self, display_site: Optional[_CallSite]) -> None:
         # Show the editor until "Done" is clicked, then rewrite the cell.

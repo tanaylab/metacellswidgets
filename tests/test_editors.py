@@ -2,6 +2,7 @@
 Test the widgets for editing the arguments of properties and tweaks.
 """
 
+from typing import Any
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -17,30 +18,46 @@ from metacellswidgets.editors import PickerEditor
 
 class _Row(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
     """
-    A row of a list, whose value is set directly.
+    A row of a list, whose value is picked directly.
     """
 
     def __init__(self, current: Optional[Arguments]) -> None:
         super().__init__()
-        self.value = current
+        self.pick(current)
+
+    def pick(self, value: Optional[Arguments]) -> None:
+        """
+        Pick the ``value``, as a user would.
+        """
+        self.value = value
+        self.is_blank = value is None
+
+
+def _parts(editor: ListEditor) -> Tuple[Any, Any]:
+    """
+    The reset button and the box of the rows of a list editor.
+    """
+    reset, rows_box = editor.children[0].children[0].children
+    return reset, rows_box
 
 
 def test_list_editor() -> None:
     """
-    A list editor starts with a row per object. A new row is empty until it gets a value. Rows move up and down (but not
-    past either end), and are removed. Without any value, the list's value is ``None``.
+    A list editor starts with a row per object, and ends with a blank row. Picking in the blank row adds it to the list,
+    and adds a new blank row. Rows move up and down (but not past either end), and are removed; removing all of them
+    gives an empty list, not ``None``.
     """
     first, second, third = mw.Title(text="A"), mw.Title(text="B"), mw.Title(text="C")
-    editor = ListEditor(_Row, [first, second], add="Add title")
+    editor = ListEditor(_Row, [first, second], title="Titles")
     assert editor.value == [first, second]
-    rows_box, add_button = editor.children[0].children
-    assert add_button.description == "Add title"
-
-    add_button.click()
+    assert editor.children[0].titles == ("Titles",)
+    assert editor.children[0].selected_index is None
+    reset, rows_box = _parts(editor)
     assert len(rows_box.children) == 3
-    assert editor.value == [first, second]
-    rows_box.children[2].children[0].value = third
+
+    rows_box.children[2].pick(third)
     assert editor.value == [first, second, third]
+    assert len(rows_box.children) == 4
 
     rows_box.children[2].children[1].click()
     assert editor.value == [first, third, second]
@@ -50,7 +67,30 @@ def test_list_editor() -> None:
 
     for _ in range(3):
         rows_box.children[0].children[3].click()
+    assert editor.value == []
+    assert reset.layout.display is None
+
+
+def test_list_editor_default() -> None:
+    """
+    Without a current list, a list editor shows the default, and its value stays ``None`` until the first change. The
+    reset button returns to the default.
+    """
+    first, second = mw.Title(text="A"), mw.Title(text="B")
+    editor = ListEditor(_Row, None, default=[first], title="Titles")
+    reset, rows_box = _parts(editor)
     assert editor.value is None
+    assert reset.layout.display == "none"
+    assert rows_box.children[0].children[0].value == first
+
+    rows_box.children[0].children[0].pick(second)
+    assert editor.value == [second]
+    assert reset.layout.display is None
+
+    reset.click()
+    _reset, rows_box = _parts(editor)
+    assert editor.value is None
+    assert rows_box.children[0].children[0].value == first
 
 
 class _Genes:
