@@ -83,25 +83,37 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">cast</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HBox</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Label</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">VBox</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">metacellsgraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Entries</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">HeatmapGraph</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">PointsGraph</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">AxisPicker</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneChoices</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">GenePicker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ListEditor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">PropertyPicker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.entries</span><span class="w"> </span><span class="kn">import</span> <span class="n">EntryFilter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.entries</span><span class="w"> </span><span class="kn">import</span> <span class="n">EntryFilterPicker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.entries</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneSelection</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.entries</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneSelectionPicker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.entries</span><span class="w"> </span><span class="kn">import</span> <span class="n">TopMarkers</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">GraphForm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">IsLateral</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">Property</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">Slot</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceWidgets</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.tweaks</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tweak</span>
 
 <span class="n">__all__</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"GeneGene"</span><span class="p">,</span>
+    <span class="s2">"GenesHeatmap"</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -160,6 +172,134 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">points_colors_vector_fields</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">points_sizes_vector_fields</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="GenesHeatmap">
+<a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GenesHeatmap">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GenesHeatmap</span><span class="p">(</span><span class="n">GraphForm</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The expression of the ``genes`` in each of the ``entries`` of the ``axis``, as the fold factor of each gene from</span>
+<span class="sd">    its median across the entries. The rows (the genes) and the columns (the entries) may be annotated by properties.</span>
+
+<span class="sd">    Left out, the ``genes`` are the strongest markers (:py:class:`~metacellswidgets.entries.TopMarkers`), the</span>
+<span class="sd">    ``entries`` are all of them, and each side's annotations are its defaults: whether each gene is lateral, and the</span>
+<span class="sd">    type of each entry, each only if the data has it. These are what ``add_genes_heatmap_default_rows_annotations``</span>
+<span class="sd">    and ``add_genes_heatmap_default_columns_annotations`` of ``metacellsgraphspy`` add.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"metacell"</span><span class="p">,</span>
+        <span class="n">genes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GeneSelection</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">entries</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">EntryFilter</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">row_annotations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Property</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">column_annotations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Property</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tweaks</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Tweak</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">tweaks</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">genes</span> <span class="o">=</span> <span class="n">genes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">entries</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">entries</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">row_annotations</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">row_annotations</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">row_annotations</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">column_annotations</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">column_annotations</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">column_annotations</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GenesHeatmap.default_row_annotations">
+<a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GenesHeatmap.default_row_annotations">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">default_row_annotations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Property</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The annotations of the rows (the genes) when ``row_annotations`` is left out: whether each gene is lateral, if</span>
+<span class="sd">        the data has it.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">property_class</span><span class="p">()</span> <span class="k">for</span> <span class="n">property_class</span> <span class="ow">in</span> <span class="p">(</span><span class="n">IsLateral</span><span class="p">,)</span> <span class="k">if</span> <span class="n">property_class</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="s2">"gene"</span><span class="p">)]</span></div>
+
+
+<div class="viewcode-block" id="GenesHeatmap.default_column_annotations">
+<a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GenesHeatmap.default_column_annotations">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">default_column_annotations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Property</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The annotations of the columns (the entries) when ``column_annotations`` is left out: the type of each entry,</span>
+<span class="sd">        if the data has it.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">property_class</span><span class="p">()</span> <span class="k">for</span> <span class="n">property_class</span> <span class="ow">in</span> <span class="p">(</span><span class="n">Type</span><span class="p">,)</span> <span class="k">if</span> <span class="n">property_class</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)]</span></div>
+
+
+<div class="viewcode-block" id="GenesHeatmap.selected_genes">
+<a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GenesHeatmap.selected_genes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">selected_genes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Entries</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The genes the ``genes`` select (by default, the strongest markers).</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">TopMarkers</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">genes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">genes</span><span class="p">)</span><span class="o">.</span><span class="n">genes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GenesHeatmap.selected_entries">
+<a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GenesHeatmap.selected_entries">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">selected_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The mask of the entries which pass all the ``entries`` filters, or ``None`` for all of them.</span>
+<span class="sd">        """</span>
+        <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">entry_filter</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries</span> <span class="ow">or</span> <span class="p">[]:</span>
+            <span class="n">filter_mask</span> <span class="o">=</span> <span class="n">entry_filter</span><span class="o">.</span><span class="n">mask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">filter_mask</span> <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">mask</span> <span class="o">&amp;</span> <span class="n">filter_mask</span>
+        <span class="k">return</span> <span class="n">mask</span></div>
+
+
+<div class="viewcode-block" id="GenesHeatmap.editor">
+<a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GenesHeatmap.editor">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Widget</span><span class="p">:</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="n">AxisPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="p">[</span><span class="s2">"metacell"</span><span class="p">,</span> <span class="s2">"block"</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
+        <span class="n">genes</span> <span class="o">=</span> <span class="n">GeneSelectionPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">genes</span><span class="p">)</span>
+        <span class="n">entries</span><span class="p">:</span> <span class="n">ListEditor</span><span class="p">[</span><span class="n">EntryFilter</span><span class="p">]</span> <span class="o">=</span> <span class="n">ListEditor</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">current</span><span class="p">:</span> <span class="n">EntryFilterPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">current</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"Filters"</span>
+        <span class="p">)</span>
+        <span class="n">row_annotations</span><span class="p">:</span> <span class="n">ListEditor</span><span class="p">[</span><span class="n">Property</span><span class="p">]</span> <span class="o">=</span> <span class="n">ListEditor</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">current</span><span class="p">:</span> <span class="n">PropertyPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">Slot</span><span class="o">.</span><span class="n">COLORS</span><span class="p">,</span> <span class="s2">"gene"</span><span class="p">,</span> <span class="n">current</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">row_annotations</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_row_annotations</span><span class="p">(),</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">"Row annotations"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">column_annotations</span><span class="p">:</span> <span class="n">ListEditor</span><span class="p">[</span><span class="n">Property</span><span class="p">]</span> <span class="o">=</span> <span class="n">ListEditor</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">current</span><span class="p">:</span> <span class="n">PropertyPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">Slot</span><span class="o">.</span><span class="n">COLORS</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">current</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">column_annotations</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_column_annotations</span><span class="p">(),</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">"Column annotations"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span>
+            <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span>
+            <span class="n">genes</span><span class="o">=</span><span class="n">genes</span><span class="p">,</span>
+            <span class="n">entries</span><span class="o">=</span><span class="n">entries</span><span class="p">,</span>
+            <span class="n">row_annotations</span><span class="o">=</span><span class="n">row_annotations</span><span class="p">,</span>
+            <span class="n">column_annotations</span><span class="o">=</span><span class="n">column_annotations</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">VBox</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">HBox</span><span class="p">([</span><span class="n">Label</span><span class="p">(</span><span class="s2">"Axis"</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">Label</span><span class="p">(</span><span class="s2">"Genes"</span><span class="p">),</span> <span class="n">genes</span><span class="p">]),</span>
+                <span class="n">entries</span><span class="p">,</span>
+                <span class="n">row_annotations</span><span class="p">,</span>
+                <span class="n">column_annotations</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GenesHeatmap.fill_slots">
+<a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GenesHeatmap.fill_slots">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fill_slots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">HeatmapGraph</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_row_annotations</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_annotations</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_annotations</span>
+        <span class="k">for</span> <span class="n">row_property</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="n">row_property</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">rows_annotations_colors_vector_fields</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">add_rows_annotation</span><span class="p">()),</span> <span class="s2">"gene"</span>
+            <span class="p">)</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_column_annotations</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">column_annotations</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">column_annotations</span>
+        <span class="k">for</span> <span class="n">column_property</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
+            <span class="n">column_property</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">columns_annotations_colors_vector_fields</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">add_columns_annotation</span><span class="p">()),</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span>
+            <span class="p">)</span></div>
 </div>
 
 </pre></div>

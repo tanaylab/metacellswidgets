@@ -85,5 +85,5 @@ def test_not_vacuous() -> None:
     """
     assert _has_arguments(mw.GeneExpression)
     assert not _has_arguments(mw.Type)
-    assert mw.DafWidgets.offered_graphs() == {"gene_gene": mw.GeneGene}
-    assert mw.AnnDataWidgets.offered_graphs() == {"gene_gene": mw.GeneGene}
+    assert mw.DafWidgets.offered_graphs() == {"gene_gene": mw.GeneGene, "genes_heatmap": mw.GenesHeatmap}
+    assert mw.AnnDataWidgets.offered_graphs() == {"gene_gene": mw.GeneGene, "genes_heatmap": mw.GenesHeatmap}

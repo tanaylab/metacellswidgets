@@ -12,6 +12,7 @@ from typing import Tuple
 import metacellsgraphspy as mg
 import numpy as np
 from dafpy import DafReader
+from somegraphspy import HeatmapGraph
 from somegraphspy import PointsGraph
 from somegraphspy import VectorDataSinks
 
@@ -27,6 +28,7 @@ from .entries import SkeletonGenes
 from .entries import TopMarkers
 from .forms import Branch
 from .graphs import GeneGene
+from .graphs import GenesHeatmap
 from .properties import UMAP
 from .properties import Block
 from .properties import BooleanMask
@@ -66,9 +68,10 @@ class DafWidgets(SourceWidgets):
     """
 
     gene_gene = graph_constructor(GeneGene)
+    genes_heatmap = graph_constructor(GenesHeatmap)
 
     #: The tree of the graphs offered, as shown in the menus.
-    graphs = Branch("Graphs", [GeneGene])
+    graphs = Branch("Graphs", [GeneGene, GenesHeatmap])
 
     def __init__(self, daf: DafReader) -> None:
         self.daf = daf
@@ -301,6 +304,21 @@ def _has_gene_gene(_cls: type, source: DafWidgets) -> bool:
 def _gene_gene_base_graph(self: GeneGene, source: DafWidgets) -> PointsGraph:
     assert self.x_gene is not None and self.y_gene is not None
     return mg.gene_gene_graph(source.daf, axis=self.axis, x_gene=self.x_gene, y_gene=self.y_gene)
+
+
+@implements(GenesHeatmap.exists, DafWidgets)
+def _has_genes_heatmap(_cls: type, source: DafWidgets) -> bool:
+    return source.daf.has_axis("gene") and any(
+        source.daf.has_axis(axis) and source.daf.has_matrix("gene", axis, "log_linear_fraction")
+        for axis in ("metacell", "block")
+    )
+
+
+@implements(GenesHeatmap.base_graph, DafWidgets)
+def _genes_heatmap_base_graph(self: GenesHeatmap, source: DafWidgets) -> HeatmapGraph:
+    return mg.genes_heatmap_graph(
+        source.daf, axis=self.axis, genes=self.selected_genes(), entries=self.selected_entries()
+    )
 
 
 @implements(TopMarkers.exists, DafWidgets)

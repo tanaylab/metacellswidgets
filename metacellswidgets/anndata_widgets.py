@@ -15,6 +15,7 @@ from typing import Tuple
 import metacellsgraphspy as mg
 import numpy as np
 from anndata import AnnData  # type: ignore
+from somegraphspy import HeatmapGraph
 from somegraphspy import PointsGraph
 from somegraphspy import VectorDataSinks
 
@@ -27,6 +28,7 @@ from .entries import OfTypes
 from .entries import TopMarkers
 from .forms import Branch
 from .graphs import GeneGene
+from .graphs import GenesHeatmap
 from .properties import UMAP
 from .properties import GeneExpression
 from .properties import IsLateral
@@ -49,9 +51,10 @@ class AnnDataWidgets(SourceWidgets):
     """
 
     gene_gene = graph_constructor(GeneGene)
+    genes_heatmap = graph_constructor(GenesHeatmap)
 
     #: The tree of the graphs offered, as shown in the menus.
-    graphs = Branch("Graphs", [GeneGene])
+    graphs = Branch("Graphs", [GeneGene, GenesHeatmap])
 
     def __init__(self, adata: AnnData, *, type_property: str, type_colors_csv: str) -> None:
         self.adata = adata
@@ -184,6 +187,16 @@ def _has_gene_gene(_cls: type, _source: AnnDataWidgets) -> bool:
 def _gene_gene_base_graph(self: GeneGene, source: AnnDataWidgets) -> PointsGraph:
     assert self.x_gene is not None and self.y_gene is not None
     return mg.ad_gene_gene_graph(source.adata, x_gene=self.x_gene, y_gene=self.y_gene)
+
+
+@implements(GenesHeatmap.exists, AnnDataWidgets)
+def _has_genes_heatmap(_cls: type, _source: AnnDataWidgets) -> bool:
+    return True
+
+
+@implements(GenesHeatmap.base_graph, AnnDataWidgets)
+def _genes_heatmap_base_graph(self: GenesHeatmap, source: AnnDataWidgets) -> HeatmapGraph:
+    return mg.ad_genes_heatmap_graph(source.adata, genes=self.selected_genes(), entries=self.selected_entries())
 
 
 @implements(TopMarkers.exists, AnnDataWidgets)
