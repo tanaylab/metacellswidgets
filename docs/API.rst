@@ -9,6 +9,7 @@ API
   properties
   sources
   editors
+  entries
   forms
   graphs
   tweaks

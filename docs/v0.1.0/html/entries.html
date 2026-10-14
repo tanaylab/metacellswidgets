@@ -1,0 +1,4643 @@
+
+
+
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en" data-content_root="./">
+
+<head>
+  
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+<title>entries &mdash; MetacellsWidgets 0.1.0 documentation
+</title>
+      
+<link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      
+<link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      
+<script src="_static/jquery.js?v=5d32c60e">
+</script>
+      
+<script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c">
+</script>
+      
+<script src="_static/documentation_options.js?v=01f34227">
+</script>
+      
+<script src="_static/doctools.js?v=fd6eb6e6">
+</script>
+      
+<script src="_static/sphinx_highlight.js?v=6ffebe34">
+</script>
+    
+<script src="_static/js/theme.js">
+</script>
+    
+<link rel="index" title="Index" href="genindex.html" />
+    
+<link rel="search" title="Search" href="search.html" />
+    
+<link rel="next" title="forms" href="forms.html" />
+    
+<link rel="prev" title="editors" href="editors.html" /> 
+
+</head>
+
+
+<body class="wy-body-for-nav"> 
+  
+<div class="wy-grid-for-nav">
+    
+<nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      
+<div class="wy-side-scroll">
+        
+<div class="wy-side-nav-search" >
+
+          
+          
+          
+<a href="index.html" class="icon icon-home">
+            MetacellsWidgets
+          
+</a>
+
+<div role="search">
+  
+<form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    
+<input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    
+<input type="hidden" name="check_keywords" value="yes" />
+    
+<input type="hidden" name="area" value="default" />
+  
+</form>
+
+</div>
+        
+</div>
+<div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              
+<ul>
+
+<li class="toctree-l1">
+<a class="reference internal" href="readme.html">README
+</a>
+</li>
+
+</ul>
+
+<ul class="current">
+
+<li class="toctree-l1 current">
+<a class="reference internal" href="API.html">API
+</a>
+<ul class="current">
+
+<li class="toctree-l2">
+<a class="reference internal" href="common.html">common
+</a>
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="properties.html">properties
+</a>
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="sources.html">sources
+</a>
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="editors.html">editors
+</a>
+</li>
+
+<li class="toctree-l2 current">
+<a class="current reference internal" href="#">entries
+</a>
+<ul>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.entries.BlockNames">
+<code class="docutils literal notranslate">
+<span class="pre">BlockNames
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.BlockNames.block_names">
+<code class="docutils literal notranslate">
+<span class="pre">BlockNames.block_names()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.entries.EntryFilter">
+<code class="docutils literal notranslate">
+<span class="pre">EntryFilter
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.EntryFilter.exists">
+<code class="docutils literal notranslate">
+<span class="pre">EntryFilter.exists()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.EntryFilter.editor">
+<code class="docutils literal notranslate">
+<span class="pre">EntryFilter.editor()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.EntryFilter.mask">
+<code class="docutils literal notranslate">
+<span class="pre">EntryFilter.mask()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.EntryFilter.on_axis">
+<code class="docutils literal notranslate">
+<span class="pre">EntryFilter.on_axis()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.entries.EntryFilterPicker">
+<code class="docutils literal notranslate">
+<span class="pre">EntryFilterPicker
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.entries.GeneList">
+<code class="docutils literal notranslate">
+<span class="pre">GeneList
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.GeneList.editor">
+<code class="docutils literal notranslate">
+<span class="pre">GeneList.editor()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.GeneList.exists">
+<code class="docutils literal notranslate">
+<span class="pre">GeneList.exists()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.GeneList.genes">
+<code class="docutils literal notranslate">
+<span class="pre">GeneList.genes()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.entries.GeneSelection">
+<code class="docutils literal notranslate">
+<span class="pre">GeneSelection
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.GeneSelection.exists">
+<code class="docutils literal notranslate">
+<span class="pre">GeneSelection.exists()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.GeneSelection.editor">
+<code class="docutils literal notranslate">
+<span class="pre">GeneSelection.editor()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.GeneSelection.genes">
+<code class="docutils literal notranslate">
+<span class="pre">GeneSelection.genes()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.entries.GeneSelectionPicker">
+<code class="docutils literal notranslate">
+<span class="pre">GeneSelectionPicker
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.entries.InEnvironment">
+<code class="docutils literal notranslate">
+<span class="pre">InEnvironment
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.InEnvironment.editor">
+<code class="docutils literal notranslate">
+<span class="pre">InEnvironment.editor()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.InEnvironment.on_axis">
+<code class="docutils literal notranslate">
+<span class="pre">InEnvironment.on_axis()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.InEnvironment.exists">
+<code class="docutils literal notranslate">
+<span class="pre">InEnvironment.exists()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.InEnvironment.mask">
+<code class="docutils literal notranslate">
+<span class="pre">InEnvironment.mask()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.entries.InNeighborhood">
+<code class="docutils literal notranslate">
+<span class="pre">InNeighborhood
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.InNeighborhood.editor">
+<code class="docutils literal notranslate">
+<span class="pre">InNeighborhood.editor()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.InNeighborhood.exists">
+<code class="docutils literal notranslate">
+<span class="pre">InNeighborhood.exists()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.InNeighborhood.mask">
+<code class="docutils literal notranslate">
+<span class="pre">InNeighborhood.mask()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.entries.OfTypes">
+<code class="docutils literal notranslate">
+<span class="pre">OfTypes
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.OfTypes.editor">
+<code class="docutils literal notranslate">
+<span class="pre">OfTypes.editor()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.OfTypes.exists">
+<code class="docutils literal notranslate">
+<span class="pre">OfTypes.exists()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.OfTypes.mask">
+<code class="docutils literal notranslate">
+<span class="pre">OfTypes.mask()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.entries.SkeletonGenes">
+<code class="docutils literal notranslate">
+<span class="pre">SkeletonGenes
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.SkeletonGenes.exists">
+<code class="docutils literal notranslate">
+<span class="pre">SkeletonGenes.exists()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.SkeletonGenes.genes">
+<code class="docutils literal notranslate">
+<span class="pre">SkeletonGenes.genes()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.entries.TopMarkers">
+<code class="docutils literal notranslate">
+<span class="pre">TopMarkers
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.TopMarkers.editor">
+<code class="docutils literal notranslate">
+<span class="pre">TopMarkers.editor()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.TopMarkers.exists">
+<code class="docutils literal notranslate">
+<span class="pre">TopMarkers.exists()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.TopMarkers.genes">
+<code class="docutils literal notranslate">
+<span class="pre">TopMarkers.genes()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.entries.TypeNames">
+<code class="docutils literal notranslate">
+<span class="pre">TypeNames
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.entries.TypeNames.type_names">
+<code class="docutils literal notranslate">
+<span class="pre">TypeNames.type_names()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="forms.html">forms
+</a>
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="graphs.html">graphs
+</a>
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="tweaks.html">tweaks
+</a>
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="daf_widgets.html">daf_widgets
+</a>
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="anndata_widgets.html">anndata_widgets
+</a>
+</li>
+
+</ul>
+
+</li>
+
+</ul>
+
+        
+</div>
+      
+</div>
+    
+</nav>
+
+    
+<section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+<nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          
+<i data-toggle="wy-nav-top" class="fa fa-bars">
+</i>
+          
+<a href="index.html">MetacellsWidgets
+</a>
+      
+</nav>
+
+      
+<div class="wy-nav-content">
+        
+<div class="rst-content">
+          
+<div role="navigation" aria-label="Page navigation">
+  
+<ul class="wy-breadcrumbs">
+      
+<li>
+<a href="index.html" class="icon icon-home" aria-label="Home">
+</a>
+</li>
+          
+<li class="breadcrumb-item">
+<a href="API.html">API
+</a>
+</li>
+      
+<li class="breadcrumb-item active">entries
+</li>
+      
+<li class="wy-breadcrumbs-aside">
+            
+<a href="_sources/entries.rst.txt" rel="nofollow"> View page source
+</a>
+      
+</li>
+  
+</ul>
+  
+<hr/>
+
+</div>
+          
+<div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           
+<div itemprop="articleBody">
+             
+  
+<section id="module-metacellswidgets.entries">
+
+<span id="entries">
+</span>
+<h1>entries
+<a class="headerlink" href="#module-metacellswidgets.entries" title="Link to this heading">
+</a>
+</h1>
+
+<p>Selections of entries: which entries each side of a graph shows, such as the genes of the rows of a heatmap and the
+metacells of its columns.
+</p>
+
+<p>A gene selection (e.g., 
+<code class="docutils literal notranslate">
+<span class="pre">TopMarkers(count=100)
+</span>
+</code>) picks the genes. An entry filter (e.g., 
+<code class="docutils literal notranslate">
+<span class="pre">OfTypes(types=[&quot;T1&quot;])
+</span>
+</code>)
+picks some of the entries of an axis; a list of filters picks the entries which pass all of them. Like a property,
+each holds the values of its arguments, so a form can write it back into the code of its cell. Whether a data source
+has it, and its value, are implemented separately for each kind of data source. Each is a thin wrapper over a data
+source of 
+<code class="docutils literal notranslate">
+<span class="pre">metacellsgraphspy
+</span>
+</code> (e.g., 
+<code class="docutils literal notranslate">
+<span class="pre">get_is_in_categories_vector
+</span>
+</code>), so a graph shown with them is the same as a
+script calling these data sources.
+</p>
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.BlockNames">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.entries.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">BlockNames
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">args
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="o">
+<span class="pre">**
+</span>
+</span>
+<span class="n">
+<span class="pre">kwargs
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#BlockNames">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.BlockNames" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>A data source which can list the names of its blocks, for picking one of them.
+</p>
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.BlockNames.block_names">
+
+<span class="sig-name descname">
+<span class="pre">block_names
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#BlockNames.block_names">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.BlockNames.block_names" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The names of the blocks, in the order of the block axis.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<em>List
+</em>[str]
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.EntryFilter">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.entries.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">EntryFilter
+</span>
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#EntryFilter">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.EntryFilter" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The base class of the filters of the entries of an axis. Its instance holds the values of its arguments (see
+
+<a class="reference internal" href="common.html#metacellswidgets.common.Arguments" title="metacellswidgets.common.Arguments">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">Arguments
+</span>
+</code>
+</a>). A filter class must derive directly from this class.
+</p>
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.EntryFilter.exists">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#EntryFilter.exists">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.EntryFilter.exists" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Whether the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code> has the data of the filter for the entries of the 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code>. Each kind of data source
+implements this for the filters it supports; for any other, the filter does not exist.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>axis
+</strong> (
+<em>str
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>bool
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.EntryFilter.editor">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">editor
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">current
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#EntryFilter.editor">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.EntryFilter.editor" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>A widget for editing the filter’s arguments, starting from the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> filter (if any). Its 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is the
+filter, or 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> while the arguments are incomplete. A filter without arguments has no editor.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<a class="reference internal" href="#metacellswidgets.entries.EntryFilter" title="metacellswidgets.entries.EntryFilter">
+<em>EntryFilter
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>Widget
+</em> | None
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.EntryFilter.mask">
+
+<span class="sig-name descname">
+<span class="pre">mask
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#EntryFilter.mask">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.EntryFilter.mask" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Whether each entry of the 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code> of the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code> passes the filter, to combine with other filters (by
+
+<code class="docutils literal notranslate">
+<span class="pre">&amp;
+</span>
+</code>) and pass as the 
+<code class="docutils literal notranslate">
+<span class="pre">entries
+</span>
+</code> of a data source. Each kind of data source implements this for the filters
+it supports; for any other, this is an error.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>axis
+</strong> (
+<em>str
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>ndarray
+</em>
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.EntryFilter.on_axis">
+
+<span class="sig-name descname">
+<span class="pre">on_axis
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#EntryFilter.on_axis">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.EntryFilter.on_axis" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>What the filter becomes for the entries of another 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code> of the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code>: by default, itself if it exists
+there, and nothing otherwise.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>axis
+</strong> (
+<em>str
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<a class="reference internal" href="#metacellswidgets.entries.EntryFilter" title="metacellswidgets.entries.EntryFilter">
+<em>EntryFilter
+</em>
+</a> | None
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.EntryFilterPicker">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.entries.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">EntryFilterPicker
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">args
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="o">
+<span class="pre">**
+</span>
+</span>
+<span class="n">
+<span class="pre">kwargs
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#EntryFilterPicker">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.EntryFilterPicker" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Pick a filter of the entries of the 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code> of the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code>, starting with the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> one (if any). The
+choices are the filters the source has for the axis. The 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code> may be an 
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">AxisPicker
+</span>
+</code> to follow. When
+its axis changes, the filter becomes what 
+<a class="reference internal" href="#metacellswidgets.entries.EntryFilter.on_axis" title="metacellswidgets.entries.EntryFilter.on_axis">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">EntryFilter.on_axis()
+</span>
+</code>
+</a> says (e.g., an environment becomes a
+neighborhood on the block axis).
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>axis
+</strong> (
+<em>str
+</em>
+<em> | 
+</em>
+<a class="reference internal" href="editors.html#metacellswidgets.editors.AxisPicker" title="metacellswidgets.editors.AxisPicker">
+<em>AxisPicker
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<a class="reference internal" href="#metacellswidgets.entries.EntryFilter" title="metacellswidgets.entries.EntryFilter">
+<em>EntryFilter
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.GeneList">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.entries.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">GeneList
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">names
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#GeneList">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.GeneList" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The genes with the 
+<code class="docutils literal notranslate">
+<span class="pre">names
+</span>
+</code>, in this order.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>names
+</strong> (
+<em>Sequence
+</em>
+<em>[
+</em>
+<em>str
+</em>
+<em>]
+</em>)
+</p>
+
+</dd>
+
+</dl>
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.GeneList.editor">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">editor
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">current
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#GeneList.editor">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.GeneList.editor" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>A widget for editing the selection’s arguments, starting from the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> selection (if any). Its 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code>
+is the selection, or 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> while the arguments are incomplete. A selection without arguments has no editor.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<a class="reference internal" href="#metacellswidgets.entries.GeneSelection" title="metacellswidgets.entries.GeneSelection">
+<em>GeneSelection
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>Widget
+</em>
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.GeneList.exists">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="headerlink" href="#metacellswidgets.entries.GeneList.exists" title="Link to this definition">
+</a>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">_source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dd>
+<p>Whether the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code> has the data of the selection. Each kind of data source implements this for the
+selections it supports; for any other, the selection does not exist.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>bool
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.GeneList.genes">
+
+<span class="sig-name descname">
+<span class="pre">genes
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="headerlink" href="#metacellswidgets.entries.GeneList.genes" title="Link to this definition">
+</a>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="sig-name descname">
+<span class="pre">genes
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">_source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="sig-name descname">
+<span class="pre">genes
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">_source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dd>
+<p>The selected genes of the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code>, to pass as the 
+<code class="docutils literal notranslate">
+<span class="pre">genes
+</span>
+</code> of a data source. Each kind of data source
+implements this for the selections it supports; for any other, this is an error.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>ndarray
+</em> | 
+<em>Sequence
+</em>[str] | 
+<em>Sequence
+</em>[int] | 
+<em>Sequence
+</em>[bool]
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.GeneSelection">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.entries.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">GeneSelection
+</span>
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#GeneSelection">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.GeneSelection" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The base class of the selections of genes. Its instance holds the values of its arguments (see
+
+<a class="reference internal" href="common.html#metacellswidgets.common.Arguments" title="metacellswidgets.common.Arguments">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">Arguments
+</span>
+</code>
+</a>). A selection class must derive directly from this class.
+</p>
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.GeneSelection.exists">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#GeneSelection.exists">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.GeneSelection.exists" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Whether the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code> has the data of the selection. Each kind of data source implements this for the
+selections it supports; for any other, the selection does not exist.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>bool
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.GeneSelection.editor">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">editor
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">current
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#GeneSelection.editor">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.GeneSelection.editor" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>A widget for editing the selection’s arguments, starting from the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> selection (if any). Its 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code>
+is the selection, or 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> while the arguments are incomplete. A selection without arguments has no editor.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<a class="reference internal" href="#metacellswidgets.entries.GeneSelection" title="metacellswidgets.entries.GeneSelection">
+<em>GeneSelection
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>Widget
+</em> | None
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.GeneSelection.genes">
+
+<span class="sig-name descname">
+<span class="pre">genes
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#GeneSelection.genes">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.GeneSelection.genes" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The selected genes of the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code>, to pass as the 
+<code class="docutils literal notranslate">
+<span class="pre">genes
+</span>
+</code> of a data source. Each kind of data source
+implements this for the selections it supports; for any other, this is an error.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>ndarray
+</em> | 
+<em>Sequence
+</em>[str] | 
+<em>Sequence
+</em>[int] | 
+<em>Sequence
+</em>[bool]
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.GeneSelectionPicker">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.entries.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">GeneSelectionPicker
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">args
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="o">
+<span class="pre">**
+</span>
+</span>
+<span class="n">
+<span class="pre">kwargs
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#GeneSelectionPicker">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.GeneSelectionPicker" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Pick a selection of the genes of the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code>, starting with the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> one (if any). The choices are the
+selections the source has. While none is given or picked, the default (
+<a class="reference internal" href="#metacellswidgets.entries.TopMarkers" title="metacellswidgets.entries.TopMarkers">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">TopMarkers
+</span>
+</code>
+</a>) is shown.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<a class="reference internal" href="#metacellswidgets.entries.GeneSelection" title="metacellswidgets.entries.GeneSelection">
+<em>GeneSelection
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.InEnvironment">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.entries.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">InEnvironment
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">block
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#InEnvironment">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.InEnvironment" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The metacells in the environment of the 
+<code class="docutils literal notranslate">
+<span class="pre">block
+</span>
+</code>. On the block axis, this becomes the neighborhood of the
+
+<code class="docutils literal notranslate">
+<span class="pre">block
+</span>
+</code> (see 
+<a class="reference internal" href="#metacellswidgets.entries.InNeighborhood" title="metacellswidgets.entries.InNeighborhood">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">InNeighborhood
+</span>
+</code>
+</a>), since an environment is a set of metacells.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>block
+</strong> (
+<em>str
+</em>)
+</p>
+
+</dd>
+
+</dl>
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.InEnvironment.editor">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">editor
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">current
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#InEnvironment.editor">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.InEnvironment.editor" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>A widget for editing the filter’s arguments, starting from the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> filter (if any). Its 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is the
+filter, or 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> while the arguments are incomplete. A filter without arguments has no editor.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<a class="reference internal" href="#metacellswidgets.entries.EntryFilter" title="metacellswidgets.entries.EntryFilter">
+<em>EntryFilter
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>Widget
+</em>
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.InEnvironment.on_axis">
+
+<span class="sig-name descname">
+<span class="pre">on_axis
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#InEnvironment.on_axis">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.InEnvironment.on_axis" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>What the filter becomes for the entries of another 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code> of the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code>: by default, itself if it exists
+there, and nothing otherwise.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>axis
+</strong> (
+<em>str
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<a class="reference internal" href="#metacellswidgets.entries.EntryFilter" title="metacellswidgets.entries.EntryFilter">
+<em>EntryFilter
+</em>
+</a> | None
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.InEnvironment.exists">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="headerlink" href="#metacellswidgets.entries.InEnvironment.exists" title="Link to this definition">
+</a>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dd>
+<p>Whether the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code> has the data of the filter for the entries of the 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code>. Each kind of data source
+implements this for the filters it supports; for any other, the filter does not exist.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>axis
+</strong> (
+<em>str
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>bool
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.InEnvironment.mask">
+
+<span class="sig-name descname">
+<span class="pre">mask
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="headerlink" href="#metacellswidgets.entries.InEnvironment.mask" title="Link to this definition">
+</a>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="sig-name descname">
+<span class="pre">mask
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dd>
+<p>Whether each entry of the 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code> of the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code> passes the filter, to combine with other filters (by
+
+<code class="docutils literal notranslate">
+<span class="pre">&amp;
+</span>
+</code>) and pass as the 
+<code class="docutils literal notranslate">
+<span class="pre">entries
+</span>
+</code> of a data source. Each kind of data source implements this for the filters
+it supports; for any other, this is an error.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>axis
+</strong> (
+<em>str
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>ndarray
+</em>
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.InNeighborhood">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.entries.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">InNeighborhood
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">block
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#InNeighborhood">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.InNeighborhood" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The entries in the neighborhood of the 
+<code class="docutils literal notranslate">
+<span class="pre">block
+</span>
+</code>: its blocks, or the metacells of its blocks.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>block
+</strong> (
+<em>str
+</em>)
+</p>
+
+</dd>
+
+</dl>
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.InNeighborhood.editor">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">editor
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">current
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#InNeighborhood.editor">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.InNeighborhood.editor" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>A widget for editing the filter’s arguments, starting from the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> filter (if any). Its 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is the
+filter, or 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> while the arguments are incomplete. A filter without arguments has no editor.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<a class="reference internal" href="#metacellswidgets.entries.EntryFilter" title="metacellswidgets.entries.EntryFilter">
+<em>EntryFilter
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>Widget
+</em>
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.InNeighborhood.exists">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="headerlink" href="#metacellswidgets.entries.InNeighborhood.exists" title="Link to this definition">
+</a>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dd>
+<p>Whether the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code> has the data of the filter for the entries of the 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code>. Each kind of data source
+implements this for the filters it supports; for any other, the filter does not exist.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>axis
+</strong> (
+<em>str
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>bool
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.InNeighborhood.mask">
+
+<span class="sig-name descname">
+<span class="pre">mask
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="headerlink" href="#metacellswidgets.entries.InNeighborhood.mask" title="Link to this definition">
+</a>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="sig-name descname">
+<span class="pre">mask
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dd>
+<p>Whether each entry of the 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code> of the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code> passes the filter, to combine with other filters (by
+
+<code class="docutils literal notranslate">
+<span class="pre">&amp;
+</span>
+</code>) and pass as the 
+<code class="docutils literal notranslate">
+<span class="pre">entries
+</span>
+</code> of a data source. Each kind of data source implements this for the filters
+it supports; for any other, this is an error.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>axis
+</strong> (
+<em>str
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>ndarray
+</em>
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.OfTypes">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.entries.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">OfTypes
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">types
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#OfTypes">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.OfTypes" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The entries whose type is one of the 
+<code class="docutils literal notranslate">
+<span class="pre">types
+</span>
+</code>.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>types
+</strong> (
+<em>Sequence
+</em>
+<em>[
+</em>
+<em>str
+</em>
+<em>]
+</em>)
+</p>
+
+</dd>
+
+</dl>
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.OfTypes.editor">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">editor
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">current
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#OfTypes.editor">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.OfTypes.editor" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>A widget for editing the filter’s arguments, starting from the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> filter (if any). Its 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is the
+filter, or 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> while the arguments are incomplete. A filter without arguments has no editor.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<a class="reference internal" href="#metacellswidgets.entries.EntryFilter" title="metacellswidgets.entries.EntryFilter">
+<em>EntryFilter
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>Widget
+</em>
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.OfTypes.exists">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="headerlink" href="#metacellswidgets.entries.OfTypes.exists" title="Link to this definition">
+</a>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dd>
+<p>Whether the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code> has the data of the filter for the entries of the 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code>. Each kind of data source
+implements this for the filters it supports; for any other, the filter does not exist.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>axis
+</strong> (
+<em>str
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>bool
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.OfTypes.mask">
+
+<span class="sig-name descname">
+<span class="pre">mask
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="headerlink" href="#metacellswidgets.entries.OfTypes.mask" title="Link to this definition">
+</a>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="sig-name descname">
+<span class="pre">mask
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">_axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="sig-name descname">
+<span class="pre">mask
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dd>
+<p>Whether each entry of the 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code> of the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code> passes the filter, to combine with other filters (by
+
+<code class="docutils literal notranslate">
+<span class="pre">&amp;
+</span>
+</code>) and pass as the 
+<code class="docutils literal notranslate">
+<span class="pre">entries
+</span>
+</code> of a data source. Each kind of data source implements this for the filters
+it supports; for any other, this is an error.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>axis
+</strong> (
+<em>str
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>ndarray
+</em>
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.SkeletonGenes">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.entries.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">SkeletonGenes
+</span>
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#SkeletonGenes">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.SkeletonGenes" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The skeleton genes, which the blocks were computed from.
+</p>
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.SkeletonGenes.exists">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="headerlink" href="#metacellswidgets.entries.SkeletonGenes.exists" title="Link to this definition">
+</a>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dd>
+<p>Whether the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code> has the data of the selection. Each kind of data source implements this for the
+selections it supports; for any other, the selection does not exist.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>bool
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.SkeletonGenes.genes">
+
+<span class="sig-name descname">
+<span class="pre">genes
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="headerlink" href="#metacellswidgets.entries.SkeletonGenes.genes" title="Link to this definition">
+</a>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="sig-name descname">
+<span class="pre">genes
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dd>
+<p>The selected genes of the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code>, to pass as the 
+<code class="docutils literal notranslate">
+<span class="pre">genes
+</span>
+</code> of a data source. Each kind of data source
+implements this for the selections it supports; for any other, this is an error.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>ndarray
+</em> | 
+<em>Sequence
+</em>[str] | 
+<em>Sequence
+</em>[int] | 
+<em>Sequence
+</em>[bool]
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.TopMarkers">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.entries.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">TopMarkers
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">count
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">100
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#TopMarkers">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.TopMarkers" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The 
+<code class="docutils literal notranslate">
+<span class="pre">count
+</span>
+</code> strongest marker genes. This is the default selection of the genes.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>count
+</strong> (
+<em>int
+</em>)
+</p>
+
+</dd>
+
+</dl>
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.TopMarkers.editor">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">editor
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">current
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#TopMarkers.editor">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.TopMarkers.editor" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>A widget for editing the selection’s arguments, starting from the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> selection (if any). Its 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code>
+is the selection, or 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> while the arguments are incomplete. A selection without arguments has no editor.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<a class="reference internal" href="#metacellswidgets.entries.GeneSelection" title="metacellswidgets.entries.GeneSelection">
+<em>GeneSelection
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>Widget
+</em>
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.TopMarkers.exists">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="headerlink" href="#metacellswidgets.entries.TopMarkers.exists" title="Link to this definition">
+</a>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">exists
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dd>
+<p>Whether the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code> has the data of the selection. Each kind of data source implements this for the
+selections it supports; for any other, the selection does not exist.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>bool
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.TopMarkers.genes">
+
+<span class="sig-name descname">
+<span class="pre">genes
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="headerlink" href="#metacellswidgets.entries.TopMarkers.genes" title="Link to this definition">
+</a>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="sig-name descname">
+<span class="pre">genes
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="sig-name descname">
+<span class="pre">genes
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dd>
+<p>The selected genes of the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code>, to pass as the 
+<code class="docutils literal notranslate">
+<span class="pre">genes
+</span>
+</code> of a data source. Each kind of data source
+implements this for the selections it supports; for any other, this is an error.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>ndarray
+</em> | 
+<em>Sequence
+</em>[str] | 
+<em>Sequence
+</em>[int] | 
+<em>Sequence
+</em>[bool]
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.TypeNames">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.entries.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">TypeNames
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">args
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="o">
+<span class="pre">**
+</span>
+</span>
+<span class="n">
+<span class="pre">kwargs
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#TypeNames">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.TypeNames" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>A data source which can list the names of its types, for picking some of them.
+</p>
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.entries.TypeNames.type_names">
+
+<span class="sig-name descname">
+<span class="pre">type_names
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/entries.html#TypeNames.type_names">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.entries.TypeNames.type_names" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The names of the types, sorted.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<em>List
+</em>[str]
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+</section>
+
+
+           
+</div>
+          
+</div>
+          
+<footer>
+<div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        
+<a href="editors.html" class="btn btn-neutral float-left" title="editors" accesskey="p" rel="prev">
+<span class="fa fa-arrow-circle-left" aria-hidden="true">
+</span> Previous
+</a>
+        
+<a href="forms.html" class="btn btn-neutral float-right" title="forms" accesskey="n" rel="next">Next 
+<span class="fa fa-arrow-circle-right" aria-hidden="true">
+</span>
+</a>
+    
+</div>
+
+  
+<hr/>
+
+  
+<div role="contentinfo">
+    
+<p>&#169; Copyright 2026 Weizmann Institute of Science.
+</p>
+  
+</div>
+
+  Built with 
+<a href="https://www.sphinx-doc.org/">Sphinx
+</a> using a
+    
+<a href="https://github.com/readthedocs/sphinx_rtd_theme">theme
+</a>
+    provided by 
+<a href="https://readthedocs.org">Read the Docs
+</a>.
+   
+
+
+</footer>
+        
+</div>
+      
+</div>
+    
+</section>
+  
+</div>
+  
+<script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  
+</script> 
+
+
+</body>
+
+</html>

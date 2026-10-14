@@ -92,6 +92,12 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">GenePicker</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamePicker</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">PickerEditor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.entries</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneList</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.entries</span><span class="w"> </span><span class="kn">import</span> <span class="n">InEnvironment</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.entries</span><span class="w"> </span><span class="kn">import</span> <span class="n">InNeighborhood</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.entries</span><span class="w"> </span><span class="kn">import</span> <span class="n">OfTypes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.entries</span><span class="w"> </span><span class="kn">import</span> <span class="n">SkeletonGenes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.entries</span><span class="w"> </span><span class="kn">import</span> <span class="n">TopMarkers</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">Branch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.graphs</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneGene</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">UMAP</span>
@@ -185,6 +191,24 @@
                 <span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">vectors_set</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">get_np_vector</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_boolean_vectors</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="DafWidgets.type_names">
+<a class="viewcode-back" href="../../daf_widgets.html#metacellswidgets.daf_widgets.DafWidgets.type_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">type_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The names of the types, sorted.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">axis_np_vector</span><span class="p">(</span><span class="s2">"type"</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="DafWidgets.block_names">
+<a class="viewcode-back" href="../../daf_widgets.html#metacellswidgets.daf_widgets.DafWidgets.block_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">block_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The names of the blocks, in the order of the block axis.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">axis_np_vector</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)]</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_gene_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -368,6 +392,75 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_gene_gene_base_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">GeneGene</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">DafWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PointsGraph</span><span class="p">:</span>
     <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_gene</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_gene</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
     <span class="k">return</span> <span class="n">mg</span><span class="o">.</span><span class="n">gene_gene_graph</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">daf</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="n">x_gene</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">x_gene</span><span class="p">,</span> <span class="n">y_gene</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">y_gene</span><span class="p">)</span>
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">TopMarkers</span><span class="o">.</span><span class="n">exists</span><span class="p">,</span> <span class="n">DafWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_top_markers</span><span class="p">(</span><span class="n">_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">DafWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="n">_has_vectors</span><span class="p">(</span><span class="s2">"gene"</span><span class="p">,</span> <span class="s2">"marker_rank"</span><span class="p">)</span>
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">TopMarkers</span><span class="o">.</span><span class="n">genes</span><span class="p">,</span> <span class="n">DafWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_top_markers_genes</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TopMarkers</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">DafWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">mg</span><span class="o">.</span><span class="n">Entries</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">mg</span><span class="o">.</span><span class="n">get_top_marker_gene_indices</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">daf</span><span class="p">,</span> <span class="n">markers_count</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">)</span>
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">SkeletonGenes</span><span class="o">.</span><span class="n">exists</span><span class="p">,</span> <span class="n">DafWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_skeleton_genes</span><span class="p">(</span><span class="n">_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">DafWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="n">_has_vectors</span><span class="p">(</span><span class="s2">"gene"</span><span class="p">,</span> <span class="s2">"is_skeleton"</span><span class="p">)</span>
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">SkeletonGenes</span><span class="o">.</span><span class="n">genes</span><span class="p">,</span> <span class="n">DafWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_skeleton_genes_genes</span><span class="p">(</span><span class="n">_self</span><span class="p">:</span> <span class="n">SkeletonGenes</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">DafWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">mg</span><span class="o">.</span><span class="n">Entries</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">mg</span><span class="o">.</span><span class="n">get_skeleton_gene_indices</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">daf</span><span class="p">)</span>
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">GeneList</span><span class="o">.</span><span class="n">exists</span><span class="p">,</span> <span class="n">DafWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_gene_list</span><span class="p">(</span><span class="n">_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">DafWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">has_axis</span><span class="p">(</span><span class="s2">"gene"</span><span class="p">)</span>
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">GeneList</span><span class="o">.</span><span class="n">genes</span><span class="p">,</span> <span class="n">DafWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_gene_list_genes</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">GeneList</span><span class="p">,</span> <span class="n">_source</span><span class="p">:</span> <span class="n">DafWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">mg</span><span class="o">.</span><span class="n">Entries</span><span class="p">:</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span>
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">OfTypes</span><span class="o">.</span><span class="n">exists</span><span class="p">,</span> <span class="n">DafWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_of_types</span><span class="p">(</span><span class="n">_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">DafWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="n">_has_vectors</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">source</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">has_axis</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span>
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">OfTypes</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">DafWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_of_types_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">OfTypes</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">DafWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">mg</span><span class="o">.</span><span class="n">get_is_in_categories_vector</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">daf</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"type"</span><span class="p">,</span> <span class="n">categories</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">types</span><span class="p">)</span>
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">InNeighborhood</span><span class="o">.</span><span class="n">exists</span><span class="p">,</span> <span class="n">DafWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_in_neighborhood</span><span class="p">(</span><span class="n">_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">DafWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">source</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">has_axis</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="n">source</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">has_matrix</span><span class="p">(</span><span class="s2">"block"</span><span class="p">,</span> <span class="s2">"block"</span><span class="p">,</span> <span class="s2">"is_in_neighborhood"</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="p">(</span><span class="n">axis</span> <span class="o">==</span> <span class="s2">"block"</span> <span class="ow">or</span> <span class="n">source</span><span class="o">.</span><span class="n">_has_vectors</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="s2">"block"</span><span class="p">))</span>
+    <span class="p">)</span>
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">InNeighborhood</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">DafWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_in_neighborhood_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">InNeighborhood</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">DafWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">mg</span><span class="o">.</span><span class="n">get_is_in_neighborhood_vector</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">daf</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">)</span>
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">InEnvironment</span><span class="o">.</span><span class="n">exists</span><span class="p">,</span> <span class="n">DafWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_in_environment</span><span class="p">(</span><span class="n">_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">DafWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">axis</span> <span class="o">==</span> <span class="s2">"metacell"</span>
+        <span class="ow">and</span> <span class="n">source</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">has_axis</span><span class="p">(</span><span class="s2">"metacell"</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="n">source</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">has_axis</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="n">source</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">has_matrix</span><span class="p">(</span><span class="s2">"metacell"</span><span class="p">,</span> <span class="s2">"block"</span><span class="p">,</span> <span class="s2">"is_in_environment"</span><span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">InEnvironment</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">DafWidgets</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_in_environment_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">InEnvironment</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">DafWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">mg</span><span class="o">.</span><span class="n">get_is_in_environment_vector</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">daf</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">)</span>
 
 
 <span class="k">for</span> <span class="n">_property_class</span><span class="p">,</span> <span class="n">_fill</span><span class="p">,</span> <span class="n">_axes</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="n">_SIZE_PROPERTIES</span><span class="p">,</span> <span class="o">*</span><span class="n">_CATEGORY_PROPERTIES</span><span class="p">,</span> <span class="o">*</span><span class="n">_BOOLEAN_PROPERTIES</span><span class="p">):</span>

@@ -17,6 +17,7 @@ from .anndata_widgets import *
 from .common import *
 from .daf_widgets import *
 from .editors import *
+from .entries import *
 from .forms import *
 from .graphs import *
 from .kernel import *

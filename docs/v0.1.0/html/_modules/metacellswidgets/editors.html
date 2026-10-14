@@ -81,12 +81,14 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generic</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Protocol</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TypeVar</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">traitlets</span>  <span class="c1"># type: ignore</span>
@@ -109,6 +111,7 @@
     <span class="s2">"ArgumentsEditor"</span><span class="p">,</span>
     <span class="s2">"AxisPicker"</span><span class="p">,</span>
     <span class="s2">"ClassPicker"</span><span class="p">,</span>
+    <span class="s2">"ComboPicker"</span><span class="p">,</span>
     <span class="s2">"GeneChoices"</span><span class="p">,</span>
     <span class="s2">"GenePicker"</span><span class="p">,</span>
     <span class="s2">"ListEditor"</span><span class="p">,</span>
@@ -116,6 +119,7 @@
     <span class="s2">"OnAxisChange"</span><span class="p">,</span>
     <span class="s2">"Picker"</span><span class="p">,</span>
     <span class="s2">"PickerEditor"</span><span class="p">,</span>
+    <span class="s2">"PickerRow"</span><span class="p">,</span>
     <span class="s2">"PropertyPicker"</span><span class="p">,</span>
 <span class="p">]</span>
 
@@ -237,15 +241,59 @@
 
 
 
+<div class="viewcode-block" id="ComboPicker">
+<a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.ComboPicker">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ComboPicker</span><span class="p">(</span><span class="n">Picker</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Pick one of some ``names`` by typing (part of) it, starting with the ``current`` one (if any, and if it is one of</span>
+<span class="sd">    them). This suits many names (e.g., the blocks), where a dropdown would be too long. The ``placeholder`` says what</span>
+<span class="sd">    is picked.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">placeholder</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">is_current</span> <span class="o">=</span> <span class="n">current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">current</span> <span class="ow">in</span> <span class="n">names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_combobox</span> <span class="o">=</span> <span class="n">Combobox</span><span class="p">(</span>
+            <span class="n">options</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">names</span><span class="p">),</span> <span class="n">value</span><span class="o">=</span><span class="n">current</span> <span class="k">if</span> <span class="n">is_current</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span> <span class="n">placeholder</span><span class="o">=</span><span class="n">placeholder</span><span class="p">,</span> <span class="n">ensure_option</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_combobox</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">current</span> <span class="k">if</span> <span class="n">is_current</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_combobox</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_combobox_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_combobox_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">]</span> <span class="ow">or</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="PickerRow">
+<a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.PickerRow">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PickerRow</span><span class="p">(</span><span class="n">ArgumentsEditor</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    A row of a :py:class:`ListEditor` of names, picked by a ``picker``. Its ``value`` is the picked name.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">picker</span><span class="p">:</span> <span class="n">Picker</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="n">picker</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">picker</span><span class="o">.</span><span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_blank</span> <span class="o">=</span> <span class="n">picker</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="n">picker</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_picker_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_picker_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_blank</span> <span class="o">=</span> <span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span></div>
+
+
+
 <div class="viewcode-block" id="PickerEditor">
 <a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.PickerEditor">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">PickerEditor</span><span class="p">(</span><span class="n">ArgumentsEditor</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Edit a property with a single argument, picked by a ``picker``. The ``build`` function makes the property from the</span>
-<span class="sd">    picked string.</span>
+<span class="sd">    Edit an object with a single argument (e.g., a property or an entry filter), picked by a ``picker``. The ``build``</span>
+<span class="sd">    function makes the object from the picked string.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">picker</span><span class="p">:</span> <span class="n">Picker</span><span class="p">,</span> <span class="n">build</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Property</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">picker</span><span class="p">:</span> <span class="n">Picker</span><span class="p">,</span> <span class="n">build</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Arguments</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_build</span> <span class="o">=</span> <span class="n">build</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="n">picker</span><span class="p">]</span>
@@ -443,12 +491,18 @@
 <span class="n">_ROW_BUTTON_LAYOUT</span> <span class="o">=</span> <span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s2">"2.5em"</span><span class="p">)</span>
 
 
+<span class="c1"># The type of the objects of the list of a ``ListEditor``: the same for its rows, its ``current`` and its ``default``.</span>
+<span class="n">_Item</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"_Item"</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">Union</span><span class="p">[</span><span class="n">Arguments</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span>
+
+
 <div class="viewcode-block" id="ListEditor">
 <a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.ListEditor">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">ListEditor</span><span class="p">(</span><span class="n">ArgumentsEditor</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method,too-many-instance-attributes</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ListEditor</span><span class="p">(</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method,too-many-instance-attributes</span>
+    <span class="n">ArgumentsEditor</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">_Item</span><span class="p">]</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Edit a list of properties or tweaks, a row per object, in a collapsible section named ``title`` (collapsed at</span>
-<span class="sd">    first). Each row is a picker made by ``make_row``, which gets the object the row starts with, or ``None`` for a</span>
+<span class="sd">    Edit a list of objects (e.g., properties, tweaks, or names), a row per object, in a collapsible section named</span>
+<span class="sd">    ``title`` (collapsed at first). Each row is a picker made by ``make_row``, which gets the object the row starts with, or ``None`` for a</span>
 <span class="sd">    blank row. The list always ends with a blank row; picking something in it makes it a row of the list, and appends a</span>
 <span class="sd">    new blank row. Each row of the list has buttons to move it up or down, or to remove it.</span>
 
@@ -460,10 +514,10 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">make_row</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Arguments</span><span class="p">]],</span> <span class="n">ArgumentsEditor</span><span class="p">],</span>
-        <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Arguments</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">make_row</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Optional</span><span class="p">[</span><span class="n">_Item</span><span class="p">]],</span> <span class="n">ArgumentsEditor</span><span class="p">],</span>
+        <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">_Item</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">default</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Arguments</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">default</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">_Item</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
@@ -481,7 +535,7 @@
         <span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill</span><span class="p">(</span><span class="n">default</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_fill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Arguments</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">_Item</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Show a row per object of the ``items``, and then a blank row.</span>
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">:</span>
             <span class="n">row</span><span class="o">.</span><span class="n">unobserve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_row_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>

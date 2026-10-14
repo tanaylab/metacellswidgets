@@ -8,12 +8,14 @@ incomplete), and the pickers' is the chosen string (or ``None`` while nothing is
 
 from typing import Callable
 from typing import Dict
+from typing import Generic
 from typing import List
 from typing import Optional
 from typing import Protocol
 from typing import Sequence
 from typing import Tuple
 from typing import Type
+from typing import TypeVar
 from typing import Union
 
 import traitlets  # type: ignore
@@ -36,6 +38,7 @@ __all__: List[str] = [
     "ArgumentsEditor",
     "AxisPicker",
     "ClassPicker",
+    "ComboPicker",
     "GeneChoices",
     "GenePicker",
     "ListEditor",
@@ -43,6 +46,7 @@ __all__: List[str] = [
     "OnAxisChange",
     "Picker",
     "PickerEditor",
+    "PickerRow",
     "PropertyPicker",
 ]
 
@@ -146,13 +150,51 @@ class NamePicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
         self.value = change["new"]
 
 
-class PickerEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
+class ComboPicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
     """
-    Edit a property with a single argument, picked by a ``picker``. The ``build`` function makes the property from the
-    picked string.
+    Pick one of some ``names`` by typing (part of) it, starting with the ``current`` one (if any, and if it is one of
+    them). This suits many names (e.g., the blocks), where a dropdown would be too long. The ``placeholder`` says what
+    is picked.
     """
 
-    def __init__(self, picker: Picker, build: Callable[[str], Property]) -> None:
+    def __init__(self, names: Sequence[str], current: Optional[str] = None, *, placeholder: str) -> None:
+        super().__init__()
+        is_current = current is not None and current in names
+        self._combobox = Combobox(
+            options=list(names), value=current if is_current else "", placeholder=placeholder, ensure_option=True
+        )
+        self.children = [self._combobox]
+        self.value = current if is_current else None
+        self._combobox.observe(self._on_combobox_change, names="value")
+
+    def _on_combobox_change(self, change: Dict) -> None:
+        self.value = change["new"] or None
+
+
+class PickerRow(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
+    """
+    A row of a :py:class:`ListEditor` of names, picked by a ``picker``. Its ``value`` is the picked name.
+    """
+
+    def __init__(self, picker: Picker) -> None:
+        super().__init__()
+        self.children = [picker]
+        self.value = picker.value
+        self.is_blank = picker.value is None
+        picker.observe(self._on_picker_change, names="value")
+
+    def _on_picker_change(self, change: Dict) -> None:
+        self.value = change["new"]
+        self.is_blank = change["new"] is None
+
+
+class PickerEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
+    """
+    Edit an object with a single argument (e.g., a property or an entry filter), picked by a ``picker``. The ``build``
+    function makes the object from the picked string.
+    """
+
+    def __init__(self, picker: Picker, build: Callable[[str], Arguments]) -> None:
         super().__init__()
         self._build = build
         self.children = [picker]
@@ -340,10 +382,16 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
 _ROW_BUTTON_LAYOUT = Layout(width="2.5em")
 
 
-class ListEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method,too-many-instance-attributes
+# The type of the objects of the list of a ``ListEditor``: the same for its rows, its ``current`` and its ``default``.
+_Item = TypeVar("_Item", bound=Union[Arguments, str])
+
+
+class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many-instance-attributes
+    ArgumentsEditor, Generic[_Item]
+):
     """
-    Edit a list of properties or tweaks, a row per object, in a collapsible section named ``title`` (collapsed at
-    first). Each row is a picker made by ``make_row``, which gets the object the row starts with, or ``None`` for a
+    Edit a list of objects (e.g., properties, tweaks, or names), a row per object, in a collapsible section named
+    ``title`` (collapsed at first). Each row is a picker made by ``make_row``, which gets the object the row starts with, or ``None`` for a
     blank row. The list always ends with a blank row; picking something in it makes it a row of the list, and appends a
     new blank row. Each row of the list has buttons to move it up or down, or to remove it.
 
@@ -355,10 +403,10 @@ class ListEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstrac
 
     def __init__(
         self,
-        make_row: Callable[[Optional[Arguments]], ArgumentsEditor],
-        current: Optional[Sequence[Arguments]] = None,
+        make_row: Callable[[Optional[_Item]], ArgumentsEditor],
+        current: Optional[Sequence[_Item]] = None,
         *,
-        default: Optional[Sequence[Arguments]] = None,
+        default: Optional[Sequence[_Item]] = None,
         title: str,
     ) -> None:
         super().__init__()
@@ -376,7 +424,7 @@ class ListEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstrac
         ]
         self._fill(default if current is None else current)
 
-    def _fill(self, items: Optional[Sequence[Arguments]]) -> None:
+    def _fill(self, items: Optional[Sequence[_Item]]) -> None:
         # Show a row per object of the ``items``, and then a blank row.
         for row in self._rows:
             row.unobserve(self._on_row_change, names="value")

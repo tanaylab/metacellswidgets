@@ -22,6 +22,9 @@ from .common import implements
 from .editors import GenePicker
 from .editors import NamePicker
 from .editors import PickerEditor
+from .entries import GeneList
+from .entries import OfTypes
+from .entries import TopMarkers
 from .forms import Branch
 from .graphs import GeneGene
 from .properties import UMAP
@@ -74,6 +77,13 @@ class AnnDataWidgets(SourceWidgets):
                 (str(names[index]), str(names[index])) for index in np.flatnonzero(is_included)
             ]
         return self._gene_choices[markers_only]
+
+    def type_names(self) -> List[str]:
+        """
+        The names of the types (the distinct values of the ``type_property`` of the ``obs``, without missing ones),
+        sorted.
+        """
+        return sorted({str(name) for name in self.adata.obs[self.type_property].dropna()})
 
     def _var_mask(self, column: str) -> np.ndarray:
         # The Boolean ``column`` of ``var``, or all false if there is no such column.
@@ -174,6 +184,36 @@ def _has_gene_gene(_cls: type, _source: AnnDataWidgets) -> bool:
 def _gene_gene_base_graph(self: GeneGene, source: AnnDataWidgets) -> PointsGraph:
     assert self.x_gene is not None and self.y_gene is not None
     return mg.ad_gene_gene_graph(source.adata, x_gene=self.x_gene, y_gene=self.y_gene)
+
+
+@implements(TopMarkers.exists, AnnDataWidgets)
+def _has_top_markers(_cls: type, source: AnnDataWidgets) -> bool:
+    return "marker_gene" in source.adata.var
+
+
+@implements(TopMarkers.genes, AnnDataWidgets)
+def _top_markers_genes(self: TopMarkers, source: AnnDataWidgets) -> mg.Entries:
+    return mg.ad_get_top_marker_gene_indices(source.adata, markers_count=self.count)
+
+
+@implements(GeneList.exists, AnnDataWidgets)
+def _has_gene_list(_cls: type, _source: AnnDataWidgets) -> bool:
+    return True
+
+
+@implements(GeneList.genes, AnnDataWidgets)
+def _gene_list_genes(self: GeneList, _source: AnnDataWidgets) -> mg.Entries:
+    return self.names
+
+
+@implements(OfTypes.exists, AnnDataWidgets)
+def _has_of_types(_cls: type, source: AnnDataWidgets, axis: str) -> bool:
+    return axis == "metacell" and source.type_property in source.adata.obs
+
+
+@implements(OfTypes.mask, AnnDataWidgets)
+def _of_types_mask(self: OfTypes, source: AnnDataWidgets, _axis: str) -> np.ndarray:
+    return mg.ad_get_is_in_categories_vector(source.adata, property=source.type_property, categories=self.types)
 
 
 for _property_class, _axis, _column, _fill in (*_SIZE_PROPERTIES, *_BOOLEAN_PROPERTIES):

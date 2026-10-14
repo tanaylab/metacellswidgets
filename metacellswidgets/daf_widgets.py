@@ -19,6 +19,12 @@ from .common import implements
 from .editors import GenePicker
 from .editors import NamePicker
 from .editors import PickerEditor
+from .entries import GeneList
+from .entries import InEnvironment
+from .entries import InNeighborhood
+from .entries import OfTypes
+from .entries import SkeletonGenes
+from .entries import TopMarkers
 from .forms import Branch
 from .graphs import GeneGene
 from .properties import UMAP
@@ -102,6 +108,18 @@ class DafWidgets(SourceWidgets):
                 name for name in self.daf.vectors_set(axis) if self.daf.get_np_vector(axis, name).dtype == np.bool_
             )
         return self._boolean_vectors[axis]
+
+    def type_names(self) -> List[str]:
+        """
+        The names of the types, sorted.
+        """
+        return sorted(str(name) for name in self.daf.axis_np_vector("type"))
+
+    def block_names(self) -> List[str]:
+        """
+        The names of the blocks, in the order of the block axis.
+        """
+        return [str(name) for name in self.daf.axis_np_vector("block")]
 
     def _gene_mask(self, name: str) -> np.ndarray:
         # The Boolean gene property with the ``name``, or all false if the data set doesn't have it.
@@ -283,6 +301,75 @@ def _has_gene_gene(_cls: type, source: DafWidgets) -> bool:
 def _gene_gene_base_graph(self: GeneGene, source: DafWidgets) -> PointsGraph:
     assert self.x_gene is not None and self.y_gene is not None
     return mg.gene_gene_graph(source.daf, axis=self.axis, x_gene=self.x_gene, y_gene=self.y_gene)
+
+
+@implements(TopMarkers.exists, DafWidgets)
+def _has_top_markers(_cls: type, source: DafWidgets) -> bool:
+    return source._has_vectors("gene", "marker_rank")
+
+
+@implements(TopMarkers.genes, DafWidgets)
+def _top_markers_genes(self: TopMarkers, source: DafWidgets) -> mg.Entries:
+    return mg.get_top_marker_gene_indices(source.daf, markers_count=self.count)
+
+
+@implements(SkeletonGenes.exists, DafWidgets)
+def _has_skeleton_genes(_cls: type, source: DafWidgets) -> bool:
+    return source._has_vectors("gene", "is_skeleton")
+
+
+@implements(SkeletonGenes.genes, DafWidgets)
+def _skeleton_genes_genes(_self: SkeletonGenes, source: DafWidgets) -> mg.Entries:
+    return mg.get_skeleton_gene_indices(source.daf)
+
+
+@implements(GeneList.exists, DafWidgets)
+def _has_gene_list(_cls: type, source: DafWidgets) -> bool:
+    return source.daf.has_axis("gene")
+
+
+@implements(GeneList.genes, DafWidgets)
+def _gene_list_genes(self: GeneList, _source: DafWidgets) -> mg.Entries:
+    return self.names
+
+
+@implements(OfTypes.exists, DafWidgets)
+def _has_of_types(_cls: type, source: DafWidgets, axis: str) -> bool:
+    return source._has_vectors(axis, "type") and source.daf.has_axis("type")
+
+
+@implements(OfTypes.mask, DafWidgets)
+def _of_types_mask(self: OfTypes, source: DafWidgets, axis: str) -> np.ndarray:
+    return mg.get_is_in_categories_vector(source.daf, axis=axis, property="type", categories=self.types)
+
+
+@implements(InNeighborhood.exists, DafWidgets)
+def _has_in_neighborhood(_cls: type, source: DafWidgets, axis: str) -> bool:
+    return (
+        source.daf.has_axis("block")
+        and source.daf.has_matrix("block", "block", "is_in_neighborhood")
+        and (axis == "block" or source._has_vectors(axis, "block"))
+    )
+
+
+@implements(InNeighborhood.mask, DafWidgets)
+def _in_neighborhood_mask(self: InNeighborhood, source: DafWidgets, axis: str) -> np.ndarray:
+    return mg.get_is_in_neighborhood_vector(source.daf, axis=axis, block=self.block)
+
+
+@implements(InEnvironment.exists, DafWidgets)
+def _has_in_environment(_cls: type, source: DafWidgets, axis: str) -> bool:
+    return (
+        axis == "metacell"
+        and source.daf.has_axis("metacell")
+        and source.daf.has_axis("block")
+        and source.daf.has_matrix("metacell", "block", "is_in_environment")
+    )
+
+
+@implements(InEnvironment.mask, DafWidgets)
+def _in_environment_mask(self: InEnvironment, source: DafWidgets, axis: str) -> np.ndarray:
+    return mg.get_is_in_environment_vector(source.daf, axis=axis, block=self.block)
 
 
 for _property_class, _fill, _axes in (*_SIZE_PROPERTIES, *_CATEGORY_PROPERTIES, *_BOOLEAN_PROPERTIES):

@@ -44,7 +44,7 @@
     
 <link rel="search" title="Search" href="search.html" />
     
-<link rel="next" title="forms" href="forms.html" />
+<link rel="next" title="entries" href="entries.html" />
     
 <link rel="prev" title="sources" href="sources.html" /> 
 
@@ -150,6 +150,15 @@
 </li>
 
 <li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.editors.ComboPicker">
+<code class="docutils literal notranslate">
+<span class="pre">ComboPicker
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l3">
 <a class="reference internal" href="#metacellswidgets.editors.GeneChoices">
 <code class="docutils literal notranslate">
 <span class="pre">GeneChoices
@@ -226,6 +235,15 @@
 </li>
 
 <li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.editors.PickerRow">
+<code class="docutils literal notranslate">
+<span class="pre">PickerRow
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l3">
 <a class="reference internal" href="#metacellswidgets.editors.PropertyPicker">
 <code class="docutils literal notranslate">
 <span class="pre">PropertyPicker
@@ -236,6 +254,11 @@
 
 </ul>
 
+</li>
+
+<li class="toctree-l2">
+<a class="reference internal" href="entries.html">entries
+</a>
 </li>
 
 <li class="toctree-l2">
@@ -713,6 +736,135 @@ choices (e.g., after the axis changed), or whose arguments aren’t valid, gives
 
 <dl class="py class">
 
+<dt class="sig sig-object py" id="metacellswidgets.editors.ComboPicker">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.editors.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">ComboPicker
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">args
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="o">
+<span class="pre">**
+</span>
+</span>
+<span class="n">
+<span class="pre">kwargs
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/editors.html#ComboPicker">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.editors.ComboPicker" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Pick one of some 
+<code class="docutils literal notranslate">
+<span class="pre">names
+</span>
+</code> by typing (part of) it, starting with the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> one (if any, and if it is one of
+them). This suits many names (e.g., the blocks), where a dropdown would be too long. The 
+<code class="docutils literal notranslate">
+<span class="pre">placeholder
+</span>
+</code> says what
+is picked.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>names
+</strong> (
+<em>Sequence
+</em>
+<em>[
+</em>
+<em>str
+</em>
+<em>]
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<em>str
+</em>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>placeholder
+</strong> (
+<em>str
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
 <dt class="sig sig-object py" id="metacellswidgets.editors.GeneChoices">
 
 <span class="property">
@@ -1025,12 +1177,12 @@ restricts the choices to the marker genes.
 </dt>
 
 <dd>
-<p>Edit a list of properties or tweaks, a row per object, in a collapsible section named 
+<p>Edit a list of objects (e.g., properties, tweaks, or names), a row per object, in a collapsible section named
+
 <code class="docutils literal notranslate">
 <span class="pre">title
 </span>
-</code> (collapsed at
-first). Each row is a picker made by 
+</code> (collapsed at first). Each row is a picker made by 
 <code class="docutils literal notranslate">
 <span class="pre">make_row
 </span>
@@ -1109,10 +1261,8 @@ shown while the
 </em>
 <em>[
 </em>
-<a class="reference internal" href="common.html#metacellswidgets.common.Arguments" title="metacellswidgets.common.Arguments">
-<em>Arguments
+<em>_Item
 </em>
-</a>
 <em> | 
 </em>
 <em>None
@@ -1138,10 +1288,8 @@ shown while the
 </em>
 <em>[
 </em>
-<a class="reference internal" href="common.html#metacellswidgets.common.Arguments" title="metacellswidgets.common.Arguments">
-<em>Arguments
+<em>_Item
 </em>
-</a>
 <em>] 
 </em>
 <em>| 
@@ -1159,10 +1307,8 @@ shown while the
 </em>
 <em>[
 </em>
-<a class="reference internal" href="common.html#metacellswidgets.common.Arguments" title="metacellswidgets.common.Arguments">
-<em>Arguments
+<em>_Item
 </em>
-</a>
 <em>] 
 </em>
 <em>| 
@@ -1491,7 +1637,7 @@ nothing is chosen.
 </dt>
 
 <dd>
-<p>Edit a property with a single argument, picked by a 
+<p>Edit an object with a single argument (e.g., a property or an entry filter), picked by a 
 <code class="docutils literal notranslate">
 <span class="pre">picker
 </span>
@@ -1499,8 +1645,8 @@ nothing is chosen.
 <code class="docutils literal notranslate">
 <span class="pre">build
 </span>
-</code> function makes the property from the
-picked string.
+</code>
+function makes the object from the picked string.
 </p>
 
 <dl class="field-list simple">
@@ -1540,8 +1686,8 @@ picked string.
 </em>
 <em>, 
 </em>
-<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
-<em>Property
+<a class="reference internal" href="common.html#metacellswidgets.common.Arguments" title="metacellswidgets.common.Arguments">
+<em>Arguments
 </em>
 </a>
 <em>]
@@ -1550,6 +1696,103 @@ picked string.
 </li>
 
 </ul>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.editors.PickerRow">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.editors.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">PickerRow
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">args
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="o">
+<span class="pre">**
+</span>
+</span>
+<span class="n">
+<span class="pre">kwargs
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/editors.html#PickerRow">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.editors.PickerRow" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>A row of a 
+<a class="reference internal" href="#metacellswidgets.editors.ListEditor" title="metacellswidgets.editors.ListEditor">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">ListEditor
+</span>
+</code>
+</a> of names, picked by a 
+<code class="docutils literal notranslate">
+<span class="pre">picker
+</span>
+</code>. Its 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is the picked name.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>picker
+</strong> (
+<a class="reference internal" href="#metacellswidgets.editors.Picker" title="metacellswidgets.editors.Picker">
+<em>Picker
+</em>
+</a>)
+</p>
 
 </dd>
 
@@ -1816,7 +2059,7 @@ this instead.
 </span> Previous
 </a>
         
-<a href="forms.html" class="btn btn-neutral float-right" title="forms" accesskey="n" rel="next">Next 
+<a href="entries.html" class="btn btn-neutral float-right" title="entries" accesskey="n" rel="next">Next 
 <span class="fa fa-arrow-circle-right" aria-hidden="true">
 </span>
 </a>

@@ -1,0 +1,552 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>metacellswidgets.entries &mdash; MetacellsWidgets 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MetacellsWidgets
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">README</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../API.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MetacellsWidgets</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">metacellswidgets.entries</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for metacellswidgets.entries</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""</span>
+<span class="sd">Selections of entries: which entries each side of a graph shows, such as the genes of the rows of a heatmap and the</span>
+<span class="sd">metacells of its columns.</span>
+
+<span class="sd">A gene selection (e.g., ``TopMarkers(count=100)``) picks the genes. An entry filter (e.g., ``OfTypes(types=["T1"])``)</span>
+<span class="sd">picks some of the entries of an axis; a list of filters picks the entries which pass all of them. Like a property,</span>
+<span class="sd">each holds the values of its arguments, so a form can write it back into the code of its cell. Whether a data source</span>
+<span class="sd">has it, and its value, are implemented separately for each kind of data source. Each is a thin wrapper over a data</span>
+<span class="sd">source of ``metacellsgraphspy`` (e.g., ``get_is_in_categories_vector``), so a graph shown with them is the same as a</span>
+<span class="sd">script calling these data sources.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Protocol</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">cast</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">metacellsgraphspy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mg</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntText</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>  <span class="c1"># type: ignore</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">Arguments</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">_give_own_dispatchers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArgumentsEditor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">AxisPicker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassPicker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComboPicker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneChoices</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">GenePicker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ListEditor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">PickerEditor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">PickerRow</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.kernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">_on_main_thread</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceWidgets</span>
+
+<span class="n">__all__</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"BlockNames"</span><span class="p">,</span>
+    <span class="s2">"EntryFilter"</span><span class="p">,</span>
+    <span class="s2">"EntryFilterPicker"</span><span class="p">,</span>
+    <span class="s2">"GeneList"</span><span class="p">,</span>
+    <span class="s2">"GeneSelection"</span><span class="p">,</span>
+    <span class="s2">"GeneSelectionPicker"</span><span class="p">,</span>
+    <span class="s2">"InEnvironment"</span><span class="p">,</span>
+    <span class="s2">"InNeighborhood"</span><span class="p">,</span>
+    <span class="s2">"OfTypes"</span><span class="p">,</span>
+    <span class="s2">"SkeletonGenes"</span><span class="p">,</span>
+    <span class="s2">"TopMarkers"</span><span class="p">,</span>
+    <span class="s2">"TypeNames"</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="TypeNames">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.TypeNames">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TypeNames</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-few-public-methods</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    A data source which can list the names of its types, for picking some of them.</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="TypeNames.type_names">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.TypeNames.type_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">type_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The names of the types, sorted.</span>
+<span class="sd">        """</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BlockNames">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.BlockNames">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BlockNames</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-few-public-methods</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    A data source which can list the names of its blocks, for picking one of them.</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="BlockNames.block_names">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.BlockNames.block_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">block_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The names of the blocks, in the order of the block axis.</span>
+<span class="sd">        """</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="GeneSelection">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.GeneSelection">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GeneSelection</span><span class="p">(</span><span class="n">Arguments</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The base class of the selections of genes. Its instance holds the values of its arguments (see</span>
+<span class="sd">    :py:class:`~metacellswidgets.common.Arguments`). A selection class must derive directly from this class.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">_give_own_dispatchers</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">GeneSelection</span><span class="p">,</span> <span class="p">(</span><span class="s2">"exists"</span><span class="p">,</span> <span class="s2">"genes"</span><span class="p">))</span>
+
+<div class="viewcode-block" id="GeneSelection.exists">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.GeneSelection.exists">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">exists</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Whether the ``source`` has the data of the selection. Each kind of data source implements this for the</span>
+<span class="sd">        selections it supports; for any other, the selection does not exist.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="GeneSelection.editor">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.GeneSelection.editor">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">"GeneSelection"</span><span class="p">]</span>  <span class="c1"># pylint: disable=unused-argument</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Widget</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        A widget for editing the selection's arguments, starting from the ``current`` selection (if any). Its ``value``</span>
+<span class="sd">        is the selection, or ``None`` while the arguments are incomplete. A selection without arguments has no editor.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="GeneSelection.genes">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.GeneSelection.genes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">genes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">mg</span><span class="o">.</span><span class="n">Entries</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The selected genes of the ``source``, to pass as the ``genes`` of a data source. Each kind of data source</span>
+<span class="sd">        implements this for the selections it supports; for any other, this is an error.</span>
+<span class="sd">        """</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.genes is not implemented for: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="EntryFilter">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.EntryFilter">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EntryFilter</span><span class="p">(</span><span class="n">Arguments</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The base class of the filters of the entries of an axis. Its instance holds the values of its arguments (see</span>
+<span class="sd">    :py:class:`~metacellswidgets.common.Arguments`). A filter class must derive directly from this class.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">_give_own_dispatchers</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">EntryFilter</span><span class="p">,</span> <span class="p">(</span><span class="s2">"exists"</span><span class="p">,</span> <span class="s2">"mask"</span><span class="p">))</span>
+
+<div class="viewcode-block" id="EntryFilter.exists">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.EntryFilter.exists">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">exists</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Whether the ``source`` has the data of the filter for the entries of the ``axis``. Each kind of data source</span>
+<span class="sd">        implements this for the filters it supports; for any other, the filter does not exist.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="EntryFilter.editor">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.EntryFilter.editor">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">"EntryFilter"</span><span class="p">]</span>  <span class="c1"># pylint: disable=unused-argument</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Widget</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        A widget for editing the filter's arguments, starting from the ``current`` filter (if any). Its ``value`` is the</span>
+<span class="sd">        filter, or ``None`` while the arguments are incomplete. A filter without arguments has no editor.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="EntryFilter.mask">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.EntryFilter.mask">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Whether each entry of the ``axis`` of the ``source`` passes the filter, to combine with other filters (by</span>
+<span class="sd">        ``&amp;``) and pass as the ``entries`` of a data source. Each kind of data source implements this for the filters</span>
+<span class="sd">        it supports; for any other, this is an error.</span>
+<span class="sd">        """</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.mask is not implemented for: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EntryFilter.on_axis">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.EntryFilter.on_axis">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">"EntryFilter"</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        What the filter becomes for the entries of another ``axis`` of the ``source``: by default, itself if it exists</span>
+<span class="sd">        there, and nothing otherwise.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TopMarkers">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.TopMarkers">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TopMarkers</span><span class="p">(</span><span class="n">GeneSelection</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The ``count`` strongest marker genes. This is the default selection of the genes.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">mg</span><span class="o">.</span><span class="n">TOP_MARKERS_COUNT_FOR_GRAPHS</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="n">count</span>
+
+<div class="viewcode-block" id="TopMarkers.editor">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.TopMarkers.editor">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GeneSelection</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Widget</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">TopMarkers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_CountEditor</span><span class="p">(</span><span class="n">TopMarkers</span><span class="p">()</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_CountEditor</span><span class="p">(</span><span class="n">ArgumentsEditor</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+    <span class="c1"># The editor of a ``TopMarkers``: the number of genes. A number below one is incomplete.</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">TopMarkers</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">=</span> <span class="n">IntText</span><span class="p">(</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">current</span><span class="o">.</span><span class="n">count</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">"Count"</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="p">{</span><span class="s2">"description_width"</span><span class="p">:</span> <span class="s2">"initial"</span><span class="p">},</span>
+            <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s2">"10em"</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_count</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_value</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_count</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_value</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_count</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">TopMarkers</span><span class="p">(</span><span class="n">count</span><span class="p">)</span> <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_blank</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="SkeletonGenes">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.SkeletonGenes">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SkeletonGenes</span><span class="p">(</span><span class="n">GeneSelection</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The skeleton genes, which the blocks were computed from.</span>
+<span class="sd">    """</span></div>
+
+
+
+<div class="viewcode-block" id="GeneList">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.GeneList">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GeneList</span><span class="p">(</span><span class="n">GeneSelection</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The genes with the ``names``, in this order.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GeneList.editor">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.GeneList.editor">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GeneSelection</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Widget</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">GeneList</span><span class="p">)</span>
+        <span class="n">genes</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">GeneChoices</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_NamesEditor</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="n">PickerRow</span><span class="p">(</span><span class="n">GenePicker</span><span class="p">(</span><span class="n">genes</span><span class="p">,</span> <span class="n">name</span><span class="p">)),</span>
+            <span class="kc">None</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">names</span><span class="p">,</span>
+            <span class="n">GeneList</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">"Genes"</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_NamesEditor</span><span class="p">(</span><span class="n">ArgumentsEditor</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+    <span class="c1"># The editor of a selection or a filter whose argument is a list of names: a list of rows, each picking a name. An</span>
+    <span class="c1"># empty list is incomplete.</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">make_row</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">ArgumentsEditor</span><span class="p">],</span>
+        <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">build</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">Arguments</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build</span> <span class="o">=</span> <span class="n">build</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_names</span> <span class="o">=</span> <span class="n">ListEditor</span><span class="p">(</span><span class="n">make_row</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">current</span> <span class="ow">or</span> <span class="p">[]),</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_value</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_value</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="o">.</span><span class="n">value</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="k">if</span> <span class="n">names</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_blank</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="OfTypes">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.OfTypes">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">OfTypes</span><span class="p">(</span><span class="n">EntryFilter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The entries whose type is one of the ``types``.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">types</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">types</span><span class="p">)</span>
+
+<div class="viewcode-block" id="OfTypes.editor">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.OfTypes.editor">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">EntryFilter</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Widget</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">OfTypes</span><span class="p">)</span>
+        <span class="n">type_names</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">TypeNames</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="n">type_names</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">_NamesEditor</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="n">PickerRow</span><span class="p">(</span><span class="n">ComboPicker</span><span class="p">(</span><span class="n">type_names</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">placeholder</span><span class="o">=</span><span class="s2">"Type"</span><span class="p">)),</span>
+            <span class="kc">None</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">types</span><span class="p">,</span>
+            <span class="n">OfTypes</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">"Types"</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="InNeighborhood">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.InNeighborhood">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">InNeighborhood</span><span class="p">(</span><span class="n">EntryFilter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The entries in the neighborhood of the ``block``: its blocks, or the metacells of its blocks.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="n">block</span>
+
+<div class="viewcode-block" id="InNeighborhood.editor">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.InNeighborhood.editor">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">EntryFilter</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Widget</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">InNeighborhood</span><span class="p">)</span>
+        <span class="n">block_names</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">BlockNames</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="n">block_names</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">PickerEditor</span><span class="p">(</span>
+            <span class="n">ComboPicker</span><span class="p">(</span><span class="n">block_names</span><span class="p">,</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">block</span><span class="p">,</span> <span class="n">placeholder</span><span class="o">=</span><span class="s2">"Block"</span><span class="p">),</span> <span class="n">InNeighborhood</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="InEnvironment">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.InEnvironment">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">InEnvironment</span><span class="p">(</span><span class="n">EntryFilter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The metacells in the environment of the ``block``. On the block axis, this becomes the neighborhood of the</span>
+<span class="sd">    ``block`` (see :py:class:`InNeighborhood`), since an environment is a set of metacells.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="n">block</span>
+
+<div class="viewcode-block" id="InEnvironment.editor">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.InEnvironment.editor">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">EntryFilter</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Widget</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">InEnvironment</span><span class="p">)</span>
+        <span class="n">block_names</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">BlockNames</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="n">block_names</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">PickerEditor</span><span class="p">(</span>
+            <span class="n">ComboPicker</span><span class="p">(</span><span class="n">block_names</span><span class="p">,</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">block</span><span class="p">,</span> <span class="n">placeholder</span><span class="o">=</span><span class="s2">"Block"</span><span class="p">),</span> <span class="n">InEnvironment</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="InEnvironment.on_axis">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.InEnvironment.on_axis">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">EntryFilter</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">"block"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">InNeighborhood</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">)</span><span class="o">.</span><span class="n">on_axis</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">on_axis</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># The selections of genes and the filters of entries, in the order they are offered.</span>
+<span class="n">_GENE_SELECTIONS</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">GeneSelection</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">GeneList</span><span class="p">,</span> <span class="n">SkeletonGenes</span><span class="p">,</span> <span class="n">TopMarkers</span><span class="p">)</span>
+<span class="n">_ENTRY_FILTERS</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">EntryFilter</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">InEnvironment</span><span class="p">,</span> <span class="n">InNeighborhood</span><span class="p">,</span> <span class="n">OfTypes</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="GeneSelectionPicker">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.GeneSelectionPicker">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GeneSelectionPicker</span><span class="p">(</span><span class="n">ClassPicker</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Pick a selection of the genes of the ``source``, starting with the ``current`` one (if any). The choices are the</span>
+<span class="sd">    selections the source has. While none is given or picked, the default (:py:class:`TopMarkers`) is shown.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GeneSelection</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">TopMarkers</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_show</span><span class="p">([</span><span class="n">choice</span> <span class="k">for</span> <span class="n">choice</span> <span class="ow">in</span> <span class="n">_GENE_SELECTIONS</span> <span class="k">if</span> <span class="n">choice</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">source</span><span class="p">)],</span> <span class="n">current</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_editor_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">choice</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">Arguments</span><span class="p">],</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Arguments</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ArgumentsEditor</span><span class="p">]:</span>
+        <span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">choice</span><span class="p">,</span> <span class="n">GeneSelection</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">GeneSelection</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">choice</span><span class="o">.</span><span class="n">editor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">,</span> <span class="n">current</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="EntryFilterPicker">
+<a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.EntryFilterPicker">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EntryFilterPicker</span><span class="p">(</span><span class="n">ClassPicker</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Pick a filter of the entries of the ``axis`` of the ``source``, starting with the ``current`` one (if any). The</span>
+<span class="sd">    choices are the filters the source has for the axis. The ``axis`` may be an :py:class:`AxisPicker` to follow. When</span>
+<span class="sd">    its axis changes, the filter becomes what :py:meth:`EntryFilter.on_axis` says (e.g., an environment becomes a</span>
+<span class="sd">    neighborhood on the block axis).</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AxisPicker</span><span class="p">],</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">EntryFilter</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="o">=</span> <span class="n">axis</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">axis</span><span class="o">.</span><span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_show</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_choices</span><span class="p">(),</span> <span class="n">current</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">AxisPicker</span><span class="p">):</span>
+            <span class="n">axis</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_axis_picker_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_choices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">EntryFilter</span><span class="p">]]:</span>
+        <span class="c1"># The filters which may be picked for the current axis.</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">choice</span> <span class="k">for</span> <span class="n">choice</span> <span class="ow">in</span> <span class="n">_ENTRY_FILTERS</span> <span class="k">if</span> <span class="n">choice</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">)]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_editor_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">choice</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">Arguments</span><span class="p">],</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Arguments</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ArgumentsEditor</span><span class="p">]:</span>
+        <span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">choice</span><span class="p">,</span> <span class="n">EntryFilter</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">EntryFilter</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">choice</span><span class="o">.</span><span class="n">editor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">,</span> <span class="n">current</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_axis_picker_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="o">=</span> <span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">]</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">on_axis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">)</span>
+        <span class="n">_on_main_thread</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_show</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_choices</span><span class="p">(),</span> <span class="n">current</span><span class="p">))</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026 Weizmann Institute of Science.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
