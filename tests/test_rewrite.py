@@ -18,6 +18,14 @@ from metacellswidgets.rewrite import _call_position
 from metacellswidgets.rewrite import _Position
 from metacellswidgets.rewrite import _rewritten_cell
 
+# Non-ASCII text for a cell: a Hebrew string, a Hebrew variable name, and an accented gene name.
+_GENE = "\N{HEBREW LETTER GIMEL}\N{HEBREW LETTER FINAL NUN}"  # NOT F-STRING
+_CHECK = (
+    "\N{HEBREW LETTER LAMED}\N{HEBREW LETTER BET}\N{HEBREW LETTER DALET}"  # NOT F-STRING
+    "\N{HEBREW LETTER YOD}\N{HEBREW LETTER QOF}\N{HEBREW LETTER HE}"  # NOT F-STRING
+)
+_ACCENTED = "\N{LATIN SMALL LETTER E WITH ACUTE}"  # NOT F-STRING
+
 
 class _Recorder:
     """
@@ -121,9 +129,9 @@ def test_non_ascii() -> None:
     """
     Positions are in UTF-8 bytes, so text before the calls on the same line doesn't shift them.
     """
-    source = "name = 'גן'; form = mw.form(daf)\nלבדיקה = form.display(interactive=True)\n"
-    assert _rewrite(source, {"x_gene": "é"}) == (
-        "name = 'גן'; form = mw.form(daf, x_gene='é')\nלבדיקה = form.display(interactive=False)\n"
+    source = f"name = '{_GENE}'; form = mw.form(daf)\n{_CHECK} = form.display(interactive=True)\n"
+    assert _rewrite(source, {"x_gene": _ACCENTED}) == (
+        f"name = '{_GENE}'; form = mw.form(daf, x_gene='{_ACCENTED}')\n{_CHECK} = form.display(interactive=False)\n"
     )
 
 
