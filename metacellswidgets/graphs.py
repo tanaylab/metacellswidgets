@@ -25,6 +25,7 @@ from .editors import GeneChoices
 from .editors import GenePicker
 from .editors import ListEditor
 from .editors import PropertyPicker
+from .editors import ShownProperties
 from .entries import EntryFilter
 from .entries import EntryFilterPicker
 from .entries import GeneSelection
@@ -42,6 +43,15 @@ __all__: List[str] = [
     "GeneGene",
     "GenesHeatmap",
 ]
+
+
+# Fail if one of the ``hovers`` is another one, or one of the properties the ``side`` already shows.
+def _check_hovers(hovers: Optional[Sequence[Property]], shown: Sequence[Optional[Property]], side: str) -> None:
+    seen = [shown_property for shown_property in shown if shown_property is not None]
+    for hover in hovers or []:
+        if hover in seen:
+            raise ValueError(f"the hover {hover!r} is already shown on the {side}")
+        seen.append(hover)
 
 
 class GeneGene(GraphForm):
@@ -71,6 +81,7 @@ class GeneGene(GraphForm):
         self.colors = colors
         self.sizes = sizes
         self.hovers = None if hovers is None else list(hovers)
+        _check_hovers(self.hovers, [colors, sizes], "points")
 
     def editor(self) -> Widget:
         # Every kind of data source offering this graph has genes to pick from.
@@ -80,9 +91,13 @@ class GeneGene(GraphForm):
         y_gene = GenePicker(genes, self.y_gene)
         colors = PropertyPicker(self.source, Slot.COLORS, axis, self.colors)
         sizes = PropertyPicker(self.source, Slot.SIZES, axis, self.sizes)
+        points_shown = ShownProperties()
         hovers: ListEditor[Property] = ListEditor(
-            lambda current: PropertyPicker(self.source, Slot.HOVERS, axis, current), self.hovers, title="Hovers"
+            lambda current: PropertyPicker(self.source, Slot.HOVERS, axis, current, shown=points_shown),
+            self.hovers,
+            title="Hovers",
         )
+        points_shown.watch([colors, sizes], hovers, axis)
         self.bind(axis=axis, x_gene=x_gene, y_gene=y_gene, colors=colors, sizes=sizes, hovers=hovers)
         return VBox(
             [
@@ -138,6 +153,16 @@ class GenesHeatmap(GraphForm):
         self.column_annotations = None if column_annotations is None else list(column_annotations)
         self.row_hovers = None if row_hovers is None else list(row_hovers)
         self.column_hovers = None if column_hovers is None else list(column_hovers)
+        _check_hovers(self.row_hovers, self._row_annotations(), "rows")
+        _check_hovers(self.column_hovers, self._column_annotations(), "columns")
+
+    def _row_annotations(self) -> List[Property]:
+        # The annotations of the rows: the given ones, or else the default ones.
+        return self.default_row_annotations() if self.row_annotations is None else self.row_annotations
+
+    def _column_annotations(self) -> List[Property]:
+        # The annotations of the columns: the given ones, or else the default ones.
+        return self.default_column_annotations() if self.column_annotations is None else self.column_annotations
 
     def default_row_annotations(self) -> List[Property]:
         """
@@ -189,16 +214,20 @@ class GenesHeatmap(GraphForm):
             default=self.default_column_annotations,
             title="Column annotations",
         )
+        rows_shown = ShownProperties()
         row_hovers: ListEditor[Property] = ListEditor(
-            lambda current: PropertyPicker(self.source, Slot.HOVERS, "gene", current),
+            lambda current: PropertyPicker(self.source, Slot.HOVERS, "gene", current, shown=rows_shown),
             self.row_hovers,
             title="Row hovers",
         )
+        rows_shown.watch([row_annotations], row_hovers)
+        columns_shown = ShownProperties()
         column_hovers: ListEditor[Property] = ListEditor(
-            lambda current: PropertyPicker(self.source, Slot.HOVERS, axis, current),
+            lambda current: PropertyPicker(self.source, Slot.HOVERS, axis, current, shown=columns_shown),
             self.column_hovers,
             title="Column hovers",
         )
+        columns_shown.watch([column_annotations], column_hovers, axis)
         self.bind(
             axis=axis,
             genes=genes,
@@ -221,13 +250,11 @@ class GenesHeatmap(GraphForm):
 
     def fill_slots(self, graph: Graph) -> None:
         assert isinstance(graph, HeatmapGraph)
-        rows = self.default_row_annotations() if self.row_annotations is None else self.row_annotations
-        for row_property in rows:
+        for row_property in self._row_annotations():
             row_property.fill(
                 self.source, graph.rows_annotations_colors_vector_fields(graph.add_rows_annotation()), "gene"
             )
-        columns = self.default_column_annotations() if self.column_annotations is None else self.column_annotations
-        for column_property in columns:
+        for column_property in self._column_annotations():
             column_property.fill(
                 self.source, graph.columns_annotations_colors_vector_fields(graph.add_columns_annotation()), self.axis
             )

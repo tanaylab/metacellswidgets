@@ -6,7 +6,9 @@ Each widget has an observable ``value``: the editors' is the property or the twe
 incomplete), and the pickers' is the chosen string (or ``None`` while nothing is chosen).
 """
 
+from typing import Any
 from typing import Callable
+from typing import Collection
 from typing import Dict
 from typing import Generic
 from typing import List
@@ -48,6 +50,7 @@ __all__: List[str] = [
     "PickerEditor",
     "PickerRow",
     "PropertyPicker",
+    "ShownProperties",
 ]
 
 
@@ -72,6 +75,13 @@ class ArgumentsEditor(HBox):  # pylint: disable=too-many-ancestors,abstract-meth
     value = traitlets.Any(None, allow_none=True)
 
     is_blank = traitlets.Bool(True)
+
+    def shown(self) -> Any:
+        """
+        What the editor shows: its ``value``, or its default while it shows the default (and its ``value`` is
+        ``None``).
+        """
+        return self.value
 
 
 class Picker(HBox):  # pylint: disable=too-many-ancestors,abstract-method
@@ -231,6 +241,11 @@ class AxisPicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
 OnAxisChange = Callable[[str, str, Optional[Property]], Optional[Property]]
 
 
+# Whether the objects of the ``choice`` class take arguments.
+def _has_arguments(choice: Type[Arguments]) -> bool:
+    return choice.__init__ is not object.__init__
+
+
 class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method,too-many-instance-attributes
     """
     The base class of the widgets picking one of some classes of properties or of tweaks, and editing the arguments of
@@ -299,10 +314,25 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
             return self._given_default(self._axis)
         return self._given_default
 
+    def shown(self) -> Optional[Arguments]:
+        if self._is_default:
+            return self._default()
+        return self.value
+
+    def _set_options(self, choices: Sequence[Type[Arguments]], choice: Optional[Type[Arguments]]) -> None:
+        # Offer the ``choices`` (after the empty one), with the ``choice`` picked, without touching its editor.
+        assert choice is None or choice in choices
+        self._shown_choices = choices
+        self._is_updating = True
+        try:
+            self._dropdown.options = [("", None)] + [(each_choice.__name__, each_choice) for each_choice in choices]
+            self._dropdown.value = choice
+        finally:
+            self._is_updating = False
+
     def _show(self, choices: Sequence[Type[Arguments]], current: Optional[Arguments]) -> None:
         # Show the ``choices``, with the ``current`` object picked if it is one of them and its arguments are valid.
         # Otherwise, show the default (if it is one of them), or nothing.
-        self._shown_choices = choices
         choice = None if current is None else type(current)
         if choice not in choices:
             current = None
@@ -313,12 +343,7 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
             assert default is not None
             current = default
             choice = type(default)
-        self._is_updating = True
-        try:
-            self._dropdown.options = [("", None)] + [(each_choice.__name__, each_choice) for each_choice in choices]
-            self._dropdown.value = choice
-        finally:
-            self._is_updating = False
+        self._set_options(choices, choice)
         self._pick(choice, current)
         if not self._is_default and current is not None and self.value is None:
             self._show(choices, None)
@@ -378,6 +403,10 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
     The ``axis`` may be an :py:class:`AxisPicker` to follow (see :py:class:`ClassPicker`), and the ``default`` may then
     be a function of the axis. An ``on_axis_change`` function may decide which property the slot holds when the axis
     changes.
+
+    A picker of a hover may be given the ``shown`` properties of its side (see :py:class:`ShownProperties`). Its choices
+    then leave out the properties without arguments which the side already shows, other than its own pick. They follow
+    the ``shown`` properties as these change.
     """
 
     def __init__(
@@ -389,17 +418,31 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
         *,
         default: Union[None, Property, Callable[[str], Optional[Property]]] = None,
         on_axis_change: Optional[OnAxisChange] = None,
+        shown: Optional["ShownProperties"] = None,
     ) -> None:
         super().__init__(axis=axis, default=default)
         self._source = source
         self._slot = slot
         self._on_axis_change = on_axis_change
+        self._shown_properties = shown
         self._show(self._choices(), current)
+        if shown is not None:
+            shown.observe(self._on_shown_change, names="version")
 
     def _choices(self) -> List[Type[Property]]:
-        # The properties which may be picked for the current axis.
+        # The properties which may be picked for the current axis, other than the ones the side already shows.
         assert self._axis is not None
-        return self._source.properties(axis=self._axis, slot=self._slot)
+        choices = self._source.properties(axis=self._axis, slot=self._slot)
+        if self._shown_properties is None:
+            return choices
+        own = self.shown()
+        covered = [shown for shown in self._shown_properties.properties() if shown != own]
+        return [choice for choice in choices if _has_arguments(choice) or choice() not in covered]
+
+    def _on_shown_change(self, _change: Dict) -> None:
+        choices = self._choices()
+        if choices != list(self._shown_choices):
+            self._set_options(choices, self._dropdown.value)
 
     def _editor_of(self, choice: Type[Arguments], current: Optional[Arguments]) -> Optional[ArgumentsEditor]:
         assert issubclass(choice, Property)
@@ -479,6 +522,22 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
             return self._given_default(self._axis)
         return self._given_default
 
+    def shown(self) -> List[_Item]:
+        return [row.value for row in self._rows if row.value is not None]
+
+    def remove_values(self, values: Collection[_Item]) -> None:
+        """
+        Remove the rows whose value is one of the ``values``. This is a change of the list, like removing the rows by
+        their buttons. If no row has one of the ``values``, nothing changes.
+        """
+        removed_rows = [row for row in self._rows if row.value is not None and row.value in values]
+        if not removed_rows:
+            return
+        for row in removed_rows:
+            self._drop(row)
+        self._is_default = False
+        self._update()
+
     def _fill(self, items: Optional[Sequence[_Item]]) -> None:
         # Show a row per object of the ``items``, and then a blank row.
         for row in self._rows:
@@ -521,12 +580,16 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
             self._update()
 
     def _remove(self, row: ArgumentsEditor) -> None:
+        self._drop(row)
+        self._is_default = False
+        self._update()
+
+    def _drop(self, row: ArgumentsEditor) -> None:
+        # Take the ``row`` out of the list, without updating the shown rows and the value.
         index = self._rows.index(row)
         row.unobserve(self._on_row_change, names="value")
         del self._rows[index]
         del self._row_boxes[index]
-        self._is_default = False
-        self._update()
 
     def _on_blank_row_change(self, change: Dict) -> None:
         if not change["new"]:
@@ -566,3 +629,62 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
         else:
             self.value = [row.value for row in self._rows if row.value is not None]
         self._reset.layout.display = "none" if self.value is None or self._given_default is None else None
+
+
+class ShownProperties(traitlets.HasTraits):
+    """
+    The properties a side of a graph already shows: those of its editors (e.g., its annotations, or the colors and the
+    sizes of its points), and those of its ``hovers`` list. Each editor counts with what it shows, its default
+    included. The pickers of the hovers are given this, so they don't offer what the side already shows.
+
+    No hover duplicates the properties of the editors. When an editor comes to show a property which is also a hover,
+    the hover is removed from the list.
+
+    It is made before the hovers list (whose pickers are given it), and then told to ``watch`` the editors, the list,
+    and the axis they follow.
+    """
+
+    #: Bumped whenever the shown properties may have changed.
+    version = traitlets.Int(0)
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._editors: List[ArgumentsEditor] = []
+        self._hovers: Optional[ListEditor[Property]] = None
+
+    def watch(
+        self, editors: Sequence[ArgumentsEditor], hovers: ListEditor[Property], axis: Optional[AxisPicker] = None
+    ) -> None:
+        """
+        Observe the ``editors``, the ``hovers`` list, and the ``axis`` (if any).
+        """
+        self._editors = list(editors)
+        self._hovers = hovers
+        for editor in [*self._editors, hovers]:
+            editor.observe(self._on_change, names="value")
+        if axis is not None:
+            axis.observe(self._on_change, names="value")
+        self._on_change({})
+
+    def properties(self) -> List[Property]:
+        """
+        The properties shown by the editors and the hovers.
+        """
+        hovers: List[Property] = [] if self._hovers is None else self._hovers.shown()
+        return [*self._editors_properties(), *hovers]
+
+    def _editors_properties(self) -> List[Property]:
+        # The properties shown by the editors (each shows a property, a list of them, or nothing).
+        properties: List[Property] = []
+        for editor in self._editors:
+            shown = editor.shown()
+            if isinstance(shown, Property):
+                properties.append(shown)
+            elif shown is not None:
+                properties.extend(shown)
+        return properties
+
+    def _on_change(self, _change: Dict) -> None:
+        assert self._hovers is not None
+        self._hovers.remove_values(self._editors_properties())
+        self.version += 1

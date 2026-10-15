@@ -92,6 +92,32 @@ def test_gene_gene_hovers() -> None:
     assert all("type: " in hover for hover in graph.data.points.entities.hovers)
 
 
+def test_gene_gene_hovers_are_new() -> None:
+    """
+    A hover which the colors, the sizes, or another hover already show is an error. While editing, the hovers offer
+    only what the points don't already show, and a hover which the colors come to show is removed.
+    """
+    source = mw.DafWidgets(_full_daf())
+    with pytest.raises(ValueError):
+        source.gene_gene(x_gene="A", y_gene="B", colors=mw.Type(), hovers=[mw.Type()])
+    with pytest.raises(ValueError):
+        source.gene_gene(x_gene="A", y_gene="B", hovers=[mw.Type(), mw.Type()])
+
+    form = source.gene_gene(x_gene="A", y_gene="B", hovers=[mw.Type()])
+    editor = form.editor()
+    colors = editor.children[1].children[1]
+    hovers = editor.children[3]
+    hover_rows = hovers.children[0].children[0].children[1].children
+    blank_row = hover_rows[-1]
+    assert mw.Type not in [choice for _label, choice in blank_row.children[0].options]
+    assert mw.Type in [choice for _label, choice in hover_rows[0].children[0].children[0].options]
+
+    colors.children[0].value = mw.Type
+    assert form.colors == mw.Type()
+    assert form.hovers == []
+    assert mw.Type not in [choice for _label, choice in blank_row.children[0].options]
+
+
 def test_gene_gene_of_blocks() -> None:
     """
     The graph of the blocks of a ``Daf`` data set.

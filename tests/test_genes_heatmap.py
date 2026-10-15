@@ -9,6 +9,7 @@ from typing import List
 import dafpy as dp
 import numpy as np
 import pandas as pd
+import pytest
 from anndata import AnnData  # type: ignore
 from somegraphspy import HeatmapGraph
 
@@ -84,6 +85,18 @@ def test_hovers() -> None:
     assert not graph.data.columns.annotations
     assert all("marker: " in hover for hover in _list(graph.data.rows.entities.hovers))
     assert all("block: " in hover for hover in _list(graph.data.columns.entities.hovers))
+
+
+def test_hovers_are_new() -> None:
+    """
+    A hover which the annotations of its side already show, the default ones included, is an error.
+    """
+    source = mw.DafWidgets(_daf())
+    with pytest.raises(ValueError):
+        source.genes_heatmap(column_hovers=[mw.Type()])
+    with pytest.raises(ValueError):
+        source.genes_heatmap(row_annotations=[mw.IsMarker()], row_hovers=[mw.IsMarker()])
+    assert source.genes_heatmap(column_annotations=[], column_hovers=[mw.Type()]).column_hovers == [mw.Type()]
 
 
 def test_editor() -> None:
