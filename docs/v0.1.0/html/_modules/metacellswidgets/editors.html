@@ -545,7 +545,8 @@
 <span class="sd">    The list starts with a row per object of the ``current`` list. If there is no ``current`` list, it shows the</span>
 <span class="sd">    ``default`` list (if any), and its ``value`` stays ``None`` until the first change. Otherwise, the ``value`` is the</span>
 <span class="sd">    list of the values of the rows, leaving out the rows without one (so it may be empty). A "Reset to default" button,</span>
-<span class="sd">    shown while the ``value`` isn't ``None``, sets it back to ``None`` and shows the ``default`` again.</span>
+<span class="sd">    shown while the ``value`` isn't ``None`` (if there is a ``default``), sets it back to ``None`` and shows the</span>
+<span class="sd">    ``default`` again.</span>
 
 <span class="sd">    The list may be of the entries of an ``axis``, which may be an :py:class:`AxisPicker` to follow. The ``default`` may</span>
 <span class="sd">    then be a function giving the default list for an axis. When the followed axis changes, a list showing its default</span>
@@ -675,7 +676,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">display</span> <span class="o">=</span> <span class="s2">"none"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">display</span> <span class="o">=</span> <span class="s2">"none"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_given_default</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span></div>
 
 </pre></div>
 

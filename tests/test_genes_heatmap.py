@@ -72,6 +72,20 @@ def test_explicit() -> None:
     assert [annotation.colors.title for annotation in graph.data.columns.annotations] == ["block"]
 
 
+def test_hovers() -> None:
+    """
+    Hover properties add lines to the hovers of their side, without annotating it.
+    """
+    form = mw.DafWidgets(_daf()).genes_heatmap(
+        row_annotations=[], column_annotations=[], row_hovers=[mw.IsMarker()], column_hovers=[mw.Block()]
+    )
+    graph = form.graph()
+    assert not graph.data.rows.annotations
+    assert not graph.data.columns.annotations
+    assert all("marker: " in hover for hover in _list(graph.data.rows.entities.hovers))
+    assert all("block: " in hover for hover in _list(graph.data.columns.entities.hovers))
+
+
 def test_editor() -> None:
     """
     The editor builds, and an untouched default leaves its argument ``None``.

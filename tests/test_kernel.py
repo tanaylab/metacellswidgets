@@ -294,10 +294,11 @@ def test_interactive_tweaks_rewrite_the_cell(kernel: Tuple[Any, Any]) -> None:
 
     cell = "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.display(interactive=True)\n"
     message_id = client.execute(cell)
-    # The class choices are those of the colors, the sizes, and the blank row of the tweaks, in this order.
-    widgets = _opened_widgets(client, lambda state: _is_done_button(state) or _is_class_choice(state), 4)
+    # The class choices are those of the colors, the sizes, the blank row of the hovers, and the blank row of the
+    # tweaks, in this order.
+    widgets = _opened_widgets(client, lambda state: _is_done_button(state) or _is_class_choice(state), 5)
     done = next(widget for widget in widgets if _is_done_button(widget))
-    tweak_choice = [widget for widget in widgets if _is_class_choice(widget)][2]
+    tweak_choice = [widget for widget in widgets if _is_class_choice(widget)][3]
 
     time.sleep(1)
     # The choices of the blank row are: "", Size, Title, Legends, ...

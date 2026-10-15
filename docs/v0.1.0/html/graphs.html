@@ -469,6 +469,20 @@ which each kind implements in its own module (see
 </em>, 
 <em class="sig-param">
 <span class="n">
+<span class="pre">hovers
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
 <span class="pre">tweaks
 </span>
 </span>
@@ -515,7 +529,12 @@ colored by the
 <code class="docutils literal notranslate">
 <span class="pre">sizes
 </span>
-</code> property.
+</code> property. The 
+<code class="docutils literal notranslate">
+<span class="pre">hovers
+</span>
+</code> properties add lines to the
+hover of each point (left out, there are none).
 </p>
 
 <dl class="field-list simple">
@@ -590,6 +609,27 @@ colored by the
 </em>
 </a>
 <em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>hovers
+</strong> (
+<em>Sequence
+</em>
+<em>[
+</em>
+<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
+<em>Property
+</em>
+</a>
+<em>] 
+</em>
+<em>| 
 </em>
 <em>None
 </em>)
@@ -1092,6 +1132,34 @@ offers; for any other, the graph does not exist.
 </em>, 
 <em class="sig-param">
 <span class="n">
+<span class="pre">row_hovers
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">column_hovers
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
 <span class="pre">tweaks
 </span>
 </span>
@@ -1163,6 +1231,18 @@ and
 <span class="pre">metacellsgraphspy
 </span>
 </code> add.
+</p>
+
+<p>An annotation also adds a line to the hover of each cell. The 
+<code class="docutils literal notranslate">
+<span class="pre">row_hovers
+</span>
+</code> and 
+<code class="docutils literal notranslate">
+<span class="pre">column_hovers
+</span>
+</code> properties add
+more lines, without annotating (left out, there are none).
 </p>
 
 <dl class="field-list simple">
@@ -1255,6 +1335,48 @@ and
 <li>
 <p>
 <strong>column_annotations
+</strong> (
+<em>Sequence
+</em>
+<em>[
+</em>
+<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
+<em>Property
+</em>
+</a>
+<em>] 
+</em>
+<em>| 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>row_hovers
+</strong> (
+<em>Sequence
+</em>
+<em>[
+</em>
+<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
+<em>Property
+</em>
+</a>
+<em>] 
+</em>
+<em>| 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>column_hovers
 </strong> (
 <em>Sequence
 </em>

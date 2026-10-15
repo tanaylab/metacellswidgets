@@ -26,6 +26,7 @@ def test_gene_gene_arguments() -> None:
         "y_gene": "B",
         "colors": mw.Type(),
         "sizes": None,
+        "hovers": None,
         "tweaks": None,
     }
 
@@ -36,7 +37,7 @@ def test_gene_gene_repr() -> None:
     """
     form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B", sizes=mw.TotalUMIs())
     assert repr(form) == (
-        "GeneGene(axis='metacell', x_gene='A', y_gene='B', colors=None, sizes=TotalUMIs(), tweaks=None)"
+        "GeneGene(axis='metacell', x_gene='A', y_gene='B', colors=None, sizes=TotalUMIs(), hovers=None, tweaks=None)"
     )
 
 
@@ -78,6 +79,17 @@ def test_gene_gene_of_daf() -> None:
     assert list(graph.data.points.colors.vector) == ["T1", "T2", "T1"]
     assert graph.data.points.sizes.vector is not None
     assert len(graph.data.points.sizes.vector) == 3
+
+
+def test_gene_gene_hovers() -> None:
+    """
+    Hover properties add lines to the hover of each point, without coloring or sizing it.
+    """
+    form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B", hovers=[mw.Type()])
+    graph = form.graph()
+    assert graph.data.points.colors.vector is None
+    assert graph.data.points.entities.hovers is not None
+    assert all("type: " in hover for hover in graph.data.points.entities.hovers)
 
 
 def test_gene_gene_of_blocks() -> None:

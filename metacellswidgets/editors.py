@@ -434,7 +434,8 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
     The list starts with a row per object of the ``current`` list. If there is no ``current`` list, it shows the
     ``default`` list (if any), and its ``value`` stays ``None`` until the first change. Otherwise, the ``value`` is the
     list of the values of the rows, leaving out the rows without one (so it may be empty). A "Reset to default" button,
-    shown while the ``value`` isn't ``None``, sets it back to ``None`` and shows the ``default`` again.
+    shown while the ``value`` isn't ``None`` (if there is a ``default``), sets it back to ``None`` and shows the
+    ``default`` again.
 
     The list may be of the entries of an ``axis``, which may be an :py:class:`AxisPicker` to follow. The ``default`` may
     then be a function giving the default list for an axis. When the followed axis changes, a list showing its default
@@ -564,4 +565,4 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
             self.value = None
         else:
             self.value = [row.value for row in self._rows if row.value is not None]
-        self._reset.layout.display = "none" if self.value is None else None
+        self._reset.layout.display = "none" if self.value is None or self._given_default is None else None

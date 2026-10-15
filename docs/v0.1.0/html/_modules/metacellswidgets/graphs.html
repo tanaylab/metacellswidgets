@@ -122,7 +122,8 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">GeneGene</span><span class="p">(</span><span class="n">GraphForm</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The expression of ``x_gene`` against ``y_gene``, a point per entry of the ``axis``, on log scale. The points may be</span>
-<span class="sd">    colored by the ``colors`` property, and sized by the ``sizes`` property.</span>
+<span class="sd">    colored by the ``colors`` property, and sized by the ``sizes`` property. The ``hovers`` properties add lines to the</span>
+<span class="sd">    hover of each point (left out, there are none).</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -134,6 +135,7 @@
         <span class="n">y_gene</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">colors</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Property</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">sizes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Property</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">hovers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Property</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">tweaks</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Tweak</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">tweaks</span><span class="p">)</span>
@@ -143,6 +145,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">y_gene</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_gene</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">colors</span> <span class="o">=</span> <span class="n">colors</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span> <span class="o">=</span> <span class="n">sizes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hovers</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">hovers</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">hovers</span><span class="p">)</span>
 
 <div class="viewcode-block" id="GeneGene.editor">
 <a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GeneGene.editor">[docs]</a>
@@ -154,12 +157,16 @@
         <span class="n">y_gene</span> <span class="o">=</span> <span class="n">GenePicker</span><span class="p">(</span><span class="n">genes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_gene</span><span class="p">)</span>
         <span class="n">colors</span> <span class="o">=</span> <span class="n">PropertyPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">Slot</span><span class="o">.</span><span class="n">COLORS</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">)</span>
         <span class="n">sizes</span> <span class="o">=</span> <span class="n">PropertyPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">Slot</span><span class="o">.</span><span class="n">SIZES</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">x_gene</span><span class="o">=</span><span class="n">x_gene</span><span class="p">,</span> <span class="n">y_gene</span><span class="o">=</span><span class="n">y_gene</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">colors</span><span class="p">,</span> <span class="n">sizes</span><span class="o">=</span><span class="n">sizes</span><span class="p">)</span>
+        <span class="n">hovers</span><span class="p">:</span> <span class="n">ListEditor</span><span class="p">[</span><span class="n">Property</span><span class="p">]</span> <span class="o">=</span> <span class="n">ListEditor</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">current</span><span class="p">:</span> <span class="n">PropertyPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">Slot</span><span class="o">.</span><span class="n">HOVERS</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">current</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">hovers</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"Hovers"</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">x_gene</span><span class="o">=</span><span class="n">x_gene</span><span class="p">,</span> <span class="n">y_gene</span><span class="o">=</span><span class="n">y_gene</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">colors</span><span class="p">,</span> <span class="n">sizes</span><span class="o">=</span><span class="n">sizes</span><span class="p">,</span> <span class="n">hovers</span><span class="o">=</span><span class="n">hovers</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">VBox</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="n">HBox</span><span class="p">([</span><span class="n">Label</span><span class="p">(</span><span class="s2">"Axis"</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">Label</span><span class="p">(</span><span class="s2">"X"</span><span class="p">),</span> <span class="n">x_gene</span><span class="p">,</span> <span class="n">Label</span><span class="p">(</span><span class="s2">"Y"</span><span class="p">),</span> <span class="n">y_gene</span><span class="p">]),</span>
                 <span class="n">HBox</span><span class="p">([</span><span class="n">Label</span><span class="p">(</span><span class="s2">"Colors"</span><span class="p">),</span> <span class="n">colors</span><span class="p">]),</span>
                 <span class="n">HBox</span><span class="p">([</span><span class="n">Label</span><span class="p">(</span><span class="s2">"Sizes"</span><span class="p">),</span> <span class="n">sizes</span><span class="p">]),</span>
+                <span class="n">hovers</span><span class="p">,</span>
             <span class="p">]</span>
         <span class="p">)</span></div>
 
@@ -171,7 +178,9 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">colors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">points_colors_vector_fields</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">points_sizes_vector_fields</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">points_sizes_vector_fields</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">hover_property</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hovers</span> <span class="ow">or</span> <span class="p">[]:</span>
+            <span class="n">hover_property</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">points_entities</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span></div>
 </div>
 
 
@@ -187,6 +196,9 @@
 <span class="sd">    ``entries`` are all of them, and each side's annotations are its defaults: whether each gene is lateral, and the</span>
 <span class="sd">    type of each entry, each only if the data has it. These are what ``add_genes_heatmap_default_rows_annotations``</span>
 <span class="sd">    and ``add_genes_heatmap_default_columns_annotations`` of ``metacellsgraphspy`` add.</span>
+
+<span class="sd">    An annotation also adds a line to the hover of each cell. The ``row_hovers`` and ``column_hovers`` properties add</span>
+<span class="sd">    more lines, without annotating (left out, there are none).</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -198,6 +210,8 @@
         <span class="n">entries</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">EntryFilter</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">row_annotations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Property</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">column_annotations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Property</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">row_hovers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Property</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">column_hovers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Property</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">tweaks</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Tweak</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">tweaks</span><span class="p">)</span>
@@ -206,6 +220,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">entries</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">entries</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">row_annotations</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">row_annotations</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">row_annotations</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">column_annotations</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">column_annotations</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">column_annotations</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">row_hovers</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">row_hovers</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">row_hovers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">column_hovers</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">column_hovers</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">column_hovers</span><span class="p">)</span>
 
 <div class="viewcode-block" id="GenesHeatmap.default_row_annotations">
 <a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GenesHeatmap.default_row_annotations">[docs]</a>
@@ -271,12 +287,24 @@
             <span class="n">default</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_column_annotations</span><span class="p">,</span>
             <span class="n">title</span><span class="o">=</span><span class="s2">"Column annotations"</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="n">row_hovers</span><span class="p">:</span> <span class="n">ListEditor</span><span class="p">[</span><span class="n">Property</span><span class="p">]</span> <span class="o">=</span> <span class="n">ListEditor</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">current</span><span class="p">:</span> <span class="n">PropertyPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">Slot</span><span class="o">.</span><span class="n">HOVERS</span><span class="p">,</span> <span class="s2">"gene"</span><span class="p">,</span> <span class="n">current</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">row_hovers</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">"Row hovers"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">column_hovers</span><span class="p">:</span> <span class="n">ListEditor</span><span class="p">[</span><span class="n">Property</span><span class="p">]</span> <span class="o">=</span> <span class="n">ListEditor</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">current</span><span class="p">:</span> <span class="n">PropertyPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">Slot</span><span class="o">.</span><span class="n">HOVERS</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">current</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">column_hovers</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">"Column hovers"</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span>
             <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span>
             <span class="n">genes</span><span class="o">=</span><span class="n">genes</span><span class="p">,</span>
             <span class="n">entries</span><span class="o">=</span><span class="n">entries</span><span class="p">,</span>
             <span class="n">row_annotations</span><span class="o">=</span><span class="n">row_annotations</span><span class="p">,</span>
             <span class="n">column_annotations</span><span class="o">=</span><span class="n">column_annotations</span><span class="p">,</span>
+            <span class="n">row_hovers</span><span class="o">=</span><span class="n">row_hovers</span><span class="p">,</span>
+            <span class="n">column_hovers</span><span class="o">=</span><span class="n">column_hovers</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">VBox</span><span class="p">(</span>
             <span class="p">[</span>
@@ -284,6 +312,8 @@
                 <span class="n">entries</span><span class="p">,</span>
                 <span class="n">row_annotations</span><span class="p">,</span>
                 <span class="n">column_annotations</span><span class="p">,</span>
+                <span class="n">row_hovers</span><span class="p">,</span>
+                <span class="n">column_hovers</span><span class="p">,</span>
             <span class="p">]</span>
         <span class="p">)</span></div>
 
@@ -301,7 +331,11 @@
         <span class="k">for</span> <span class="n">column_property</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
             <span class="n">column_property</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">columns_annotations_colors_vector_fields</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">add_columns_annotation</span><span class="p">()),</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span>
-            <span class="p">)</span></div>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">row_hover_property</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_hovers</span> <span class="ow">or</span> <span class="p">[]:</span>
+            <span class="n">row_hover_property</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">rows_entities</span><span class="p">(),</span> <span class="s2">"gene"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">column_hover_property</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">column_hovers</span> <span class="ow">or</span> <span class="p">[]:</span>
+            <span class="n">column_hover_property</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">columns_entities</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span></div>
 </div>
 
 </pre></div>

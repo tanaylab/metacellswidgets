@@ -50,7 +50,7 @@ def test_list_editor() -> None:
     """
     A list editor starts with a row per object, and ends with a blank row. Picking in the blank row adds it to the list,
     and adds a new blank row. Rows move up and down (but not past either end), and are removed; removing all of them
-    gives an empty list, not ``None``.
+    gives an empty list, not ``None``. Without a default, there is no reset button.
     """
     first, second, third = mw.Title(text="A"), mw.Title(text="B"), mw.Title(text="C")
     editor = ListEditor(_Row, [first, second], title="Titles")
@@ -73,7 +73,7 @@ def test_list_editor() -> None:
     for _ in range(3):
         rows_box.children[0].children[3].click()
     assert editor.value == []
-    assert reset.layout.display is None
+    assert reset.layout.display == "none"
 
 
 def test_list_editor_default() -> None:

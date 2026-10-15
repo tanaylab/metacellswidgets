@@ -112,7 +112,8 @@ _SLOT_ELTYPES: Mapping[Slot, FrozenSet[Eltype]] = {
     Slot.COLORS: frozenset([Eltype.NUMBER, Eltype.CATEGORICAL, Eltype.BOOLEAN]),
     Slot.GROUPS: frozenset([Eltype.CATEGORICAL, Eltype.ARRANGEMENT]),
     Slot.MASK: frozenset([Eltype.BOOLEAN]),
-    Slot.HOVERS: frozenset([Eltype.NUMBER, Eltype.CATEGORICAL, Eltype.BOOLEAN, Eltype.ARRANGEMENT, Eltype.COORDINATE]),
+    # A coordinate puts no hover line, so it isn't offered as one.
+    Slot.HOVERS: frozenset([Eltype.NUMBER, Eltype.CATEGORICAL, Eltype.BOOLEAN, Eltype.ARRANGEMENT]),
 }
 
 
