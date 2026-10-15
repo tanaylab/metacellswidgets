@@ -693,6 +693,26 @@ choices (e.g., after the axis changed), or whose arguments aren’t valid, gives
 </code>.
 </p>
 
+<p>A picker may be for the entries of an 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code>, which may be an 
+<a class="reference internal" href="#metacellswidgets.editors.AxisPicker" title="metacellswidgets.editors.AxisPicker">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">AxisPicker
+</span>
+</code>
+</a> to follow. The 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code>
+may then be a function giving the default object for an axis. When the followed axis changes, the choices change
+with it. A picker showing its default shows the default of the new axis. A changed picker keeps its object if it is
+still one of the choices and its arguments are valid for the new axis, and otherwise gives way to the default.
+</p>
+
 <p>A subclass makes its widget, then calls 
 <code class="docutils literal notranslate">
 <span class="pre">_show
@@ -702,7 +722,17 @@ choices (e.g., after the axis changed), or whose arguments aren’t valid, gives
 <code class="docutils literal notranslate">
 <span class="pre">_editor_of
 </span>
-</code>, which makes the editor of a choice.
+</code>, which makes the editor of a choice. A subclass which follows an axis also implements 
+<code class="docutils literal notranslate">
+<span class="pre">_choices
+</span>
+</code>,
+which gives the choices for the current axis, and may implement 
+<code class="docutils literal notranslate">
+<span class="pre">_on_axis
+</span>
+</code>, which says what the object becomes on
+the new axis.
 </p>
 
 <dl class="field-list simple">
@@ -713,9 +743,53 @@ choices (e.g., after the axis changed), or whose arguments aren’t valid, gives
 </dt>
 
 <dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>axis
+</strong> (
+<em>None
+</em>
+<em> | 
+</em>
+<em>str
+</em>
+<em> | 
+</em>
+<a class="reference internal" href="#metacellswidgets.editors.AxisPicker" title="metacellswidgets.editors.AxisPicker">
+<em>AxisPicker
+</em>
+</a>)
+</p>
+</li>
+
+<li>
 <p>
 <strong>default
 </strong> (
+<em>None
+</em>
+<em> | 
+</em>
+<a class="reference internal" href="common.html#metacellswidgets.common.Arguments" title="metacellswidgets.common.Arguments">
+<em>Arguments
+</em>
+</a>
+<em> | 
+</em>
+<em>Callable
+</em>
+<em>[
+</em>
+<em>[
+</em>
+<em>str
+</em>
+<em>]
+</em>
+<em>, 
+</em>
 <a class="reference internal" href="common.html#metacellswidgets.common.Arguments" title="metacellswidgets.common.Arguments">
 <em>Arguments
 </em>
@@ -723,8 +797,13 @@ choices (e.g., after the axis changed), or whose arguments aren’t valid, gives
 <em> | 
 </em>
 <em>None
+</em>
+<em>]
 </em>)
 </p>
+</li>
+
+</ul>
 
 </dd>
 
@@ -1241,6 +1320,30 @@ shown while the
 </code> again.
 </p>
 
+<p>The list may be of the entries of an 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code>, which may be an 
+<a class="reference internal" href="#metacellswidgets.editors.AxisPicker" title="metacellswidgets.editors.AxisPicker">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">AxisPicker
+</span>
+</code>
+</a> to follow. The 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> may
+then be a function giving the default list for an axis. When the followed axis changes, a list showing its default
+shows the default of the new axis. A changed list keeps its rows, each following the axis by itself (if its
+
+<code class="docutils literal notranslate">
+<span class="pre">make_row
+</span>
+</code> gives it the axis picker).
+</p>
+
 <dl class="field-list simple">
 
 <dt class="field-odd">Parameters
@@ -1301,8 +1404,31 @@ shown while the
 
 <li>
 <p>
+<strong>axis
+</strong> (
+<em>None
+</em>
+<em> | 
+</em>
+<em>str
+</em>
+<em> | 
+</em>
+<a class="reference internal" href="#metacellswidgets.editors.AxisPicker" title="metacellswidgets.editors.AxisPicker">
+<em>AxisPicker
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
 <strong>default
 </strong> (
+<em>None
+</em>
+<em> | 
+</em>
 <em>Sequence
 </em>
 <em>[
@@ -1313,7 +1439,27 @@ shown while the
 </em>
 <em>| 
 </em>
-<em>None
+<em>Callable
+</em>
+<em>[
+</em>
+<em>[
+</em>
+<em>str
+</em>
+<em>]
+</em>
+<em>, 
+</em>
+<em>Sequence
+</em>
+<em>[
+</em>
+<em>_Item
+</em>
+<em>]
+</em>
+<em>]
 </em>)
 </p>
 </li>
@@ -1889,24 +2035,23 @@ to the right of the choice.
 <span class="pre">AxisPicker
 </span>
 </code>
-</a> to follow. When its axis changes, the choices change with it. A
-property which is still one of them is kept, with its arguments, if they are valid for the new axis. Otherwise, the
-slot gets its 
-<code class="docutils literal notranslate">
-<span class="pre">default
-</span>
-</code> (see 
+</a> to follow (see 
 <a class="reference internal" href="#metacellswidgets.editors.ClassPicker" title="metacellswidgets.editors.ClassPicker">
 <code class="xref py py-class docutils literal notranslate">
 <span class="pre">ClassPicker
 </span>
 </code>
-</a>), or is emptied. An 
+</a>), and the 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> may then
+be a function of the axis. An 
 <code class="docutils literal notranslate">
 <span class="pre">on_axis_change
 </span>
-</code> function may decide
-this instead.
+</code> function may decide which property the slot holds when the axis
+changes.
 </p>
 
 <dl class="field-list simple">
@@ -1975,6 +2120,28 @@ this instead.
 <p>
 <strong>default
 </strong> (
+<em>None
+</em>
+<em> | 
+</em>
+<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
+<em>Property
+</em>
+</a>
+<em> | 
+</em>
+<em>Callable
+</em>
+<em>[
+</em>
+<em>[
+</em>
+<em>str
+</em>
+<em>]
+</em>
+<em>, 
+</em>
 <a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
 <em>Property
 </em>
@@ -1982,6 +2149,8 @@ this instead.
 <em> | 
 </em>
 <em>None
+</em>
+<em>]
 </em>)
 </p>
 </li>

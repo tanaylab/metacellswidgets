@@ -130,12 +130,13 @@ class GenesHeatmap(GraphForm):
         """
         return [property_class() for property_class in (IsLateral,) if property_class.exists(self.source, "gene")]
 
-    def default_column_annotations(self) -> List[Property]:
+    def default_column_annotations(self, axis: Optional[str] = None) -> List[Property]:
         """
         The annotations of the columns (the entries) when ``column_annotations`` is left out: the type of each entry,
-        if the data has it.
+        if the data has it. The entries are of the ``axis`` (by default, the form's).
         """
-        return [property_class() for property_class in (Type,) if property_class.exists(self.source, self.axis)]
+        axis = self.axis if axis is None else axis
+        return [property_class() for property_class in (Type,) if property_class.exists(self.source, axis)]
 
     def selected_genes(self) -> Entries:
         """
@@ -168,7 +169,8 @@ class GenesHeatmap(GraphForm):
         column_annotations: ListEditor[Property] = ListEditor(
             lambda current: PropertyPicker(self.source, Slot.COLORS, axis, current),
             self.column_annotations,
-            default=self.default_column_annotations(),
+            axis=axis,
+            default=self.default_column_annotations,
             title="Column annotations",
         )
         self.bind(

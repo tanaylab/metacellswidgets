@@ -219,12 +219,13 @@
 
 <div class="viewcode-block" id="GenesHeatmap.default_column_annotations">
 <a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GenesHeatmap.default_column_annotations">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">default_column_annotations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Property</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">default_column_annotations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Property</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        The annotations of the columns (the entries) when ``column_annotations`` is left out: the type of each entry,</span>
-<span class="sd">        if the data has it.</span>
+<span class="sd">        if the data has it. The entries are of the ``axis`` (by default, the form's).</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">property_class</span><span class="p">()</span> <span class="k">for</span> <span class="n">property_class</span> <span class="ow">in</span> <span class="p">(</span><span class="n">Type</span><span class="p">,)</span> <span class="k">if</span> <span class="n">property_class</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)]</span></div>
+        <span class="n">axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">axis</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">property_class</span><span class="p">()</span> <span class="k">for</span> <span class="n">property_class</span> <span class="ow">in</span> <span class="p">(</span><span class="n">Type</span><span class="p">,)</span> <span class="k">if</span> <span class="n">property_class</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">axis</span><span class="p">)]</span></div>
 
 
 <div class="viewcode-block" id="GenesHeatmap.selected_genes">
@@ -266,7 +267,8 @@
         <span class="n">column_annotations</span><span class="p">:</span> <span class="n">ListEditor</span><span class="p">[</span><span class="n">Property</span><span class="p">]</span> <span class="o">=</span> <span class="n">ListEditor</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">current</span><span class="p">:</span> <span class="n">PropertyPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">Slot</span><span class="o">.</span><span class="n">COLORS</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">current</span><span class="p">),</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">column_annotations</span><span class="p">,</span>
-            <span class="n">default</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_column_annotations</span><span class="p">(),</span>
+            <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_column_annotations</span><span class="p">,</span>
             <span class="n">title</span><span class="o">=</span><span class="s2">"Column annotations"</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span>

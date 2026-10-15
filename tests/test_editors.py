@@ -10,10 +10,15 @@ from typing import Tuple
 import metacellswidgets as mw
 from metacellswidgets.common import Arguments
 from metacellswidgets.editors import ArgumentsEditor
+from metacellswidgets.editors import AxisPicker
 from metacellswidgets.editors import GenePicker
 from metacellswidgets.editors import ListEditor
 from metacellswidgets.editors import NamePicker
 from metacellswidgets.editors import PickerEditor
+from metacellswidgets.editors import PropertyPicker
+from metacellswidgets.properties import Slot
+
+from .test_daf_widgets import _full_daf
 
 
 class _Row(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
@@ -91,6 +96,55 @@ def test_list_editor_default() -> None:
     _reset, rows_box = _parts(editor)
     assert editor.value is None
     assert rows_box.children[0].children[0].value == first
+
+
+def test_list_editor_axis_default() -> None:
+    """
+    A list editor following an axis shows the default of the new axis when the axis changes. A changed list keeps its
+    rows, and the reset button returns to the default of the current axis.
+    """
+    title_per_axis = {"metacell": mw.Title(text="M"), "block": mw.Title(text="B")}
+    axis = AxisPicker(mw.DafWidgets(_full_daf()), ["metacell", "block"])
+    editor = ListEditor(_Row, None, axis=axis, default=lambda axis_name: [title_per_axis[axis_name]], title="Titles")
+    _reset, rows_box = _parts(editor)
+    assert rows_box.children[0].children[0].value == title_per_axis["metacell"]
+
+    axis.children[0].value = "block"
+    reset, rows_box = _parts(editor)
+    assert editor.value is None
+    assert rows_box.children[0].children[0].value == title_per_axis["block"]
+
+    changed = mw.Title(text="X")
+    rows_box.children[0].children[0].pick(changed)
+    axis.children[0].value = "metacell"
+    assert editor.value == [changed]
+
+    reset.click()
+    _reset, rows_box = _parts(editor)
+    assert editor.value is None
+    assert rows_box.children[0].children[0].value == title_per_axis["metacell"]
+
+
+def test_property_picker_axis_default() -> None:
+    """
+    A property picker following an axis shows the default of the new axis when the axis changes.
+    """
+    axis = AxisPicker(mw.DafWidgets(_full_daf()), ["metacell", "block"])
+    picker = PropertyPicker(
+        mw.DafWidgets(_full_daf()),
+        Slot.COLORS,
+        axis,
+        default=lambda axis_name: mw.Type() if axis_name == "metacell" else None,
+    )
+    assert picker.value is None
+    assert picker.children[0].value is mw.Type
+
+    axis.children[0].value = "block"
+    assert picker.value is None
+    assert picker.children[0].value is None
+
+    axis.children[0].value = "metacell"
+    assert picker.children[0].value is mw.Type
 
 
 class _Genes:

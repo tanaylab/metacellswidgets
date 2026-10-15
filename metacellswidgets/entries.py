@@ -38,7 +38,6 @@ from .editors import GenePicker
 from .editors import ListEditor
 from .editors import PickerEditor
 from .editors import PickerRow
-from .kernel import _on_main_thread
 from .sources import SourceWidgets
 
 __all__: List[str] = [
@@ -344,15 +343,13 @@ class EntryFilterPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abst
     def __init__(
         self, source: SourceWidgets, axis: Union[str, AxisPicker], current: Optional[EntryFilter] = None
     ) -> None:
-        super().__init__()
+        super().__init__(axis=axis)
         self._source = source
-        self._axis = axis if isinstance(axis, str) else axis.value
         self._show(self._choices(), current)
-        if isinstance(axis, AxisPicker):
-            axis.observe(self._on_axis_picker_change, names="value")
 
     def _choices(self) -> List[Type[EntryFilter]]:
         # The filters which may be picked for the current axis.
+        assert self._axis is not None
         return [choice for choice in _ENTRY_FILTERS if choice.exists(self._source, self._axis)]
 
     def _editor_of(self, choice: Type[Arguments], current: Optional[Arguments]) -> Optional[ArgumentsEditor]:
@@ -360,9 +357,10 @@ class EntryFilterPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abst
         assert current is None or isinstance(current, EntryFilter)
         return choice.editor(self._source, current)
 
-    def _on_axis_picker_change(self, change: Dict) -> None:
-        self._axis = change["new"]
-        current = self.value
-        if current is not None:
-            current = current.on_axis(self._source, self._axis)
-        _on_main_thread(lambda: self._show(self._choices(), current))
+    def _on_axis(  # pylint: disable=unused-argument
+        self, old_axis: str, new_axis: str, current: Optional[Arguments]
+    ) -> Optional[Arguments]:
+        assert current is None or isinstance(current, EntryFilter)
+        if current is None:
+            return None
+        return current.on_axis(self._source, new_axis)
