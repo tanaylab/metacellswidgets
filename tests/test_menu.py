@@ -10,6 +10,7 @@ from typing import Tuple
 import pytest
 
 import metacellswidgets as mw
+from metacellswidgets.forms import _EditSession
 from metacellswidgets.forms import _kind_tree
 from metacellswidgets.forms import _pooled
 from metacellswidgets.forms import _switched_form
@@ -87,6 +88,33 @@ def test_switched_form() -> None:
         tweaks=[mw.Title(text="T")],
     )
     assert restored.arguments() == expected.arguments()
+
+
+def test_revert() -> None:
+    """
+    Revert goes back to the graph and the arguments the editing started with (or to no graph, for a menu), with an
+    empty pool, and shows them in the menu.
+    """
+    # pylint: disable=protected-access
+    source = mw.DafWidgets(_daf())
+    form = source.gene_gene(x_gene="A", y_gene="B")
+    session = _EditSession(source, form, mw.DafWidgets.tree)
+    form.x_gene = "C"
+    session._switch(mw.GenesHeatmap)
+    assert isinstance(session._form, mw.GenesHeatmap)
+    session._revert()
+    assert isinstance(session._form, mw.GeneGene)
+    assert session._form.arguments() == source.gene_gene(x_gene="A", y_gene="B").arguments()
+    assert not session._pool
+    assert session._menu is not None
+    assert session._menu.value is mw.GeneGene
+
+    menu_session = _EditSession(source, None, mw.DafWidgets.tree)
+    menu_session._switch(mw.GeneGene)
+    menu_session._revert()
+    assert menu_session._form is None
+    assert menu_session._menu is not None
+    assert menu_session._menu.value is None
 
 
 def test_kind_tree() -> None:

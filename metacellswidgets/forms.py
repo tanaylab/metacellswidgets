@@ -10,6 +10,7 @@ widget changes the argument and asks for the graph to be redrawn. Requests only 
 once for all the requests pending, when the interactive display polls the form.
 """
 
+import copy
 import functools
 import inspect
 import sys
@@ -383,6 +384,12 @@ class GraphMenu(HBox):  # pylint: disable=too-many-ancestors,abstract-method
         self._dropdowns: List[Dropdown] = []
         self._set_path([] if current is None else _path_to(visible, current))
 
+    def show(self, graph_class: Optional[Type[GraphForm]]) -> None:
+        """
+        Show the path to the ``graph_class`` (if it is in the tree), or nothing chosen.
+        """
+        self._set_path([] if graph_class is None else _path_to(self._root, graph_class))
+
     def _set_path(self, path: Sequence[_Node]) -> None:
         # Show a dropdown of the root and of each branch on the ``path`` of chosen nodes, with the next node chosen.
         self._path = list(path)
@@ -538,23 +545,29 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
     # also has a menu of its graphs, and a "Graphs" button which shows or hides it. The menu is shown at first only if
     # there is no form. Choosing a graph in the menu replaces the edited form with one of the chosen graph (see
     # ``_switched_form``). The session pools the values of the arguments of the forms it leaves, so values set in one
-    # graph reach any later graph which has them, and going back to a graph restores them.
+    # graph reach any later graph which has them, and going back to a graph restores them. A "Revert" button goes back
+    # to the graph and the arguments the session started with (or to no graph), and clears the pool.
 
     def __init__(self, source: SourceWidgets, form: Optional[GraphForm], tree: Optional[Branch] = None) -> None:
         self._source = source
         self._form = form
+        self._original = None if form is None else (type(form), copy.deepcopy(form.arguments()))
         self._pool: _Pool = {}
         self._pooled_selection_points: Optional[Any] = None
+        self._is_reverting = False
         self._figure = FigureWidget(
             form._shown_graph().figure  # pylint: disable=protected-access
             if form is not None and form.is_complete()
             else Figure()
         )
         self._done = Button(description="Done", button_style="primary")
+        revert = Button(description="Revert")
+        revert.on_click(self._on_revert)
         self._errors = Output()
         self._body = VBox([] if form is None else self._form_widgets(form))
-        toolbar: List[Widget] = [self._done]
+        toolbar: List[Widget] = [self._done, revert]
         rows: List[Widget] = []
+        self._menu: Optional[GraphMenu] = None
         visible = None if tree is None else tree.visible(source)
         if tree is not None and visible is not None and (form is None or _path_to(visible, type(form))):
             self._menu = GraphMenu(source, tree, None if form is None else type(form))
@@ -618,10 +631,36 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         self._done.disabled = not self._is_complete()
 
     def _on_graphs(self, _button: Button) -> None:
+        assert self._menu is not None
         self._menu.layout.display = "none" if self._menu.layout.display is None else None
 
     def _on_menu_change(self, change: Dict) -> None:
-        _on_main_thread(lambda: self._switch(change["new"]))
+        if not self._is_reverting:
+            _on_main_thread(lambda: self._switch(change["new"]))
+
+    def _on_revert(self, _button: Button) -> None:
+        _on_main_thread(self._revert)
+
+    def _revert(self) -> None:
+        # Edit a form of the graph and the arguments the session started with (or no form), with an empty pool.
+        try:
+            self._pool = {}
+            self._pooled_selection_points = None
+            if self._original is None:
+                self._form = None
+            else:
+                graph_class, arguments = self._original
+                self._form = graph_class(self._source, **copy.deepcopy(arguments))
+            if self._menu is not None:
+                self._is_reverting = True
+                try:
+                    self._menu.show(None if self._form is None else type(self._form))
+                finally:
+                    self._is_reverting = False
+            self._show_form()
+        except Exception:  # pylint: disable=broad-except
+            with self._errors:
+                traceback.print_exc()
 
     def _switch(self, graph_class: Optional[Type[GraphForm]]) -> None:
         # Edit a form of the ``graph_class`` (if any) instead of the current one, whose values are pooled.
@@ -635,14 +674,18 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
                 self._form = None
             else:
                 self._form = _switched_form(graph_class, self._source, self._pool, self._pooled_selection_points)
-            self._body.children = [] if self._form is None else self._form_widgets(self._form)
-            self._draw(Figure())
-            if self._form is not None:
-                self._form.request_redraw()
-            self._update_done()
+            self._show_form()
         except Exception:  # pylint: disable=broad-except
             with self._errors:
                 traceback.print_exc()
+
+    def _show_form(self) -> None:
+        # Show the widgets of the edited form (if any), and an empty figure until its graph is drawn.
+        self._body.children = [] if self._form is None else self._form_widgets(self._form)
+        self._draw(Figure())
+        if self._form is not None:
+            self._form.request_redraw()
+        self._update_done()
 
     def _draw(self, figure: Figure) -> None:
         # Show the ``figure``, and report its selections to the edited form.
