@@ -96,7 +96,8 @@ class Picker(HBox):  # pylint: disable=too-many-ancestors,abstract-method
 class GenePicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
     """
     Pick a gene of a ``source``, by typing (part of) its label, starting with the ``current`` gene (if any). A toggle
-    restricts the choices to the marker genes.
+    restricts the choices to the marker genes. It starts on if the source has any marker genes. The picked gene is always
+    one of the choices, so the toggle never drops it.
     """
 
     def __init__(self, source: GeneChoices, current: Optional[str] = None) -> None:
@@ -104,20 +105,24 @@ class GenePicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
         self._source = source
         self._name_per_label: Dict[str, str] = {}
         self._combobox = Combobox(placeholder="Gene", ensure_option=True)
-        self._markers_only = Checkbox(value=False, description="Markers only", indent=False)
+        has_markers = bool(source.gene_choices(markers_only=True))
+        self._markers_only = Checkbox(value=has_markers, description="Markers only", indent=False)
         self.children = [self._combobox, self._markers_only]
+        self.value = current
         self._reset_choices()
-        if current is not None:
-            label = self._label_of(current)
-            if label is not None:
-                self._combobox.value = label
-                self.value = current
+        label = None if current is None else self._label_of(current)
+        self._combobox.value = "" if label is None else label
+        self.value = None if label is None else current
         self._combobox.observe(self._on_combobox_change, names="value")
         self._markers_only.observe(self._on_markers_only_change, names="value")
 
     def _reset_choices(self) -> None:
-        # Fill the choices of the combobox, according to the markers only toggle.
+        # Fill the choices of the combobox, according to the markers only toggle, keeping the picked gene among them.
         choices = self._source.gene_choices(markers_only=self._markers_only.value)
+        picked = self.value
+        if picked is not None and all(name != picked for _label, name in choices):
+            names = {name for _label, name in choices}
+            choices = [choice for choice in self._source.gene_choices() if choice[1] in names or choice[1] == picked]
         self._name_per_label = dict(choices)
         self._combobox.options = [label for label, _name in choices]
 

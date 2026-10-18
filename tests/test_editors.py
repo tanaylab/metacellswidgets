@@ -162,10 +162,14 @@ class _Genes:
 
 def test_gene_picker() -> None:
     """
-    Picking a gene by its label gives its name.
+    Picking a gene by its label gives its name. The choices start restricted to the markers, since the source has some.
     """
     picker = GenePicker(_Genes())
     assert picker.value is None
+    assert picker._markers_only.value
+    assert list(picker._combobox.options) == ["A M", "C M T"]
+
+    picker._markers_only.value = False
     assert list(picker._combobox.options) == ["A M", "B", "C M T"]
 
     picker._combobox.value = "C M T"
@@ -177,26 +181,50 @@ def test_gene_picker() -> None:
 
 def test_gene_picker_current() -> None:
     """
-    The picker starts with the current gene.
+    The picker starts with the current gene, which is one of the choices even if it isn't a marker.
     """
     picker = GenePicker(_Genes(), "B")
     assert picker.value == "B"
     assert picker._combobox.value == "B"
+    assert list(picker._combobox.options) == ["A M", "B", "C M T"]
 
 
 def test_gene_picker_markers_only() -> None:
     """
-    Restricting to markers keeps a marker gene and drops any other.
+    Restricting to markers keeps the picked gene, marker or not, and drops the other genes which aren't markers.
     """
     picker = GenePicker(_Genes(), "C")
+    picker._markers_only.value = False
     picker._markers_only.value = True
     assert list(picker._combobox.options) == ["A M", "C M T"]
     assert picker.value == "C"
 
     picker = GenePicker(_Genes(), "B")
+    picker._markers_only.value = False
     picker._markers_only.value = True
-    assert picker.value is None
-    assert picker._combobox.value == ""
+    assert picker.value == "B"
+    assert picker._combobox.value == "B"
+
+
+def test_gene_picker_without_markers() -> None:
+    """
+    With no marker genes, the choices start unrestricted.
+    """
+
+    class NoMarkers:  # pylint: disable=too-few-public-methods
+        """
+        A source of genes, none of them a marker.
+        """
+
+        def gene_choices(self, *, markers_only: bool = False) -> List[Tuple[str, str]]:
+            """
+            The genes, if not restricted to the markers.
+            """
+            return [] if markers_only else [("A", "A"), ("B", "B")]
+
+    picker = GenePicker(NoMarkers())
+    assert not picker._markers_only.value
+    assert list(picker._combobox.options) == ["A", "B"]
 
 
 def test_name_picker() -> None:
