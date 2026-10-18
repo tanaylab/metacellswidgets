@@ -2,7 +2,8 @@
 Forms: the graphs a notebook cell shows, holding the arguments they were created with.
 
 A form is created by a method of a kind of data source, e.g. ``mw.DafWidgets(daf).gene_gene(x_gene="Foxa1", ...)``.
-Displaying it shows its graph.
+Displaying it shows its graph. A kind's ``menu`` method (e.g. ``mw.DafWidgets(daf).menu()``) shows a menu of its graphs,
+and an editor of the chosen one.
 
 A form's editor is made of widgets, each tied to one of its arguments (see :py:meth:`GraphForm.bind`). Changing a
 widget changes the argument and asks for the graph to be redrawn. Requests only mark the form; the graph is redrawn
@@ -10,6 +11,7 @@ once for all the requests pending, when the interactive display polls the form.
 """
 
 import functools
+import inspect
 import sys
 import threading
 import time
@@ -29,12 +31,15 @@ from typing import Optional
 from typing import Sequence
 from typing import Type
 from typing import Union
+from typing import overload
 
+import traitlets  # type: ignore
 from IPython import get_ipython
 from IPython.display import SVG
 from IPython.display import Image
 from IPython.display import display as display_in_cell
 from ipywidgets import Button  # type: ignore
+from ipywidgets import Dropdown  # type: ignore
 from ipywidgets import HBox  # type: ignore
 from ipywidgets import Output  # type: ignore
 from ipywidgets import VBox  # type: ignore
@@ -47,6 +52,7 @@ from .common import Arguments
 from .common import _give_own_dispatchers
 from .editors import ListEditor
 from .kernel import _MainThreadJobs
+from .kernel import _on_main_thread
 from .kernel import _owned_subshell_id
 from .kernel import _route_to_subshell
 from .kernel import _routing_new_widgets
@@ -55,6 +61,7 @@ from .rewrite import _cell_site
 from .rewrite import _claim_cell_rewrite
 from .rewrite import _current_cell_source
 from .rewrite import _rewritten_cell
+from .rewrite import _rewritten_menu_cell
 from .sources import SourceWidgets
 from .tweaks import Tweak
 from .tweaks import TweakPicker
@@ -62,7 +69,12 @@ from .tweaks import TweakPicker
 __all__: List[str] = [
     "Branch",
     "GraphForm",
+    "GraphMenu",
+    "graph_menu",
 ]
+
+# The formats of showing a graph: an interactive figure, or a static image.
+_Format = Literal["plotly", "svg", "png"]
 
 
 class GraphForm(Arguments):
@@ -194,7 +206,7 @@ class GraphForm(Arguments):
         self,
         *,
         interactive: bool = False,
-        format: Literal["plotly", "svg", "png"] = "plotly",  # pylint: disable=redefined-builtin
+        format: _Format = "plotly",  # pylint: disable=redefined-builtin
     ) -> "GraphForm":
         """
         Show the graph in the notebook cell. Returns the form, so it can be chained to its creation. The ``format`` is
@@ -202,23 +214,18 @@ class GraphForm(Arguments):
         graph.
 
         If ``interactive``, show an editor of the arguments and the graph instead, and block the cell until "Done" is
-        clicked. Then rewrite the code of the cell so that it creates the form with the edited arguments, and displays
-        it with ``interactive=False``, and show the graph. This requires the form to be created in the same cell, at its
-        top level, by a method of a kind of data source (e.g. ``source.gene_gene(...)``). The editor always shows an
-        interactive figure. The ``format`` applies to the graph shown after "Done".
+        clicked ("Done" is disabled while the arguments are incomplete). Then rewrite the code of the cell so that it
+        creates the form with the edited arguments, and displays it with ``interactive=False``, and show the graph. This
+        requires the form to be created in the same cell, at its top level, by a method of a kind of data source (e.g.
+        ``source.gene_gene(...)``). The editor always shows an interactive figure. The ``format`` applies to the graph
+        shown after "Done".
         """
-        if format not in ("plotly", "svg", "png"):
-            raise ValueError(f"unknown format: {format} (expected plotly, svg or png)")
+        _check_format(format)
+        form: GraphForm = self
         if interactive:
-            self._edit(_cell_site(sys._getframe(1)))  # pylint: disable=protected-access
-        graph = self.graph()
-        if format == "svg":
-            display_in_cell(SVG(graph.svg))
-        elif format == "png":
-            display_in_cell(Image(data=graph.png, format="png"))
-        else:
-            display_in_cell(graph.figure)
-        return self
+            form = self._edit(_cell_site(sys._getframe(1)))  # pylint: disable=protected-access
+        _show_graph(form.graph(), format)
+        return form
 
     def _tweaks_editor(self) -> ListEditor[Tweak]:
         # The editor of the tweaks: a list of them, under a "Tweaks" header, collapsed. A new tweak's editor starts from
@@ -230,8 +237,8 @@ class GraphForm(Arguments):
         self.bind(tweaks=tweaks)
         return tweaks
 
-    def _edit(self, display_site: Optional[_CallSite]) -> None:
-        # Show the editor until "Done" is clicked, then rewrite the cell.
+    def _edit(self, display_site: Optional[_CallSite]) -> "GraphForm":
+        # Show the editor until "Done" is clicked, then rewrite the cell. Returns the form the editor ended with.
         call_site = self._call_site
         if call_site is None or display_site is None or display_site.cell_token != call_site.cell_token:
             raise RuntimeError(
@@ -239,53 +246,20 @@ class GraphForm(Arguments):
                 "by a method of a kind of data source (e.g. source.gene_gene(...))"
             )
         _claim_cell_rewrite()
-
-        figure = FigureWidget(self.graph().figure)
-        done = Button(description="Done", button_style="primary")
-        errors = Output()
-        editor = VBox([HBox([done]), self.editor(), self._tweaks_editor(), figure, errors])
-        _route_to_subshell(editor, _owned_subshell_id())
-        display_in_cell(editor)
-
-        jobs = _MainThreadJobs()
-        is_done = threading.Event()
-
-        def on_done(_button: Button) -> None:
-            is_done.set()
-            jobs.wake()
-
-        done.on_click(on_done)
-        shown_at = time.monotonic()
-        is_resized = False
-
-        def on_poll() -> None:
-            nonlocal is_resized
-            if not is_resized and time.monotonic() - shown_at >= _FIGURE_RESIZE_DELAY_SECONDS:
-                figure.layout.autosize = False
-                figure.layout.autosize = True
-                is_resized = True
-            try:
-                self._poll_redraw(lambda graph: _replace_figure(figure, graph.figure))
-            except Exception:  # pylint: disable=broad-except
-                with errors:
-                    traceback.print_exc()
-
-        with _routing_new_widgets(_owned_subshell_id()):
-            jobs.serve(is_done, on_poll)
-
+        form = _EditSession(self.source, self).run()
         shell = get_ipython()
         shell.set_next_input(
             _rewritten_cell(
                 _current_cell_source(),
                 form_position=call_site.position,
-                form_keywords=self.arguments(),
+                form_keywords=form.arguments(),
                 display_position=display_site.position,
                 is_interactive=False,
                 namespace=shell.user_ns,
             ),
             replace=True,
         )
-        editor.close()
+        return form
 
 
 # The interactive figure is drawn before its cell has a width, so it starts narrower than the cell. It measures the cell
@@ -332,6 +306,245 @@ class Branch:
             elif child.exists(source):
                 children.append(child)
         return Branch(self.name, children) if children else None
+
+
+# A node of the tree of the graphs: a graph class (a leaf), or a branch.
+_Node = Union[Type[GraphForm], Branch]
+
+
+class GraphMenu(HBox):  # pylint: disable=too-many-ancestors,abstract-method
+    """
+    Choose a graph from the ``tree`` of the graphs of a kind of data source, as shown for the ``source`` (see
+    :py:meth:`Branch.visible`). This is a row of dropdowns, one per level of the tree, each starting with nothing
+    chosen. Choosing a sub-menu (a branch) adds a dropdown of its children. Choosing a graph ends the row. The row starts
+    with the path to the ``current`` graph class, if it is in the tree.
+
+    The ``value`` is the chosen graph class, or ``None`` while no graph is chosen.
+    """
+
+    value = traitlets.Any(None, allow_none=True)
+
+    def __init__(self, source: SourceWidgets, tree: Branch, current: Optional[Type[GraphForm]] = None) -> None:
+        super().__init__()
+        visible = tree.visible(source)
+        if visible is None:
+            raise ValueError(f"no graph of: {tree.name} exists for this: {type(source).__name__}")
+        self._root = visible
+        self._path: List[_Node] = []
+        self._dropdowns: List[Dropdown] = []
+        self._set_path([] if current is None else _path_to(visible, current))
+
+    def _set_path(self, path: Sequence[_Node]) -> None:
+        # Show a dropdown of the root and of each branch on the ``path`` of chosen nodes, with the next node chosen.
+        self._path = list(path)
+        branches = [self._root, *[node for node in path if isinstance(node, Branch)]]
+        for dropdown in self._dropdowns:
+            dropdown.close()
+        self._dropdowns = []
+        for level, branch in enumerate(branches):
+            options = [("Choose...", None)] + [(_node_name(child), child) for child in branch.children]
+            dropdown = Dropdown(options=options, value=path[level] if level < len(path) else None)
+            dropdown.observe(functools.partial(self._on_dropdown_change, level), names="value")
+            self._dropdowns.append(dropdown)
+        self.children = self._dropdowns
+        last = path[-1] if path else None
+        self.value = None if last is None or isinstance(last, Branch) else last
+
+    def _on_dropdown_change(self, level: int, change: Dict) -> None:
+        path = self._path[:level] + ([] if change["new"] is None else [change["new"]])
+        _on_main_thread(lambda: self._set_path(path))
+
+
+def _node_name(node: _Node) -> str:
+    # How a node is named in a menu: a branch by its name, a graph by its class name.
+    return node.name if isinstance(node, Branch) else node.__name__
+
+
+def _path_to(branch: Branch, graph_class: Type[GraphForm]) -> List[_Node]:
+    # The nodes from the children of the ``branch`` down to the ``graph_class``, or an empty list if it isn't there.
+    for child in branch.children:
+        if child is graph_class:
+            return [child]
+        if isinstance(child, Branch):
+            path = _path_to(child, graph_class)
+            if path:
+                return [child, *path]
+    return []
+
+
+class _GraphMenu:
+    # Shows a menu of the graphs of the ``tree`` for the data source it is read through.
+
+    def __init__(self, tree: Branch) -> None:
+        self.tree = tree
+
+    @overload
+    def __get__(self, source: None, owner: type) -> "_GraphMenu": ...
+
+    @overload
+    def __get__(self, source: SourceWidgets, owner: type) -> Callable[..., GraphForm]: ...
+
+    def __get__(self, source: Optional[SourceWidgets], owner: type) -> Union["_GraphMenu", Callable[..., GraphForm]]:
+        if source is None:
+            return self
+        tree = self.tree
+
+        def menu(*, format: _Format = "plotly") -> GraphForm:  # pylint: disable=redefined-builtin
+            """
+            Show a menu of the graphs, with an editor of the chosen graph's arguments and the graph, and block the cell
+            until "Done" is clicked ("Done" is disabled until a graph is chosen and its arguments are complete). Then
+            rewrite this call in the code of the cell so that it creates the chosen graph's form with the edited
+            arguments, and displays it in the ``format`` with ``interactive=False``, and show the graph. Returns the
+            form. This must be called at the top level of the cell.
+            """
+            return _show_menu(source, tree, _cell_site(sys._getframe(1)), format)  # pylint: disable=protected-access
+
+        return menu
+
+
+def graph_menu(tree: Branch) -> _GraphMenu:
+    """
+    Offer a menu of the graphs of the ``tree`` as a method of a kind of data source, e.g. ``menu = graph_menu(graphs)``.
+    Then ``source.menu()`` shows the menu, with an editor of the chosen graph (see :py:class:`GraphMenu`), and rewrites
+    its call into the chosen graph's when "Done" is clicked.
+    """
+    return _GraphMenu(tree)
+
+
+def _show_menu(
+    source: SourceWidgets,
+    tree: Branch,
+    call_site: Optional[_CallSite],
+    format: _Format,  # pylint: disable=redefined-builtin
+) -> GraphForm:
+    # Show the menu of the graphs of the ``tree`` until "Done" is clicked, then rewrite the menu call (at the
+    # ``call_site``) into the chosen form's, and show its graph in the ``format``.
+    _check_format(format)
+    if call_site is None:
+        raise RuntimeError("a menu must be shown at the top level of a cell (e.g. source.menu())")
+    _claim_cell_rewrite()
+    form = _EditSession(source, None, tree).run()
+    method_per_graph = {graph_class: name for name, graph_class in type(source).offered_graphs().items()}
+    shell = get_ipython()
+    shell.set_next_input(
+        _rewritten_menu_cell(
+            _current_cell_source(),
+            menu_position=call_site.position,
+            method=method_per_graph[type(form)],
+            form_keywords=form.arguments(),
+            format=format,
+            namespace=shell.user_ns,
+        ),
+        replace=True,
+    )
+    _show_graph(form.graph(), format)
+    return form
+
+
+def _blank_form(graph_class: Type[GraphForm], source: SourceWidgets) -> GraphForm:
+    # A form of the ``graph_class`` for the ``source``, with ``None`` for each of its required arguments.
+    parameters = list(inspect.signature(graph_class).parameters.values())[1:]
+    required = {parameter.name: None for parameter in parameters if parameter.default is inspect.Parameter.empty}
+    return graph_class(source, **required)
+
+
+class _EditSession:
+    # The editor of a form, shown until "Done" is clicked. With a ``tree``, it also shows a menu of its graphs, and
+    # choosing a graph there replaces the edited form with a new one of the chosen graph.
+
+    def __init__(self, source: SourceWidgets, form: Optional[GraphForm], tree: Optional[Branch] = None) -> None:
+        self._source = source
+        self._form = form
+        self._figure = FigureWidget(form.graph().figure if form is not None and form.is_complete() else Figure())
+        self._done = Button(description="Done", button_style="primary")
+        self._errors = Output()
+        self._body = VBox([] if form is None else self._form_widgets(form))
+        rows: List[Widget] = [HBox([self._done])]
+        if tree is not None:
+            menu = GraphMenu(source, tree)
+            menu.observe(self._on_menu_change, names="value")
+            rows.append(menu)
+        self._editor = VBox([*rows, self._body, self._figure, self._errors])
+        self._update_done()
+
+    def run(self) -> GraphForm:
+        """
+        Show the editor and block until "Done" is clicked, while serving its jobs. Returns the edited form.
+        """
+        _route_to_subshell(self._editor, _owned_subshell_id())
+        display_in_cell(self._editor)
+        jobs = _MainThreadJobs()
+        is_done = threading.Event()
+
+        def on_done(_button: Button) -> None:
+            if self._is_complete():
+                is_done.set()
+                jobs.wake()
+
+        self._done.on_click(on_done)
+        shown_at = time.monotonic()
+        is_resized = False
+
+        def on_poll() -> None:
+            nonlocal is_resized
+            if not is_resized and time.monotonic() - shown_at >= _FIGURE_RESIZE_DELAY_SECONDS:
+                self._figure.layout.autosize = False
+                self._figure.layout.autosize = True
+                is_resized = True
+            self._update_done()
+            try:
+                if self._form is not None:
+                    self._form._poll_redraw(  # pylint: disable=protected-access
+                        lambda graph: _replace_figure(self._figure, graph.figure)
+                    )
+            except Exception:  # pylint: disable=broad-except
+                with self._errors:
+                    traceback.print_exc()
+
+        with _routing_new_widgets(_owned_subshell_id()):
+            jobs.serve(is_done, on_poll)
+        self._editor.close()
+        assert self._form is not None
+        return self._form
+
+    def _form_widgets(self, form: GraphForm) -> List[Widget]:
+        # The widgets editing the arguments of the ``form``, and its tweaks.
+        return [form.editor(), form._tweaks_editor()]  # pylint: disable=protected-access
+
+    def _is_complete(self) -> bool:
+        # Whether there is a form to rewrite the cell with: one is chosen, and its arguments are complete.
+        return self._form is not None and self._form.is_complete()
+
+    def _update_done(self) -> None:
+        self._done.disabled = not self._is_complete()
+
+    def _on_menu_change(self, change: Dict) -> None:
+        _on_main_thread(lambda: self._switch(change["new"]))
+
+    def _switch(self, graph_class: Optional[Type[GraphForm]]) -> None:
+        # Edit a new form of the ``graph_class`` (if any) instead of the current one.
+        self._form = None if graph_class is None else _blank_form(graph_class, self._source)
+        self._body.children = [] if self._form is None else self._form_widgets(self._form)
+        _replace_figure(self._figure, Figure())
+        if self._form is not None:
+            self._form.request_redraw()
+        self._update_done()
+
+
+def _check_format(format: str) -> None:  # pylint: disable=redefined-builtin
+    # Fail unless the ``format`` is one of the formats of showing a graph.
+    if format not in ("plotly", "svg", "png"):
+        raise ValueError(f"unknown format: {format} (expected plotly, svg or png)")
+
+
+def _show_graph(graph: Graph, format: _Format) -> None:  # pylint: disable=redefined-builtin
+    # Show the ``graph`` in the notebook cell, in the ``format``.
+    if format == "svg":
+        display_in_cell(SVG(graph.svg))
+    elif format == "png":
+        display_in_cell(Image(data=graph.png, format="png"))
+    else:
+        display_in_cell(graph.figure)
 
 
 def _replace_figure(widget: FigureWidget, figure: Figure) -> None:

@@ -27,6 +27,7 @@ from .entries import OfTypes
 from .entries import SkeletonGenes
 from .entries import TopMarkers
 from .forms import Branch
+from .forms import graph_menu
 from .graphs import GeneGene
 from .graphs import GenesHeatmap
 from .properties import UMAP
@@ -72,6 +73,8 @@ class DafWidgets(SourceWidgets):
 
     #: The tree of the graphs offered, as shown in the menus.
     graphs = Branch("Graphs", [GeneGene, GenesHeatmap])
+
+    menu = graph_menu(graphs)
 
     def __init__(self, daf: DafReader) -> None:
         self.daf = daf

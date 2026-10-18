@@ -2,9 +2,10 @@
 Write the state of a form back into the code of the cell that runs it.
 
 A form records where in its cell it was created. When an interactive display is done, the cell's code is rewritten: the
-form call gets the form's state as keyword arguments, and the display call gets ``interactive=False``. The rest of the
-cell is kept as written. The new code reaches the notebook through IPython's ``set_next_input(..., replace=True)``,
-which only works while the cell runs.
+form call gets the form's state as keyword arguments, and the display call gets ``interactive=False``. A menu call is
+replaced by the call of the chosen form, displayed with ``interactive=False``. The rest of the cell is kept as written.
+The new code reaches the notebook through IPython's ``set_next_input(..., replace=True)``, which only works while the
+cell runs.
 
 Calls are found by their position, which Python reports for the running code of the cell. So the functions may be
 called under any name. Positions are (line, end line, column, end column), with 1-based lines and 0-based columns in
@@ -185,20 +186,13 @@ def _rewritten_cell(
     # ``is_interactive``. The form call may be on another line than the display call, or chained to it. Values with a
     # ``code`` method (e.g. properties) name their classes as the cell's ``namespace`` does.
     tree = ast.parse(source)
-    if namespace is not None:
-        # Prefer the names the cell itself uses (e.g. ``mw``) for naming classes, over other names for the same things.
-        names_in_cell = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
-        namespace = {**{name: namespace[name] for name in namespace if name in names_in_cell}, **namespace}
+    namespace = _cell_namespace(tree, namespace)
     form_call = _top_level_call(tree, form_position, "form")
     display_call = _top_level_call(tree, display_position, "display")
 
     if form_callee is None:
         form_callee = _segment(source, form_call.func)
-    form_arguments = [_segment(source, argument) for argument in form_call.args]
-    form_arguments += [
-        f"{name}={_literal_text(name, value, namespace)}" for name, value in form_keywords.items() if value is not None
-    ]
-    form_text = f"{form_callee}({', '.join(form_arguments)})"
+    form_text = _call_text(source, form_call, form_callee, form_keywords, namespace)
 
     display_arguments = [_segment(source, argument) for argument in display_call.args]
     display_arguments += [
@@ -209,27 +203,83 @@ def _rewritten_cell(
     display_arguments.append(f"interactive={is_interactive}")
     display_arguments_text = f"({', '.join(display_arguments)})"
 
-    # Replace the later span first, so the earlier span's offsets stay valid. The display call's arguments come after the
-    # whole form call, even when the two are chained.
-    source_bytes = source.encode("utf-8")
-    line_offsets = [0]
-    for line in source_bytes.split(b"\n")[:-1]:
-        line_offsets.append(line_offsets[-1] + len(line) + 1)
-
-    def offset(line: int, column: int) -> int:
-        return line_offsets[line - 1] + column
-
+    # The display call's arguments come after the whole form call, even when the two are chained.
     _, display_end_line, _, display_end_column = _node_position(display_call)
     _, func_end_line, _, func_end_column = _node_position(display_call.func)
-    form_line, form_end_line, form_column, form_end_column = _node_position(form_call)
-    replacements = [
-        (
-            offset(func_end_line, func_end_column),
-            offset(display_end_line, display_end_column),
-            display_arguments_text,
-        ),
-        (offset(form_line, form_column), offset(form_end_line, form_end_column), form_text),
+    return _replaced(
+        source,
+        [
+            ((func_end_line, func_end_column, display_end_line, display_end_column), display_arguments_text),
+            (_span(form_call), form_text),
+        ],
+    )
+
+
+def _rewritten_menu_cell(
+    source: str,
+    *,
+    menu_position: _Position,
+    method: str,
+    form_keywords: Mapping[str, Any],
+    format: str,  # pylint: disable=redefined-builtin
+    namespace: Optional[Mapping[str, Any]] = None,
+) -> str:
+    # The code of the cell with the menu call replaced by a call of the ``method`` on the same receiver, with the
+    # ``form_keywords`` (leaving out those which are ``None``), and displayed with ``interactive=False`` and the
+    # ``format`` (unless it is the default ``"plotly"``).
+    tree = ast.parse(source)
+    namespace = _cell_namespace(tree, namespace)
+    menu_call = _top_level_call(tree, menu_position, "menu")
+    assert isinstance(menu_call.func, ast.Attribute)
+    form_callee = f"{_segment(source, menu_call.func.value)}.{method}"
+    display_arguments = ["interactive=False"]
+    if format != "plotly":
+        display_arguments.append(f"format={format!r}")
+    form_text = _call_text(source, None, form_callee, form_keywords, namespace)
+    return _replaced(source, [(_span(menu_call), f"{form_text}.display({', '.join(display_arguments)})")])
+
+
+def _cell_namespace(tree: ast.Module, namespace: Optional[Mapping[str, Any]]) -> Optional[Mapping[str, Any]]:
+    # The ``namespace``, with the names the cell itself uses (e.g. ``mw``) first, so they are preferred for naming
+    # classes over other names for the same things.
+    if namespace is None:
+        return None
+    names_in_cell = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+    return {**{name: namespace[name] for name in namespace if name in names_in_cell}, **namespace}
+
+
+def _call_text(
+    source: str,
+    call: Optional[ast.Call],
+    callee: str,
+    keywords: Mapping[str, Any],
+    namespace: Optional[Mapping[str, Any]],
+) -> str:
+    # The code calling the ``callee`` with the positional arguments of the ``call`` (if any) as written, and the
+    # ``keywords`` (leaving out those which are ``None``).
+    arguments = [] if call is None else [_segment(source, argument) for argument in call.args]
+    arguments += [
+        f"{name}={_literal_text(name, value, namespace)}" for name, value in keywords.items() if value is not None
     ]
-    for start, end, text in sorted(replacements, reverse=True):
+    return f"{callee}({', '.join(arguments)})"
+
+
+def _span(node: ast.AST) -> Tuple[int, int, int, int]:
+    # The (line, column, end line, end column) of an ``ast`` node.
+    line, end_line, column, end_column = _node_position(node)
+    return (line, column, end_line, end_column)
+
+
+def _replaced(source: str, replacements: List[Tuple[Tuple[int, int, int, int], str]]) -> str:
+    # The ``source`` with each span, given as (line, column, end line, end column), replaced by its text. The spans
+    # must not overlap. The later ones are replaced first, so the offsets of the earlier ones stay valid.
+    source_bytes = source.encode("utf-8")
+    line_offsets = [0]
+    for line_bytes in source_bytes.split(b"\n")[:-1]:
+        line_offsets.append(line_offsets[-1] + len(line_bytes) + 1)
+    spans = []
+    for (line, column, end_line, end_column), text in replacements:
+        spans.append((line_offsets[line - 1] + column, line_offsets[end_line - 1] + end_column, text))
+    for start, end, text in sorted(spans, reverse=True):
         source_bytes = source_bytes[:start] + text.encode("utf-8") + source_bytes[end:]
     return source_bytes.decode("utf-8")

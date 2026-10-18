@@ -17,6 +17,7 @@ import metacellswidgets
 from metacellswidgets.rewrite import _call_position
 from metacellswidgets.rewrite import _Position
 from metacellswidgets.rewrite import _rewritten_cell
+from metacellswidgets.rewrite import _rewritten_menu_cell
 
 # Non-ASCII text for a cell: a Hebrew string, a Hebrew variable name, and an accented gene name.
 _GENE = "\N{HEBREW LETTER GIMEL}\N{HEBREW LETTER FINAL NUN}"  # NOT F-STRING
@@ -29,12 +30,20 @@ _ACCENTED = "\N{LATIN SMALL LETTER E WITH ACUTE}"  # NOT F-STRING
 
 class _Recorder:
     """
-    Stands for a form: records where it was created and where it was displayed.
+    Stands for a form: records where it was created and where it was displayed, and where a menu was shown.
     """
 
     def __init__(self) -> None:
         self.form_position: Optional[_Position] = None
         self.display_position: Optional[_Position] = None
+        self.menu_position: Optional[_Position] = None
+
+    def menu(self, **_keywords: Any) -> "_Recorder":
+        """
+        Record the position of this call, as a menu method does.
+        """
+        self.menu_position = _call_position(sys._getframe(1))  # pylint: disable=protected-access
+        return self
 
     def form(self, *_arguments: Any, **_keywords: Any) -> "_Recorder":
         """
@@ -132,6 +141,31 @@ def test_non_ascii() -> None:
     source = f"name = '{_GENE}'; form = mw.form(daf)\n{_CHECK} = form.display(interactive=True)\n"
     assert _rewrite(source, {"x_gene": _ACCENTED}) == (
         f"name = '{_GENE}'; form = mw.form(daf, x_gene='{_ACCENTED}')\n{_CHECK} = form.display(interactive=False)\n"
+    )
+
+
+@pytest.mark.parametrize(
+    "format_name, display_arguments",
+    [("plotly", "interactive=False"), ("svg", "interactive=False, format='svg'")],
+)
+def test_menu(format_name: str, display_arguments: str) -> None:
+    """
+    A menu call becomes the call of the chosen form on the same receiver, displayed with ``interactive=False``, and
+    with the format unless it is the default.
+    """
+    source = "# The menu.\nform = mw.form(daf).menu()  # chosen\n"
+    recorder = _Recorder()
+    exec(compile(source, "<cell>", "exec"), {"mw": recorder, "daf": None})  # pylint: disable=exec-used
+    assert recorder.menu_position is not None
+    rewritten = _rewritten_menu_cell(
+        source,
+        menu_position=recorder.menu_position,
+        method="gene_gene",
+        form_keywords={"x_gene": "A", "colors": None},
+        format=format_name,
+    )
+    assert rewritten == (
+        f"# The menu.\nform = mw.form(daf).gene_gene(x_gene='A').display({display_arguments})  # chosen\n"
     )
 
 

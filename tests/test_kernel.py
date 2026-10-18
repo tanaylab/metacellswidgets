@@ -279,6 +279,36 @@ def test_interactive_display_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
     )
 
 
+def _is_graph_menu(state: Dict[str, Any]) -> bool:
+    # Whether the widget state is of the dropdown of the first level of the menu of the graphs.
+    return state.get("_model_name") == "DropdownModel" and (state.get("_options_labels") or [None])[0] == "Choose..."
+
+
+def test_menu_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
+    """
+    A menu blocks its cell; after choosing a graph (whose editor is created while the cell blocks), picking its genes,
+    and clicking "Done", the menu call is rewritten into the chosen graph's call, displayed with ``interactive=False``.
+    """
+    _, client = kernel
+    _execute(client, _DAF_SETUP)
+
+    message_id = client.execute("form = mw.DafWidgets(daf).menu()\n")
+    widgets = _opened_widgets(client, lambda state: _is_done_button(state) or _is_graph_menu(state), 2)
+    done = next(widget for widget in widgets if _is_done_button(widget))
+    menu = next(widget for widget in widgets if _is_graph_menu(widget))
+
+    time.sleep(1)
+    _send_state(client, menu, {"index": menu["_options_labels"].index("GeneGene")})
+    genes = _opened_widgets(client, _is_gene_picker, 2)
+    x_gene, y_gene = genes[0], genes[1]
+    _send_state(client, x_gene, {"value": "A"})
+    _send_state(client, y_gene, {"value": "D"})
+    _click(client, done)
+    assert _rewritten_text(client, message_id) == (
+        "form = mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='D').display(interactive=False)"
+    )
+
+
 def _is_show_legends(state: Dict[str, Any]) -> bool:
     # Whether the widget state is of the "Show legends" checkbox of a legends tweak.
     return state.get("_model_name") == "CheckboxModel" and state.get("description") == "Show legends"

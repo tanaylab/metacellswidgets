@@ -27,6 +27,7 @@ from .entries import GeneList
 from .entries import OfTypes
 from .entries import TopMarkers
 from .forms import Branch
+from .forms import graph_menu
 from .graphs import GeneGene
 from .graphs import GenesHeatmap
 from .properties import UMAP
@@ -55,6 +56,8 @@ class AnnDataWidgets(SourceWidgets):
 
     #: The tree of the graphs offered, as shown in the menus.
     graphs = Branch("Graphs", [GeneGene, GenesHeatmap])
+
+    menu = graph_menu(graphs)
 
     def __init__(self, adata: AnnData, *, type_property: str, type_colors_csv: str) -> None:
         self.adata = adata

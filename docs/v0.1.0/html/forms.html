@@ -266,6 +266,24 @@
 
 </li>
 
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.forms.GraphMenu">
+<code class="docutils literal notranslate">
+<span class="pre">GraphMenu
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.forms.graph_menu">
+<code class="docutils literal notranslate">
+<span class="pre">graph_menu()
+</span>
+</code>
+</a>
+</li>
+
 </ul>
 
 </li>
@@ -374,7 +392,16 @@
 <span class="pre">...)
 </span>
 </code>.
-Displaying it shows its graph.
+Displaying it shows its graph. A kind’s 
+<code class="docutils literal notranslate">
+<span class="pre">menu
+</span>
+</code> method (e.g. 
+<code class="docutils literal notranslate">
+<span class="pre">mw.DafWidgets(daf).menu()
+</span>
+</code>) shows a menu of its graphs,
+and an editor of the chosen one.
 </p>
 
 <p>A form’s editor is made of widgets, each tied to one of its arguments (see 
@@ -1420,22 +1447,23 @@ graph.
 <span class="pre">interactive
 </span>
 </code>, show an editor of the arguments and the graph instead, and block the cell until “Done” is
-clicked. Then rewrite the code of the cell so that it creates the form with the edited arguments, and displays
-it with 
+clicked (“Done” is disabled while the arguments are incomplete). Then rewrite the code of the cell so that it
+creates the form with the edited arguments, and displays it with 
 <code class="docutils literal notranslate">
 <span class="pre">interactive=False
 </span>
-</code>, and show the graph. This requires the form to be created in the same cell, at its
-top level, by a method of a kind of data source (e.g. 
+</code>, and show the graph. This
+requires the form to be created in the same cell, at its top level, by a method of a kind of data source (e.g.
+
 <code class="docutils literal notranslate">
 <span class="pre">source.gene_gene(...)
 </span>
-</code>). The editor always shows an
-interactive figure. The 
+</code>). The editor always shows an interactive figure. The 
 <code class="docutils literal notranslate">
 <span class="pre">format
 </span>
-</code> applies to the graph shown after “Done”.
+</code> applies to the graph
+shown after “Done”.
 </p>
 
 <dl class="field-list simple">
@@ -1504,6 +1532,257 @@ interactive figure. The
 </dd>
 </dl>
 
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.forms.GraphMenu">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.forms.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">GraphMenu
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">args
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="o">
+<span class="pre">**
+</span>
+</span>
+<span class="n">
+<span class="pre">kwargs
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/forms.html#GraphMenu">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.forms.GraphMenu" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Choose a graph from the 
+<code class="docutils literal notranslate">
+<span class="pre">tree
+</span>
+</code> of the graphs of a kind of data source, as shown for the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code> (see
+
+<a class="reference internal" href="#metacellswidgets.forms.Branch.visible" title="metacellswidgets.forms.Branch.visible">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">Branch.visible()
+</span>
+</code>
+</a>). This is a row of dropdowns, one per level of the tree, each starting with nothing
+chosen. Choosing a sub-menu (a branch) adds a dropdown of its children. Choosing a graph ends the row. The row starts
+with the path to the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> graph class, if it is in the tree.
+</p>
+
+<p>The 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is the chosen graph class, or 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> while no graph is chosen.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>tree
+</strong> (
+<a class="reference internal" href="#metacellswidgets.forms.Branch" title="metacellswidgets.forms.Branch">
+<em>Branch
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<em>Type
+</em>
+<em>[
+</em>
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm" title="metacellswidgets.forms.GraphForm">
+<em>GraphForm
+</em>
+</a>
+<em>] 
+</em>
+<em>| 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py function">
+
+<dt class="sig sig-object py" id="metacellswidgets.forms.graph_menu">
+
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.forms.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">graph_menu
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">tree
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/forms.html#graph_menu">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.forms.graph_menu" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Offer a menu of the graphs of the 
+<code class="docutils literal notranslate">
+<span class="pre">tree
+</span>
+</code> as a method of a kind of data source, e.g. 
+<code class="docutils literal notranslate">
+<span class="pre">menu
+</span> 
+<span class="pre">=
+</span> 
+<span class="pre">graph_menu(graphs)
+</span>
+</code>.
+Then 
+<code class="docutils literal notranslate">
+<span class="pre">source.menu()
+</span>
+</code> shows the menu, with an editor of the chosen graph (see 
+<a class="reference internal" href="#metacellswidgets.forms.GraphMenu" title="metacellswidgets.forms.GraphMenu">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">GraphMenu
+</span>
+</code>
+</a>), and rewrites
+its call into the chosen graph’s when “Done” is clicked.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>tree
+</strong> (
+<a class="reference internal" href="#metacellswidgets.forms.Branch" title="metacellswidgets.forms.Branch">
+<em>Branch
+</em>
+</a>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<em>_GraphMenu
+</em>
+</p>
+
+</dd>
+
+</dl>
 
 </dd>
 </dl>
