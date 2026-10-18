@@ -77,17 +77,25 @@
 <span class="sd">A property is a class. Its instance holds the values of its arguments, e.g. ``GeneExpression("Foxa1")``. Each property</span>
 <span class="sd">says what kind of values it produces (its ``eltype``), and that decides which slots it suits. Whether a data source has</span>
 <span class="sd">a property, and how to fill a graph from it, is implemented separately for each kind of data source.</span>
+
+<span class="sd">Some arguments change only how a property is shown, not its data: ``show_legend``, and for a property shown on a log</span>
+<span class="sd">scale, ``log_base``. They mirror the keywords of the property's data source in ``metacellsgraphspy``, and ``None``</span>
+<span class="sd">leaves the data source's default. They are the property's look arguments.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenSet</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogBase</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">VectorDataSinks</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">Arguments</span>
@@ -104,6 +112,8 @@
     <span class="s2">"GlobalFlowOrder"</span><span class="p">,</span>
     <span class="s2">"IsLateral"</span><span class="p">,</span>
     <span class="s2">"IsMarker"</span><span class="p">,</span>
+    <span class="c1"># Re-exported from ``somegraphspy``, since a form writes it into the code of a cell (e.g. ``mw.LogBase.Log2Base``).</span>
+    <span class="s2">"LogBase"</span><span class="p">,</span>
     <span class="s2">"MeanCellsPerMetacell"</span><span class="p">,</span>
     <span class="s2">"MeanTotalUMIsPerCell"</span><span class="p">,</span>
     <span class="s2">"MeanTotalUMIsPerMetacell"</span><span class="p">,</span>
@@ -216,9 +226,42 @@
     <span class="c1">#: The name the data gives the property, for a property made by a factory (e.g., :py:func:`size_property`).</span>
     <span class="n">property_name</span><span class="p">:</span> <span class="nb">str</span>
 
+    <span class="c1"># The arguments which change only how the property is shown, not its data (e.g. ``show_legend``).</span>
+    <span class="n">_look_arguments</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">FrozenSet</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">_give_own_dispatchers</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">Property</span><span class="p">,</span> <span class="p">(</span><span class="s2">"exists"</span><span class="p">,</span> <span class="s2">"fill"</span><span class="p">,</span> <span class="s2">"editor"</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Property.look_arguments">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Property.look_arguments">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">look_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The values of the look arguments, which change only how the property is shown (e.g. ``show_legend``), by their</span>
+<span class="sd">        names. A kind of data source passes them to the property's data source.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_look_arguments</span><span class="p">)}</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_written_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="c1"># A look argument which is ``None`` leaves the data source's default, so it isn't written.</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">value</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_look_arguments</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="Property.has_same_content">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Property.has_same_content">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_same_content</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Whether the ``other`` is a property of the same class, with the same values of the arguments other than the look</span>
+<span class="sd">        arguments, so both show the same data.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">_content_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="n">_content_arguments</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="Property.suits">
 <a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Property.suits">[docs]</a>
@@ -267,6 +310,12 @@
 
 
 
+<span class="c1"># The arguments of a property other than its look arguments.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_content_arguments</span><span class="p">(</span><span class="n">property_object</span><span class="p">:</span> <span class="n">Property</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">look_arguments</span> <span class="o">=</span> <span class="n">property_object</span><span class="o">.</span><span class="n">_look_arguments</span>  <span class="c1"># pylint: disable=protected-access</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">property_object</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">look_arguments</span><span class="p">}</span>
+
+
 <div class="viewcode-block" id="size_property">
 <a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.size_property">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">size_property</span><span class="p">(</span>
@@ -274,12 +323,19 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="nb">property</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c1"># pylint: disable=redefined-builtin</span>
     <span class="n">doc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Make the class of a property which is a count, such as UMIs, named ``class_name`` and documented by the ``doc``.</span>
-<span class="sd">    The data gives it the name ``property``.</span>
+<span class="sd">    The data gives it the name ``property``. Its objects take the look arguments ``show_legend`` and ``log_base``.</span>
 <span class="sd">    """</span>
-    <span class="k">return</span> <span class="n">_factory_property</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="n">eltype</span><span class="o">=</span><span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span><span class="p">,</span> <span class="n">property_name</span><span class="o">=</span><span class="nb">property</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="n">doc</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">_factory_property</span><span class="p">(</span>
+        <span class="n">class_name</span><span class="p">,</span>
+        <span class="n">eltype</span><span class="o">=</span><span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span><span class="p">,</span>
+        <span class="n">property_name</span><span class="o">=</span><span class="nb">property</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="n">doc</span><span class="p">,</span>
+        <span class="n">init</span><span class="o">=</span><span class="n">_init_with_show_legend_and_log_base</span><span class="p">,</span>
+        <span class="n">look_arguments</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">]),</span>
+    <span class="p">)</span></div>
 
 
 
@@ -290,12 +346,19 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="nb">property</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c1"># pylint: disable=redefined-builtin</span>
     <span class="n">doc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Make the class of a property which names a category, such as a type, named ``class_name`` and documented by the</span>
-<span class="sd">    ``doc``. The data gives it the name ``property``.</span>
+<span class="sd">    ``doc``. The data gives it the name ``property``. Its objects take the look argument ``show_legend``.</span>
 <span class="sd">    """</span>
-    <span class="k">return</span> <span class="n">_factory_property</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="n">eltype</span><span class="o">=</span><span class="n">Eltype</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,</span> <span class="n">property_name</span><span class="o">=</span><span class="nb">property</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="n">doc</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">_factory_property</span><span class="p">(</span>
+        <span class="n">class_name</span><span class="p">,</span>
+        <span class="n">eltype</span><span class="o">=</span><span class="n">Eltype</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,</span>
+        <span class="n">property_name</span><span class="o">=</span><span class="nb">property</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="n">doc</span><span class="p">,</span>
+        <span class="n">init</span><span class="o">=</span><span class="n">_init_with_show_legend</span><span class="p">,</span>
+        <span class="n">look_arguments</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">]),</span>
+    <span class="p">)</span></div>
 
 
 
@@ -306,24 +369,56 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="nb">property</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c1"># pylint: disable=redefined-builtin</span>
     <span class="n">doc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Make the class of a property which is a Boolean flag, named ``class_name`` and documented by the ``doc``. The data</span>
-<span class="sd">    gives it the name ``property``.</span>
+<span class="sd">    gives it the name ``property``. Its objects take the look argument ``show_legend``.</span>
 <span class="sd">    """</span>
-    <span class="k">return</span> <span class="n">_factory_property</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="n">eltype</span><span class="o">=</span><span class="n">Eltype</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">,</span> <span class="n">property_name</span><span class="o">=</span><span class="nb">property</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="n">doc</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">_factory_property</span><span class="p">(</span>
+        <span class="n">class_name</span><span class="p">,</span>
+        <span class="n">eltype</span><span class="o">=</span><span class="n">Eltype</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">,</span>
+        <span class="n">property_name</span><span class="o">=</span><span class="nb">property</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="n">doc</span><span class="p">,</span>
+        <span class="n">init</span><span class="o">=</span><span class="n">_init_with_show_legend</span><span class="p">,</span>
+        <span class="n">look_arguments</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">]),</span>
+    <span class="p">)</span></div>
 
 
 
-<span class="c1"># Make the class of a property without arguments, as a factory does.</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">_factory_property</span><span class="p">(</span><span class="n">class_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">eltype</span><span class="p">:</span> <span class="n">Eltype</span><span class="p">,</span> <span class="n">property_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">doc</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">Property</span><span class="p">]:</span>
+<span class="c1"># The constructor of a property whose only argument is ``show_legend``.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_init_with_show_legend</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">Property</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"show_legend"</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">)</span>
+
+
+<span class="c1"># The constructor of a property whose only arguments are ``show_legend`` and ``log_base``.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_init_with_show_legend_and_log_base</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">:</span> <span class="n">Property</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">log_base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LogBase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"show_legend"</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">)</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">,</span> <span class="n">log_base</span><span class="p">)</span>
+
+
+<span class="c1"># Make the class of a property whose only arguments are its look arguments, as a factory does. The factories return the</span>
+<span class="c1"># class as ``Any``, since a type checker can't see its generated constructor, and a property class can't inherit a typed</span>
+<span class="c1"># one (it must derive directly from ``Property``, see ``_give_own_dispatchers``).</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_factory_property</span><span class="p">(</span>
+    <span class="n">class_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">eltype</span><span class="p">:</span> <span class="n">Eltype</span><span class="p">,</span>
+    <span class="n">property_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">doc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">init</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+    <span class="n">look_arguments</span><span class="p">:</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
     <span class="n">namespace</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">"__doc__"</span><span class="p">:</span> <span class="n">doc</span><span class="p">,</span>
         <span class="s2">"__module__"</span><span class="p">:</span> <span class="vm">__name__</span><span class="p">,</span>
         <span class="s2">"__qualname__"</span><span class="p">:</span> <span class="n">class_name</span><span class="p">,</span>
+        <span class="s2">"__init__"</span><span class="p">:</span> <span class="n">init</span><span class="p">,</span>
         <span class="s2">"eltype"</span><span class="p">:</span> <span class="n">eltype</span><span class="p">,</span>
         <span class="s2">"shape"</span><span class="p">:</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span><span class="p">,</span>
         <span class="s2">"property_name"</span><span class="p">:</span> <span class="n">property_name</span><span class="p">,</span>
+        <span class="s2">"_look_arguments"</span><span class="p">:</span> <span class="n">look_arguments</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="p">(</span><span class="n">Property</span><span class="p">,),</span> <span class="n">namespace</span><span class="p">)</span>
 
@@ -339,14 +434,18 @@
 <a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.GeneExpression">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GeneExpression</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    The expression level (linear fraction) of the ``gene`` in each entry, shown in log base 2.</span>
+<span class="sd">    The expression level (linear fraction) of the ``gene`` in each entry, shown on a log scale (base 2 by default). It</span>
+<span class="sd">    takes the look arguments ``show_legend`` and ``log_base``.</span>
 <span class="sd">    """</span>
 
     <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
     <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span>
+    <span class="n">_look_arguments</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">])</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gene</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gene</span> <span class="o">=</span> <span class="n">gene</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gene</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">log_base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LogBase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gene</span> <span class="o">=</span> <span class="n">gene</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">show_legend</span> <span class="o">=</span> <span class="n">show_legend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_base</span> <span class="o">=</span> <span class="n">log_base</span></div>
 
 
 
@@ -365,11 +464,13 @@
 <a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.MeanCellsPerMetacell">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MeanCellsPerMetacell</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    The mean number of cells per metacell of each entry.</span>
+<span class="sd">    The mean number of cells per metacell of each entry. It takes the look arguments ``show_legend`` and ``log_base``.</span>
 <span class="sd">    """</span>
 
     <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
-    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span>
+    <span class="n">_look_arguments</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">])</span>
+    <span class="fm">__init__</span> <span class="o">=</span> <span class="n">_init_with_show_legend_and_log_base</span></div>
 
 
 
@@ -377,11 +478,14 @@
 <a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.MeanTotalUMIsPerMetacell">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MeanTotalUMIsPerMetacell</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    The mean total number of UMIs per metacell of each entry.</span>
+<span class="sd">    The mean total number of UMIs per metacell of each entry. It takes the look arguments ``show_legend`` and</span>
+<span class="sd">    ``log_base``.</span>
 <span class="sd">    """</span>
 
     <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
-    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span>
+    <span class="n">_look_arguments</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">])</span>
+    <span class="fm">__init__</span> <span class="o">=</span> <span class="n">_init_with_show_legend_and_log_base</span></div>
 
 
 
@@ -389,11 +493,13 @@
 <a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.MeanTotalUMIsPerCell">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MeanTotalUMIsPerCell</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    The mean total number of UMIs per cell of each entry.</span>
+<span class="sd">    The mean total number of UMIs per cell of each entry. It takes the look arguments ``show_legend`` and ``log_base``.</span>
 <span class="sd">    """</span>
 
     <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
-    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span>
+    <span class="n">_look_arguments</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">])</span>
+    <span class="fm">__init__</span> <span class="o">=</span> <span class="n">_init_with_show_legend_and_log_base</span></div>
 
 
 
@@ -401,14 +507,16 @@
 <a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.BooleanMask">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">BooleanMask</span><span class="p">(</span><span class="n">Property</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    The Boolean mask property with the ``name`` of each entry.</span>
+<span class="sd">    The Boolean mask property with the ``name`` of each entry. It takes the look argument ``show_legend``.</span>
 <span class="sd">    """</span>
 
     <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">BOOLEAN</span>
     <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span>
+    <span class="n">_look_arguments</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">])</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">show_legend</span> <span class="o">=</span> <span class="n">show_legend</span></div>
 
 
 

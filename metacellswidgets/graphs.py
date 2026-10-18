@@ -53,11 +53,12 @@ __all__: List[str] = [
 ]
 
 
-# Fail if one of the ``hovers`` is another one, or one of the properties the ``side`` already shows.
+# Fail if one of the ``hovers`` shows the same data as another one, or as one of the properties the ``side`` already
+# shows (regardless of their look arguments).
 def _check_hovers(hovers: Optional[Sequence[Property]], shown: Sequence[Optional[Property]], side: str) -> None:
     seen = [shown_property for shown_property in shown if shown_property is not None]
     for hover in hovers or []:
-        if hover in seen:
+        if any(hover.has_same_content(seen_property) for seen_property in seen):
             raise ValueError(f"the hover {hover!r} is already shown on the {side}")
         seen.append(hover)
 

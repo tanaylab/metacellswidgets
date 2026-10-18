@@ -4,17 +4,25 @@ Properties: the data a form can show in a slot of a graph, such as the colors or
 A property is a class. Its instance holds the values of its arguments, e.g. ``GeneExpression("Foxa1")``. Each property
 says what kind of values it produces (its ``eltype``), and that decides which slots it suits. Whether a data source has
 a property, and how to fill a graph from it, is implemented separately for each kind of data source.
+
+Some arguments change only how a property is shown, not its data: ``show_legend``, and for a property shown on a log
+scale, ``log_base``. They mirror the keywords of the property's data source in ``metacellsgraphspy``, and ``None``
+leaves the data source's default. They are the property's look arguments.
 """
 
 from enum import Enum
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import Callable
+from typing import ClassVar
+from typing import Dict
 from typing import FrozenSet
 from typing import List
 from typing import Mapping
 from typing import Optional
 
 from ipywidgets import Widget  # type: ignore
+from somegraphspy import LogBase
 from somegraphspy import VectorDataSinks
 
 from .common import Arguments
@@ -31,6 +39,8 @@ __all__: List[str] = [
     "GlobalFlowOrder",
     "IsLateral",
     "IsMarker",
+    # Re-exported from ``somegraphspy``, since a form writes it into the code of a cell (e.g. ``mw.LogBase.Log2Base``).
+    "LogBase",
     "MeanCellsPerMetacell",
     "MeanTotalUMIsPerCell",
     "MeanTotalUMIsPerMetacell",
@@ -132,9 +142,36 @@ class Property(Arguments):
     #: The name the data gives the property, for a property made by a factory (e.g., :py:func:`size_property`).
     property_name: str
 
+    # The arguments which change only how the property is shown, not its data (e.g. ``show_legend``).
+    _look_arguments: ClassVar[FrozenSet[str]] = frozenset()
+
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
         _give_own_dispatchers(cls, Property, ("exists", "fill", "editor"))
+
+    def look_arguments(self) -> Dict[str, Any]:
+        """
+        The values of the look arguments, which change only how the property is shown (e.g. ``show_legend``), by their
+        names. A kind of data source passes them to the property's data source.
+        """
+        return {name: getattr(self, name) for name in sorted(self._look_arguments)}
+
+    def _written_arguments(self) -> Dict[str, Any]:
+        # A look argument which is ``None`` leaves the data source's default, so it isn't written.
+        return {
+            name: value
+            for name, value in self.arguments().items()
+            if value is not None or name not in self._look_arguments
+        }
+
+    def has_same_content(self, other: Any) -> bool:
+        """
+        Whether the ``other`` is a property of the same class, with the same values of the arguments other than the look
+        arguments, so both show the same data.
+        """
+        if type(other) is not type(self):
+            return False
+        return _content_arguments(self) == _content_arguments(other)
 
     @classmethod
     def suits(cls, slot: Slot) -> bool:
@@ -170,17 +207,30 @@ class Property(Arguments):
         return None
 
 
+# The arguments of a property other than its look arguments.
+def _content_arguments(property_object: Property) -> Dict[str, Any]:
+    look_arguments = property_object._look_arguments  # pylint: disable=protected-access
+    return {name: value for name, value in property_object.arguments().items() if name not in look_arguments}
+
+
 def size_property(
     class_name: str,
     *,
     property: str,  # pylint: disable=redefined-builtin
     doc: str,
-) -> type[Property]:
+) -> Any:
     """
     Make the class of a property which is a count, such as UMIs, named ``class_name`` and documented by the ``doc``.
-    The data gives it the name ``property``.
+    The data gives it the name ``property``. Its objects take the look arguments ``show_legend`` and ``log_base``.
     """
-    return _factory_property(class_name, eltype=Eltype.NUMBER, property_name=property, doc=doc)
+    return _factory_property(
+        class_name,
+        eltype=Eltype.NUMBER,
+        property_name=property,
+        doc=doc,
+        init=_init_with_show_legend_and_log_base,
+        look_arguments=frozenset(["show_legend", "log_base"]),
+    )
 
 
 def category_property(
@@ -188,12 +238,19 @@ def category_property(
     *,
     property: str,  # pylint: disable=redefined-builtin
     doc: str,
-) -> type[Property]:
+) -> Any:
     """
     Make the class of a property which names a category, such as a type, named ``class_name`` and documented by the
-    ``doc``. The data gives it the name ``property``.
+    ``doc``. The data gives it the name ``property``. Its objects take the look argument ``show_legend``.
     """
-    return _factory_property(class_name, eltype=Eltype.CATEGORICAL, property_name=property, doc=doc)
+    return _factory_property(
+        class_name,
+        eltype=Eltype.CATEGORICAL,
+        property_name=property,
+        doc=doc,
+        init=_init_with_show_legend,
+        look_arguments=frozenset(["show_legend"]),
+    )
 
 
 def boolean_property(
@@ -201,23 +258,55 @@ def boolean_property(
     *,
     property: str,  # pylint: disable=redefined-builtin
     doc: str,
-) -> type[Property]:
+) -> Any:
     """
     Make the class of a property which is a Boolean flag, named ``class_name`` and documented by the ``doc``. The data
-    gives it the name ``property``.
+    gives it the name ``property``. Its objects take the look argument ``show_legend``.
     """
-    return _factory_property(class_name, eltype=Eltype.BOOLEAN, property_name=property, doc=doc)
+    return _factory_property(
+        class_name,
+        eltype=Eltype.BOOLEAN,
+        property_name=property,
+        doc=doc,
+        init=_init_with_show_legend,
+        look_arguments=frozenset(["show_legend"]),
+    )
 
 
-# Make the class of a property without arguments, as a factory does.
-def _factory_property(class_name: str, *, eltype: Eltype, property_name: str, doc: str) -> type[Property]:
+# The constructor of a property whose only argument is ``show_legend``.
+def _init_with_show_legend(self: Property, *, show_legend: Optional[bool] = None) -> None:
+    setattr(self, "show_legend", show_legend)
+
+
+# The constructor of a property whose only arguments are ``show_legend`` and ``log_base``.
+def _init_with_show_legend_and_log_base(
+    self: Property, *, show_legend: Optional[bool] = None, log_base: Optional[LogBase] = None
+) -> None:
+    setattr(self, "show_legend", show_legend)
+    setattr(self, "log_base", log_base)
+
+
+# Make the class of a property whose only arguments are its look arguments, as a factory does. The factories return the
+# class as ``Any``, since a type checker can't see its generated constructor, and a property class can't inherit a typed
+# one (it must derive directly from ``Property``, see ``_give_own_dispatchers``).
+def _factory_property(
+    class_name: str,
+    *,
+    eltype: Eltype,
+    property_name: str,
+    doc: str,
+    init: Callable[..., None],
+    look_arguments: FrozenSet[str],
+) -> Any:
     namespace = {
         "__doc__": doc,
         "__module__": __name__,
         "__qualname__": class_name,
+        "__init__": init,
         "eltype": eltype,
         "shape": Shape.VECTOR,
         "property_name": property_name,
+        "_look_arguments": look_arguments,
     }
     return type(class_name, (Property,), namespace)
 
@@ -231,14 +320,18 @@ Block = category_property("Block", property="block", doc="The block each entry b
 
 class GeneExpression(Property):
     """
-    The expression level (linear fraction) of the ``gene`` in each entry, shown in log base 2.
+    The expression level (linear fraction) of the ``gene`` in each entry, shown on a log scale (base 2 by default). It
+    takes the look arguments ``show_legend`` and ``log_base``.
     """
 
     eltype = Eltype.NUMBER
     shape = Shape.VECTOR
+    _look_arguments = frozenset(["show_legend", "log_base"])
 
-    def __init__(self, gene: str) -> None:
+    def __init__(self, gene: str, *, show_legend: Optional[bool] = None, log_base: Optional[LogBase] = None) -> None:
         self.gene = gene
+        self.show_legend = show_legend
+        self.log_base = log_base
 
 
 TotalUMIs = size_property("TotalUMIs", property="total_UMIs", doc="The total number of UMIs of each entry.")
@@ -254,41 +347,50 @@ IsMarker = boolean_property("IsMarker", property="is_marker", doc="Whether each 
 
 class MeanCellsPerMetacell(Property):
     """
-    The mean number of cells per metacell of each entry.
+    The mean number of cells per metacell of each entry. It takes the look arguments ``show_legend`` and ``log_base``.
     """
 
     eltype = Eltype.NUMBER
     shape = Shape.VECTOR
+    _look_arguments = frozenset(["show_legend", "log_base"])
+    __init__ = _init_with_show_legend_and_log_base
 
 
 class MeanTotalUMIsPerMetacell(Property):
     """
-    The mean total number of UMIs per metacell of each entry.
+    The mean total number of UMIs per metacell of each entry. It takes the look arguments ``show_legend`` and
+    ``log_base``.
     """
 
     eltype = Eltype.NUMBER
     shape = Shape.VECTOR
+    _look_arguments = frozenset(["show_legend", "log_base"])
+    __init__ = _init_with_show_legend_and_log_base
 
 
 class MeanTotalUMIsPerCell(Property):
     """
-    The mean total number of UMIs per cell of each entry.
+    The mean total number of UMIs per cell of each entry. It takes the look arguments ``show_legend`` and ``log_base``.
     """
 
     eltype = Eltype.NUMBER
     shape = Shape.VECTOR
+    _look_arguments = frozenset(["show_legend", "log_base"])
+    __init__ = _init_with_show_legend_and_log_base
 
 
 class BooleanMask(Property):
     """
-    The Boolean mask property with the ``name`` of each entry.
+    The Boolean mask property with the ``name`` of each entry. It takes the look argument ``show_legend``.
     """
 
     eltype = Eltype.BOOLEAN
     shape = Shape.VECTOR
+    _look_arguments = frozenset(["show_legend"])
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, *, show_legend: Optional[bool] = None) -> None:
         self.name = name
+        self.show_legend = show_legend
 
 
 class GlobalFlowOrder(Property):

@@ -6,10 +6,12 @@ Each widget has an observable ``value``: the editors' is the property or the twe
 incomplete), and the pickers' is the chosen string (or ``None`` while nothing is chosen).
 """
 
+import inspect
 from typing import Any
 from typing import Callable
 from typing import Collection
 from typing import Dict
+from typing import FrozenSet
 from typing import Generic
 from typing import List
 from typing import Optional
@@ -246,9 +248,13 @@ class AxisPicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
 OnAxisChange = Callable[[str, str, Optional[Property]], Optional[Property]]
 
 
-# Whether the objects of the ``choice`` class take arguments.
-def _has_arguments(choice: Type[Arguments]) -> bool:
-    return choice.__init__ is not object.__init__
+# Whether the objects of the ``choice`` class take arguments other than look arguments (see ``Property``).
+def _has_content_arguments(choice: Type[Arguments]) -> bool:
+    if choice.__init__ is object.__init__:
+        return False
+    look_arguments: FrozenSet[str] = getattr(choice, "_look_arguments", frozenset())
+    parameters = list(inspect.signature(choice.__init__).parameters)[1:]
+    return any(name not in look_arguments for name in parameters)
 
 
 class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method,too-many-instance-attributes
@@ -430,9 +436,19 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
         self._slot = slot
         self._on_axis_change = on_axis_change
         self._shown_properties = shown
+        self._look: Dict[str, Any] = {} if current is None else current.look_arguments()
         self._show(self._choices(), current)
         if shown is not None:
             shown.observe(self._on_shown_change, names="version")
+
+    def _set_value(self, picked: Optional[Arguments]) -> None:
+        # The picked property takes the picker's values of the look arguments its class has, since the editors of the
+        # properties make them without any.
+        if isinstance(picked, Property):
+            for name, value in self._look.items():
+                if name in picked._look_arguments:  # pylint: disable=protected-access
+                    setattr(picked, name, value)
+        super()._set_value(picked)
 
     def _choices(self) -> List[Type[Property]]:
         # The properties which may be picked for the current axis, other than the ones the side already shows.
@@ -441,8 +457,12 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
         if self._shown_properties is None:
             return choices
         own = self.shown()
-        covered = [shown for shown in self._shown_properties.properties() if shown != own]
-        return [choice for choice in choices if _has_arguments(choice) or choice() not in covered]
+        covered = [shown for shown in self._shown_properties.properties() if not shown.has_same_content(own)]
+        return [
+            choice
+            for choice in choices
+            if _has_content_arguments(choice) or not any(shown.has_same_content(choice()) for shown in covered)
+        ]
 
     def _on_shown_change(self, _change: Dict) -> None:
         choices = self._choices()
@@ -691,5 +711,8 @@ class ShownProperties(traitlets.HasTraits):
 
     def _on_change(self, _change: Dict) -> None:
         assert self._hovers is not None
-        self._hovers.remove_values(self._editors_properties())
+        shown = self._editors_properties()
+        self._hovers.remove_values(
+            [hover for hover in self._hovers.shown() if any(hover.has_same_content(other) for other in shown)]
+        )
         self.version += 1

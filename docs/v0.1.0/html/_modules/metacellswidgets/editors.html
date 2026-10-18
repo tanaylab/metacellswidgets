@@ -79,10 +79,12 @@
 <span class="sd">incomplete), and the pickers' is the chosen string (or ``None`` while nothing is chosen).</span>
 <span class="sd">"""</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Collection</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenSet</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generic</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
@@ -352,9 +354,13 @@
 <span class="n">OnAxisChange</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Property</span><span class="p">]],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Property</span><span class="p">]]</span>
 
 
-<span class="c1"># Whether the objects of the ``choice`` class take arguments.</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">_has_arguments</span><span class="p">(</span><span class="n">choice</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">Arguments</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">choice</span><span class="o">.</span><span class="fm">__init__</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__init__</span>
+<span class="c1"># Whether the objects of the ``choice`` class take arguments other than look arguments (see ``Property``).</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_content_arguments</span><span class="p">(</span><span class="n">choice</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">Arguments</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">choice</span><span class="o">.</span><span class="fm">__init__</span> <span class="ow">is</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__init__</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">look_arguments</span><span class="p">:</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">choice</span><span class="p">,</span> <span class="s2">"_look_arguments"</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">())</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">choice</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">look_arguments</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="ClassPicker">
@@ -544,9 +550,19 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_slot</span> <span class="o">=</span> <span class="n">slot</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_on_axis_change</span> <span class="o">=</span> <span class="n">on_axis_change</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shown_properties</span> <span class="o">=</span> <span class="n">shown</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_look</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">look_arguments</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_show</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_choices</span><span class="p">(),</span> <span class="n">current</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">shown</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">shown</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_shown_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"version"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">picked</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Arguments</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># The picked property takes the picker's values of the look arguments its class has, since the editors of the</span>
+        <span class="c1"># properties make them without any.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">picked</span><span class="p">,</span> <span class="n">Property</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_look</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">picked</span><span class="o">.</span><span class="n">_look_arguments</span><span class="p">:</span>  <span class="c1"># pylint: disable=protected-access</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="n">picked</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_set_value</span><span class="p">(</span><span class="n">picked</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_choices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Property</span><span class="p">]]:</span>
         <span class="c1"># The properties which may be picked for the current axis, other than the ones the side already shows.</span>
@@ -555,8 +571,12 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shown_properties</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">choices</span>
         <span class="n">own</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shown</span><span class="p">()</span>
-        <span class="n">covered</span> <span class="o">=</span> <span class="p">[</span><span class="n">shown</span> <span class="k">for</span> <span class="n">shown</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shown_properties</span><span class="o">.</span><span class="n">properties</span><span class="p">()</span> <span class="k">if</span> <span class="n">shown</span> <span class="o">!=</span> <span class="n">own</span><span class="p">]</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">choice</span> <span class="k">for</span> <span class="n">choice</span> <span class="ow">in</span> <span class="n">choices</span> <span class="k">if</span> <span class="n">_has_arguments</span><span class="p">(</span><span class="n">choice</span><span class="p">)</span> <span class="ow">or</span> <span class="n">choice</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">covered</span><span class="p">]</span>
+        <span class="n">covered</span> <span class="o">=</span> <span class="p">[</span><span class="n">shown</span> <span class="k">for</span> <span class="n">shown</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shown_properties</span><span class="o">.</span><span class="n">properties</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">shown</span><span class="o">.</span><span class="n">has_same_content</span><span class="p">(</span><span class="n">own</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">choice</span>
+            <span class="k">for</span> <span class="n">choice</span> <span class="ow">in</span> <span class="n">choices</span>
+            <span class="k">if</span> <span class="n">_has_content_arguments</span><span class="p">(</span><span class="n">choice</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">shown</span><span class="o">.</span><span class="n">has_same_content</span><span class="p">(</span><span class="n">choice</span><span class="p">())</span> <span class="k">for</span> <span class="n">shown</span> <span class="ow">in</span> <span class="n">covered</span><span class="p">)</span>
+        <span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_on_shown_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">choices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_choices</span><span class="p">()</span>
@@ -823,7 +843,10 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_on_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hovers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_hovers</span><span class="o">.</span><span class="n">remove_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_editors_properties</span><span class="p">())</span>
+        <span class="n">shown</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_editors_properties</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hovers</span><span class="o">.</span><span class="n">remove_values</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">hover</span> <span class="k">for</span> <span class="n">hover</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hovers</span><span class="o">.</span><span class="n">shown</span><span class="p">()</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">hover</span><span class="o">.</span><span class="n">has_same_content</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">shown</span><span class="p">)]</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">+=</span> <span class="mi">1</span></div>
 
 </pre></div>

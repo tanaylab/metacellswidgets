@@ -546,6 +546,37 @@
 </li>
 
 <li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.properties.LogBase">
+<code class="docutils literal notranslate">
+<span class="pre">LogBase
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.LogBase.Log10Base">
+<code class="docutils literal notranslate">
+<span class="pre">LogBase.Log10Base
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.LogBase.Log2Base">
+<code class="docutils literal notranslate">
+<span class="pre">LogBase.Log2Base
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l3">
 <a class="reference internal" href="#metacellswidgets.properties.MeanCellsPerMetacell">
 <code class="docutils literal notranslate">
 <span class="pre">MeanCellsPerMetacell
@@ -884,6 +915,24 @@
 <a class="reference internal" href="#metacellswidgets.properties.Property.property_name">
 <code class="docutils literal notranslate">
 <span class="pre">Property.property_name
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Property.look_arguments">
+<code class="docutils literal notranslate">
+<span class="pre">Property.look_arguments()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.properties.Property.has_same_content">
+<code class="docutils literal notranslate">
+<span class="pre">Property.has_same_content()
 </span>
 </code>
 </a>
@@ -1380,6 +1429,27 @@ says what kind of values it produces (its
 a property, and how to fill a graph from it, is implemented separately for each kind of data source.
 </p>
 
+<p>Some arguments change only how a property is shown, not its data: 
+<code class="docutils literal notranslate">
+<span class="pre">show_legend
+</span>
+</code>, and for a property shown on a log
+scale, 
+<code class="docutils literal notranslate">
+<span class="pre">log_base
+</span>
+</code>. They mirror the keywords of the property’s data source in 
+<code class="docutils literal notranslate">
+<span class="pre">metacellsgraphspy
+</span>
+</code>, and 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code>
+leaves the data source’s default. They are the property’s look arguments.
+</p>
+
 <dl class="py class">
 
 <dt class="sig sig-object py" id="metacellswidgets.properties.Block">
@@ -1400,6 +1470,32 @@ a property, and how to fill a graph from it, is implemented separately for each 
 <span class="pre">Block
 </span>
 </span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="keyword-only-separator o">
+<abbr title="Keyword-only parameters separator (PEP 3102)">
+<span class="pre">*
+</span>
+</abbr>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">show_legend
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
 <a class="headerlink" href="#metacellswidgets.properties.Block" title="Link to this definition">
 </a>
 </dt>
@@ -1407,6 +1503,29 @@ a property, and how to fill a graph from it, is implemented separately for each 
 <dd>
 <p>The block each entry belongs to.
 </p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>show_legend
+</strong> (
+<em>bool
+</em>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+
+</dd>
+
+</dl>
 
 <dl class="py method">
 
@@ -2114,6 +2233,28 @@ kind of data source implements this for the properties it supports; for any othe
 <span class="pre">name
 </span>
 </span>
+</em>, 
+<em class="sig-param">
+<span class="keyword-only-separator o">
+<abbr title="Keyword-only parameters separator (PEP 3102)">
+<span class="pre">*
+</span>
+</abbr>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">show_legend
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
 </em>
 <span class="sig-paren">)
 </span>
@@ -2132,7 +2273,11 @@ kind of data source implements this for the properties it supports; for any othe
 <code class="docutils literal notranslate">
 <span class="pre">name
 </span>
-</code> of each entry.
+</code> of each entry. It takes the look argument 
+<code class="docutils literal notranslate">
+<span class="pre">show_legend
+</span>
+</code>.
 </p>
 
 <dl class="field-list simple">
@@ -2143,12 +2288,31 @@ kind of data source implements this for the properties it supports; for any othe
 </dt>
 
 <dd class="field-odd">
+<ul class="simple">
+
+<li>
 <p>
 <strong>name
 </strong> (
 <em>str
 </em>)
 </p>
+</li>
+
+<li>
+<p>
+<strong>show_legend
+</strong> (
+<em>bool
+</em>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
 
 </dd>
 
@@ -3062,6 +3226,42 @@ kind of data source implements this for the properties it supports; for any othe
 <span class="pre">gene
 </span>
 </span>
+</em>, 
+<em class="sig-param">
+<span class="keyword-only-separator o">
+<abbr title="Keyword-only parameters separator (PEP 3102)">
+<span class="pre">*
+</span>
+</abbr>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">show_legend
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">log_base
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
 </em>
 <span class="sig-paren">)
 </span>
@@ -3080,7 +3280,16 @@ kind of data source implements this for the properties it supports; for any othe
 <code class="docutils literal notranslate">
 <span class="pre">gene
 </span>
-</code> in each entry, shown in log base 2.
+</code> in each entry, shown on a log scale (base 2 by default). It
+takes the look arguments 
+<code class="docutils literal notranslate">
+<span class="pre">show_legend
+</span>
+</code> and 
+<code class="docutils literal notranslate">
+<span class="pre">log_base
+</span>
+</code>.
 </p>
 
 <dl class="field-list simple">
@@ -3091,12 +3300,46 @@ kind of data source implements this for the properties it supports; for any othe
 </dt>
 
 <dd class="field-odd">
+<ul class="simple">
+
+<li>
 <p>
 <strong>gene
 </strong> (
 <em>str
 </em>)
 </p>
+</li>
+
+<li>
+<p>
+<strong>show_legend
+</strong> (
+<em>bool
+</em>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>log_base
+</strong> (
+<a class="reference internal" href="#metacellswidgets.properties.LogBase" title="somegraphspy.common.LogBase">
+<em>LogBase
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
 
 </dd>
 
@@ -4556,6 +4799,32 @@ kind of data source implements this for the properties it supports; for any othe
 <span class="pre">IsLateral
 </span>
 </span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="keyword-only-separator o">
+<abbr title="Keyword-only parameters separator (PEP 3102)">
+<span class="pre">*
+</span>
+</abbr>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">show_legend
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
 <a class="headerlink" href="#metacellswidgets.properties.IsLateral" title="Link to this definition">
 </a>
 </dt>
@@ -4563,6 +4832,29 @@ kind of data source implements this for the properties it supports; for any othe
 <dd>
 <p>Whether each gene is lateral.
 </p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>show_legend
+</strong> (
+<em>bool
+</em>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+
+</dd>
+
+</dl>
 
 <dl class="py method">
 
@@ -5325,6 +5617,32 @@ kind of data source implements this for the properties it supports; for any othe
 <span class="pre">IsMarker
 </span>
 </span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="keyword-only-separator o">
+<abbr title="Keyword-only parameters separator (PEP 3102)">
+<span class="pre">*
+</span>
+</abbr>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">show_legend
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
 <a class="headerlink" href="#metacellswidgets.properties.IsMarker" title="Link to this definition">
 </a>
 </dt>
@@ -5332,6 +5650,29 @@ kind of data source implements this for the properties it supports; for any othe
 <dd>
 <p>Whether each gene is a marker gene.
 </p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>show_legend
+</strong> (
+<em>bool
+</em>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+
+</dd>
+
+</dl>
 
 <dl class="py method">
 
@@ -6076,6 +6417,126 @@ kind of data source implements this for the properties it supports; for any othe
 
 <dl class="py class">
 
+<dt class="sig sig-object py" id="metacellswidgets.properties.LogBase">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.properties.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">LogBase
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">values
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/somegraphspy/common.html#LogBase">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.properties.LogBase" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The base of the logarithm used to scale values. See the Julia
+
+<a class="reference external" href="https://tanaylab.github.io/SomeGraphs.jl/v0.2.0/common.html#SomeGraphs.Common.LogBase">documentation
+</a>
+for details.
+</p>
+
+<dl class="py attribute">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.LogBase.Log10Base">
+
+<span class="sig-name descname">
+<span class="pre">Log10Base
+</span>
+</span>
+<span class="property">
+<span class="w"> 
+</span>
+<span class="p">
+<span class="pre">=
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="pre">'Log10Base'
+</span>
+</span>
+<a class="headerlink" href="#metacellswidgets.properties.LogBase.Log10Base" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Scale the values using a base 10 logarithm.
+</p>
+
+</dd>
+</dl>
+
+
+<dl class="py attribute">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.LogBase.Log2Base">
+
+<span class="sig-name descname">
+<span class="pre">Log2Base
+</span>
+</span>
+<span class="property">
+<span class="w"> 
+</span>
+<span class="p">
+<span class="pre">=
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="pre">'Log2Base'
+</span>
+</span>
+<a class="headerlink" href="#metacellswidgets.properties.LogBase.Log2Base" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Scale the values using a base 2 logarithm.
+</p>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
 <dt class="sig sig-object py" id="metacellswidgets.properties.MeanCellsPerMetacell">
 
 <span class="property">
@@ -6094,6 +6555,46 @@ kind of data source implements this for the properties it supports; for any othe
 <span class="pre">MeanCellsPerMetacell
 </span>
 </span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="keyword-only-separator o">
+<abbr title="Keyword-only parameters separator (PEP 3102)">
+<span class="pre">*
+</span>
+</abbr>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">show_legend
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">log_base
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
 <a class="reference internal" href="_modules/metacellswidgets/properties.html#MeanCellsPerMetacell">
 <span class="viewcode-link">
 <span class="pre">[source]
@@ -6105,8 +6606,60 @@ kind of data source implements this for the properties it supports; for any othe
 </dt>
 
 <dd>
-<p>The mean number of cells per metacell of each entry.
+<p>The mean number of cells per metacell of each entry. It takes the look arguments 
+<code class="docutils literal notranslate">
+<span class="pre">show_legend
+</span>
+</code> and 
+<code class="docutils literal notranslate">
+<span class="pre">log_base
+</span>
+</code>.
 </p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>show_legend
+</strong> (
+<em>bool
+</em>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>log_base
+</strong> (
+<a class="reference internal" href="#metacellswidgets.properties.LogBase" title="somegraphspy.common.LogBase">
+<em>LogBase
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
 
 <dl class="py attribute">
 
@@ -6759,6 +7312,46 @@ kind of data source implements this for the properties it supports; for any othe
 <span class="pre">MeanTotalUMIsPerCell
 </span>
 </span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="keyword-only-separator o">
+<abbr title="Keyword-only parameters separator (PEP 3102)">
+<span class="pre">*
+</span>
+</abbr>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">show_legend
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">log_base
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
 <a class="reference internal" href="_modules/metacellswidgets/properties.html#MeanTotalUMIsPerCell">
 <span class="viewcode-link">
 <span class="pre">[source]
@@ -6770,8 +7363,60 @@ kind of data source implements this for the properties it supports; for any othe
 </dt>
 
 <dd>
-<p>The mean total number of UMIs per cell of each entry.
+<p>The mean total number of UMIs per cell of each entry. It takes the look arguments 
+<code class="docutils literal notranslate">
+<span class="pre">show_legend
+</span>
+</code> and 
+<code class="docutils literal notranslate">
+<span class="pre">log_base
+</span>
+</code>.
 </p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>show_legend
+</strong> (
+<em>bool
+</em>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>log_base
+</strong> (
+<a class="reference internal" href="#metacellswidgets.properties.LogBase" title="somegraphspy.common.LogBase">
+<em>LogBase
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
 
 <dl class="py attribute">
 
@@ -7424,6 +8069,46 @@ kind of data source implements this for the properties it supports; for any othe
 <span class="pre">MeanTotalUMIsPerMetacell
 </span>
 </span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="keyword-only-separator o">
+<abbr title="Keyword-only parameters separator (PEP 3102)">
+<span class="pre">*
+</span>
+</abbr>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">show_legend
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">log_base
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
 <a class="reference internal" href="_modules/metacellswidgets/properties.html#MeanTotalUMIsPerMetacell">
 <span class="viewcode-link">
 <span class="pre">[source]
@@ -7435,8 +8120,61 @@ kind of data source implements this for the properties it supports; for any othe
 </dt>
 
 <dd>
-<p>The mean total number of UMIs per metacell of each entry.
+<p>The mean total number of UMIs per metacell of each entry. It takes the look arguments 
+<code class="docutils literal notranslate">
+<span class="pre">show_legend
+</span>
+</code> and
+
+<code class="docutils literal notranslate">
+<span class="pre">log_base
+</span>
+</code>.
 </p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>show_legend
+</strong> (
+<em>bool
+</em>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>log_base
+</strong> (
+<a class="reference internal" href="#metacellswidgets.properties.LogBase" title="somegraphspy.common.LogBase">
+<em>LogBase
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
 
 <dl class="py attribute">
 
@@ -8089,6 +8827,46 @@ kind of data source implements this for the properties it supports; for any othe
 <span class="pre">NCells
 </span>
 </span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="keyword-only-separator o">
+<abbr title="Keyword-only parameters separator (PEP 3102)">
+<span class="pre">*
+</span>
+</abbr>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">show_legend
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">log_base
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
 <a class="headerlink" href="#metacellswidgets.properties.NCells" title="Link to this definition">
 </a>
 </dt>
@@ -8096,6 +8874,50 @@ kind of data source implements this for the properties it supports; for any othe
 <dd>
 <p>The number of cells of each entry.
 </p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>show_legend
+</strong> (
+<em>bool
+</em>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>log_base
+</strong> (
+<a class="reference internal" href="#metacellswidgets.properties.LogBase" title="somegraphspy.common.LogBase">
+<em>LogBase
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
 
 <dl class="py method">
 
@@ -8796,6 +9618,46 @@ kind of data source implements this for the properties it supports; for any othe
 <span class="pre">NMetacells
 </span>
 </span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="keyword-only-separator o">
+<abbr title="Keyword-only parameters separator (PEP 3102)">
+<span class="pre">*
+</span>
+</abbr>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">show_legend
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">log_base
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
 <a class="headerlink" href="#metacellswidgets.properties.NMetacells" title="Link to this definition">
 </a>
 </dt>
@@ -8803,6 +9665,50 @@ kind of data source implements this for the properties it supports; for any othe
 <dd>
 <p>The number of metacells of each entry.
 </p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>show_legend
+</strong> (
+<em>bool
+</em>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>log_base
+</strong> (
+<a class="reference internal" href="#metacellswidgets.properties.LogBase" title="somegraphspy.common.LogBase">
+<em>LogBase
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
 
 <dl class="py method">
 
@@ -9619,6 +10525,131 @@ kind of data source implements this for the properties it supports; for any othe
 </code>
 </a>).
 </p>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Property.look_arguments">
+
+<span class="sig-name descname">
+<span class="pre">look_arguments
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/properties.html#Property.look_arguments">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.properties.Property.look_arguments" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The values of the look arguments, which change only how the property is shown (e.g. 
+<code class="docutils literal notranslate">
+<span class="pre">show_legend
+</span>
+</code>), by their
+names. A kind of data source passes them to the property’s data source.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<em>Dict
+</em>[str, 
+<em>Any
+</em>]
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.properties.Property.has_same_content">
+
+<span class="sig-name descname">
+<span class="pre">has_same_content
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">other
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/properties.html#Property.has_same_content">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.properties.Property.has_same_content" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Whether the 
+<code class="docutils literal notranslate">
+<span class="pre">other
+</span>
+</code> is a property of the same class, with the same values of the arguments other than the look
+arguments, so both show the same data.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>other
+</strong> (
+<em>Any
+</em>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>bool
+</p>
+
+</dd>
+
+</dl>
 
 </dd>
 </dl>
@@ -10587,6 +11618,46 @@ A property without arguments has no editor.
 <span class="pre">TotalUMIs
 </span>
 </span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="keyword-only-separator o">
+<abbr title="Keyword-only parameters separator (PEP 3102)">
+<span class="pre">*
+</span>
+</abbr>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">show_legend
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">log_base
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
 <a class="headerlink" href="#metacellswidgets.properties.TotalUMIs" title="Link to this definition">
 </a>
 </dt>
@@ -10594,6 +11665,50 @@ A property without arguments has no editor.
 <dd>
 <p>The total number of UMIs of each entry.
 </p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>show_legend
+</strong> (
+<em>bool
+</em>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>log_base
+</strong> (
+<a class="reference internal" href="#metacellswidgets.properties.LogBase" title="somegraphspy.common.LogBase">
+<em>LogBase
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
 
 <dl class="py method">
 
@@ -11356,6 +12471,32 @@ kind of data source implements this for the properties it supports; for any othe
 <span class="pre">Type
 </span>
 </span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="keyword-only-separator o">
+<abbr title="Keyword-only parameters separator (PEP 3102)">
+<span class="pre">*
+</span>
+</abbr>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">show_legend
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">None
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
 <a class="headerlink" href="#metacellswidgets.properties.Type" title="Link to this definition">
 </a>
 </dt>
@@ -11363,6 +12504,29 @@ kind of data source implements this for the properties it supports; for any othe
 <dd>
 <p>The type of each entry, such as the cell type of each metacell, shown in its color.
 </p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>show_legend
+</strong> (
+<em>bool
+</em>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+
+</dd>
+
+</dl>
 
 <dl class="py method">
 
@@ -13015,6 +14179,10 @@ gives it the name
 <code class="docutils literal notranslate">
 <span class="pre">property
 </span>
+</code>. Its objects take the look argument 
+<code class="docutils literal notranslate">
+<span class="pre">show_legend
+</span>
 </code>.
 </p>
 
@@ -13065,11 +14233,9 @@ gives it the name
 </dt>
 
 <dd class="field-even">
-<p>type[
-<a class="reference internal" href="#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
-<em>Property
+<p>
+<em>Any
 </em>
-</a>]
 </p>
 
 </dd>
@@ -13146,6 +14312,10 @@ gives it the name
 <code class="docutils literal notranslate">
 <span class="pre">property
 </span>
+</code>. Its objects take the look argument 
+<code class="docutils literal notranslate">
+<span class="pre">show_legend
+</span>
 </code>.
 </p>
 
@@ -13196,11 +14366,9 @@ gives it the name
 </dt>
 
 <dd class="field-even">
-<p>type[
-<a class="reference internal" href="#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
-<em>Property
+<p>
+<em>Any
 </em>
-</a>]
 </p>
 
 </dd>
@@ -13277,6 +14445,14 @@ The data gives it the name
 <code class="docutils literal notranslate">
 <span class="pre">property
 </span>
+</code>. Its objects take the look arguments 
+<code class="docutils literal notranslate">
+<span class="pre">show_legend
+</span>
+</code> and 
+<code class="docutils literal notranslate">
+<span class="pre">log_base
+</span>
 </code>.
 </p>
 
@@ -13327,11 +14503,9 @@ The data gives it the name
 </dt>
 
 <dd class="field-even">
-<p>type[
-<a class="reference internal" href="#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
-<em>Property
+<p>
+<em>Any
 </em>
-</a>]
 </p>
 
 </dd>

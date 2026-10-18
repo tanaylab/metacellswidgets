@@ -126,10 +126,11 @@ def _line_exists(line_axis: str, column: str) -> Callable[[type[Property], AnnDa
     return exists_line
 
 
-# The implementation of ``fill`` for a table line, which calls the line's ``fill`` function.
+# The implementation of ``fill`` for a table line, which calls the line's ``fill`` function, with the look arguments of
+# the property.
 def _line_fill(fill: Callable[..., None]) -> Callable[[Property, AnnDataWidgets, VectorDataSinks, str], None]:
-    def fill_line(_self: Property, source: AnnDataWidgets, sinks: VectorDataSinks, _axis: str) -> None:
-        fill(sinks, source.adata)
+    def fill_line(self: Property, source: AnnDataWidgets, sinks: VectorDataSinks, _axis: str) -> None:
+        fill(sinks, source.adata, **self.look_arguments())
 
     return fill_line
 
@@ -145,8 +146,14 @@ def _has_type(_cls: type, source: AnnDataWidgets, axis: str) -> bool:
 
 
 @implements(Type.fill, AnnDataWidgets)
-def _fill_type(_self: Property, source: AnnDataWidgets, sinks: VectorDataSinks, _axis: str) -> None:
-    mg.ad_fill_type(sinks, source.adata, type_property=source.type_property, type_colors_csv=source.type_colors_csv)
+def _fill_type(self: Property, source: AnnDataWidgets, sinks: VectorDataSinks, _axis: str) -> None:
+    mg.ad_fill_type(
+        sinks,
+        source.adata,
+        type_property=source.type_property,
+        type_colors_csv=source.type_colors_csv,
+        **self.look_arguments(),
+    )
 
 
 @implements(GeneExpression.exists, AnnDataWidgets)
@@ -156,7 +163,7 @@ def _has_gene_expression(_cls: type, _source: AnnDataWidgets, axis: str) -> bool
 
 @implements(GeneExpression.fill, AnnDataWidgets)
 def _fill_gene_expression(self: GeneExpression, source: AnnDataWidgets, sinks: VectorDataSinks, _axis: str) -> None:
-    mg.ad_fill_gene_expression(sinks, source.adata, gene=self.gene)
+    mg.ad_fill_gene_expression(sinks, source.adata, gene=self.gene, **self.look_arguments())
 
 
 @implements(GeneExpression.editor, AnnDataWidgets)

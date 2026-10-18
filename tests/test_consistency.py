@@ -9,6 +9,7 @@ from typing import Type
 import pytest
 
 import metacellswidgets as mw
+from metacellswidgets.editors import _has_content_arguments
 
 _KINDS: List[Type[mw.SourceWidgets]] = [mw.DafWidgets, mw.AnnDataWidgets]
 
@@ -42,9 +43,9 @@ def _is_implemented(owner: type, method: str, kind: Type[mw.SourceWidgets]) -> b
 
 def _has_arguments(property_class: Type[mw.Property]) -> bool:
     """
-    Whether the ``property_class`` takes any arguments.
+    Whether the ``property_class`` takes any arguments other than look arguments (which need no editor of their own).
     """
-    return property_class.__init__ is not object.__init__
+    return _has_content_arguments(property_class)
 
 
 @pytest.mark.parametrize("kind, axis, property_class", _registrations())

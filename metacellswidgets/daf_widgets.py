@@ -183,10 +183,11 @@ def _has_category(cls: type[Property], source: DafWidgets, axis: str) -> bool:
     return source._has_vectors(axis, cls.property_name) and source.daf.has_axis(cls.property_name)
 
 
-# The implementation of ``fill`` for a table line, which calls the line's ``fill`` function.
+# The implementation of ``fill`` for a table line, which calls the line's ``fill`` function, with the look arguments of
+# the property.
 def _line_fill(fill: Callable[..., None]) -> Callable[[Property, DafWidgets, VectorDataSinks, str], None]:
-    def fill_line(_self: Property, source: DafWidgets, sinks: VectorDataSinks, axis: str) -> None:
-        fill(sinks, source.daf, axis=axis)
+    def fill_line(self: Property, source: DafWidgets, sinks: VectorDataSinks, axis: str) -> None:
+        fill(sinks, source.daf, axis=axis, **self.look_arguments())
 
     return fill_line
 
@@ -211,7 +212,7 @@ def _has_gene_expression(_cls: type, source: DafWidgets, axis: str) -> bool:
 
 @implements(GeneExpression.fill, DafWidgets)
 def _fill_gene_expression(self: GeneExpression, source: DafWidgets, sinks: VectorDataSinks, axis: str) -> None:
-    mg.fill_gene_expression(sinks, source.daf, axis=axis, gene=self.gene)
+    mg.fill_gene_expression(sinks, source.daf, axis=axis, gene=self.gene, **self.look_arguments())
 
 
 @implements(GeneExpression.editor, DafWidgets)
@@ -228,9 +229,9 @@ def _has_mean_cells_per_metacell(_cls: type, source: DafWidgets, axis: str) -> b
 
 @implements(MeanCellsPerMetacell.fill, DafWidgets)
 def _fill_mean_cells_per_metacell(
-    _self: MeanCellsPerMetacell, source: DafWidgets, sinks: VectorDataSinks, axis: str
+    self: MeanCellsPerMetacell, source: DafWidgets, sinks: VectorDataSinks, axis: str
 ) -> None:
-    mg.fill_mean_cells_per_metacell(sinks, source.daf, axis=axis)
+    mg.fill_mean_cells_per_metacell(sinks, source.daf, axis=axis, **self.look_arguments())
 
 
 @implements(MeanTotalUMIsPerMetacell.exists, DafWidgets)
@@ -240,9 +241,9 @@ def _has_mean_total_umis_per_metacell(_cls: type, source: DafWidgets, axis: str)
 
 @implements(MeanTotalUMIsPerMetacell.fill, DafWidgets)
 def _fill_mean_total_umis_per_metacell(
-    _self: MeanTotalUMIsPerMetacell, source: DafWidgets, sinks: VectorDataSinks, axis: str
+    self: MeanTotalUMIsPerMetacell, source: DafWidgets, sinks: VectorDataSinks, axis: str
 ) -> None:
-    mg.fill_mean_total_UMIs_per_metacell(sinks, source.daf, axis=axis)
+    mg.fill_mean_total_UMIs_per_metacell(sinks, source.daf, axis=axis, **self.look_arguments())
 
 
 @implements(MeanTotalUMIsPerCell.exists, DafWidgets)
@@ -252,9 +253,9 @@ def _has_mean_total_umis_per_cell(_cls: type, source: DafWidgets, axis: str) -> 
 
 @implements(MeanTotalUMIsPerCell.fill, DafWidgets)
 def _fill_mean_total_umis_per_cell(
-    _self: MeanTotalUMIsPerCell, source: DafWidgets, sinks: VectorDataSinks, axis: str
+    self: MeanTotalUMIsPerCell, source: DafWidgets, sinks: VectorDataSinks, axis: str
 ) -> None:
-    mg.fill_mean_total_UMIs_per_cell(sinks, source.daf, axis=axis)
+    mg.fill_mean_total_UMIs_per_cell(sinks, source.daf, axis=axis, **self.look_arguments())
 
 
 @implements(BooleanMask.exists, DafWidgets)
@@ -264,7 +265,7 @@ def _has_boolean_mask(_cls: type, source: DafWidgets, axis: str) -> bool:
 
 @implements(BooleanMask.fill, DafWidgets)
 def _fill_boolean_mask(self: BooleanMask, source: DafWidgets, sinks: VectorDataSinks, axis: str) -> None:
-    mg.fill_boolean(sinks, source.daf, axis=axis, property=self.name)
+    mg.fill_boolean(sinks, source.daf, axis=axis, property=self.name, **self.look_arguments())
 
 
 @implements(BooleanMask.editor, DafWidgets)
