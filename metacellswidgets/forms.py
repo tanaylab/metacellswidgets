@@ -29,6 +29,7 @@ from typing import List
 from typing import Literal
 from typing import Optional
 from typing import Sequence
+from typing import Tuple
 from typing import Type
 from typing import Union
 from typing import overload
@@ -62,6 +63,8 @@ from .rewrite import _claim_cell_rewrite
 from .rewrite import _current_cell_source
 from .rewrite import _rewritten_cell
 from .rewrite import _rewritten_menu_cell
+from .selections import _points_key
+from .selections import _without_selection
 from .sources import SourceWidgets
 from .tweaks import Tweak
 from .tweaks import TweakPicker
@@ -77,7 +80,7 @@ __all__: List[str] = [
 _Format = Literal["plotly", "svg", "png"]
 
 
-class GraphForm(Arguments):
+class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
     """
     The base class of the forms of graphs. It holds the data ``source`` the graph is drawn from, and the values of the
     graph's arguments (see :py:class:`~metacellswidgets.common.Arguments`). A graph class must derive directly from this
@@ -90,6 +93,10 @@ class GraphForm(Arguments):
     # The data source is written into the code of the cell as the receiver of the call (e.g. ``source.gene_gene(...)``),
     # not as an argument.
     _not_arguments: ClassVar[FrozenSet[str]] = frozenset(["source"])
+
+    # The arguments which hold the selection of a graph which has one (e.g. ``selected_box``). A graph shown with other
+    # points than those the selection was made on clears them.
+    _selection_arguments: ClassVar[FrozenSet[str]] = frozenset()
 
     # Where in its cell the form was created, if it was created by a method of a kind of data source from the top level
     # of the running cell. Set by ``graph_constructor``.
@@ -105,6 +112,11 @@ class GraphForm(Arguments):
         self._bound: Dict[str, Widget] = {}
         self._is_dirty = False
         self._held_redraws = 0
+        self._kept_graph: Optional[Graph] = None
+        self._kept_arguments: Optional[Dict[str, Any]] = None
+        # The points the selection was made on (see ``_points_key``), or ``None`` if it wasn't made in a shown graph
+        # (e.g. it was given in the code of the cell).
+        self._selection_points: Optional[Any] = None
 
     @classmethod
     def exists(cls, source: SourceWidgets) -> bool:  # pylint: disable=unused-argument
@@ -130,6 +142,42 @@ class GraphForm(Arguments):
         for tweak in self.tweaks or []:
             tweak.apply(graph, self.source)
         return graph
+
+    def _shown_graph(self) -> Graph:
+        # The graph, to show. If its points differ from those the selection was made on, the selection is cleared (only
+        # a change of the look keeps it). The graph is kept, with the arguments it was built from (not counting the
+        # selection), so what is selected in it can be computed without building it again.
+        graph = self.graph()
+        points = _points_key(graph)
+        has_selection = any(getattr(self, name) is not None for name in self._selection_arguments)
+        if has_selection and self._selection_points is not None and points != self._selection_points:
+            for name in self._selection_arguments:
+                setattr(self, name, None)
+            _without_selection(graph)
+        self._selection_points = points
+        self._kept_graph = graph
+        self._kept_arguments = self._unselected_arguments()
+        return graph
+
+    def _selection_graph(self) -> Graph:
+        # The graph to compute the selected points in: the kept graph, unless an argument other than the selection
+        # changed since it was built (or there is none), and then a new one.
+        if self._kept_graph is None or self._kept_arguments != self._unselected_arguments():
+            return self._shown_graph()
+        return self._kept_graph
+
+    def _unselected_arguments(self) -> Dict[str, Any]:
+        # The arguments, other than the selection.
+        return {name: value for name, value in self.arguments().items() if name not in self._selection_arguments}
+
+    def _on_selection(self, selector: Any) -> None:  # pylint: disable=unused-argument
+        # Store the selection plotly reports by the ``selector`` (a box or a lasso) in the shown graph. A graph with a
+        # selection implements this.
+        return
+
+    def _on_deselect(self) -> None:
+        # Clear the selection, when it is cleared in the shown graph. A graph with a selection implements this.
+        return
 
     def fill_slots(self, graph: Graph) -> None:
         """
@@ -200,7 +248,7 @@ class GraphForm(Arguments):
         # runs on the main thread (which runs Julia), polled by the interactive display.
         if self._is_dirty and self._held_redraws == 0 and self.is_complete():
             self._is_dirty = False
-            redraw(self.graph())
+            redraw(self._shown_graph())
 
     def display(
         self,
@@ -224,7 +272,7 @@ class GraphForm(Arguments):
         form: GraphForm = self
         if interactive:
             form = self._edit(_cell_site(sys._getframe(1)))  # pylint: disable=protected-access
-        _show_graph(form.graph(), format)
+        _show_graph(form._shown_graph(), format)  # pylint: disable=protected-access
         return form
 
     def _tweaks_editor(self) -> ListEditor[Tweak]:
@@ -437,7 +485,7 @@ def _show_menu(
         ),
         replace=True,
     )
-    _show_graph(form.graph(), format)
+    _show_graph(form._shown_graph(), format)  # pylint: disable=protected-access
     return form
 
 
@@ -455,40 +503,53 @@ def _method_name(source: SourceWidgets, graph_class: Type[GraphForm]) -> str:
     return next(name for name, offered in type(source).offered_graphs().items() if offered is graph_class)
 
 
+# The values of the arguments of the forms left during an editing session: per name, the last value and its type
+# annotation.
+_Pool = Dict[str, Tuple[Any, Any]]
+
+
+def _pooled(pool: _Pool, form: GraphForm) -> None:
+    # Put the arguments of the ``form`` into the ``pool``, replacing the earlier values of the same names.
+    hints = typing.get_type_hints(type(form).__init__)
+    for name, value in form.arguments().items():
+        pool[name] = (value, hints.get(name))
+
+
 def _switched_form(
-    graph_class: Type[GraphForm],
-    source: SourceWidgets,
-    remembered: Optional[GraphForm],
-    current: Optional[GraphForm],
+    graph_class: Type[GraphForm], source: SourceWidgets, pool: _Pool, selection_points: Optional[Any]
 ) -> GraphForm:
-    # A form of the ``graph_class`` for the ``source``, to switch to from the ``current`` form (if any). It starts with
-    # the arguments of the ``remembered`` form of the graph (if any), or else with ``None`` for each required argument.
-    # Then it takes the arguments of the ``current`` form which have the same name and type annotation.
-    if remembered is not None:
-        arguments = remembered.arguments()
-    else:
-        parameters = list(inspect.signature(graph_class).parameters.values())[1:]
-        arguments = {parameter.name: None for parameter in parameters if parameter.default is inspect.Parameter.empty}
-    if current is not None:
-        hints = typing.get_type_hints(graph_class.__init__)
-        current_hints = typing.get_type_hints(type(current).__init__)
-        for name, value in current.arguments().items():
-            if name in hints and hints[name] == current_hints.get(name):
-                arguments[name] = value
-    return graph_class(source, **arguments)
+    # A form of the ``graph_class`` for the ``source``, with the values of the ``pool`` whose name and type annotation fit
+    # its arguments, and ``None`` for each of its other required arguments. A selection it takes from the ``pool`` was
+    # made on the ``selection_points``, so it is kept only if the form's graph has the same points.
+    hints = typing.get_type_hints(graph_class.__init__)
+    arguments: Dict[str, Any] = {}
+    for parameter in list(inspect.signature(graph_class).parameters.values())[1:]:
+        if parameter.name in pool and pool[parameter.name][1] == hints.get(parameter.name):
+            arguments[parameter.name] = pool[parameter.name][0]
+        elif parameter.default is inspect.Parameter.empty:
+            arguments[parameter.name] = None
+    form = graph_class(source, **arguments)
+    form._selection_points = selection_points  # pylint: disable=protected-access
+    return form
 
 
 class _EditSession:  # pylint: disable=too-many-instance-attributes
     # The editor of a form (or, with no form, of a graph to choose), shown until "Done" is clicked. With a ``tree``, it
     # also has a menu of its graphs, and a "Graphs" button which shows or hides it. The menu is shown at first only if
     # there is no form. Choosing a graph in the menu replaces the edited form with one of the chosen graph (see
-    # ``_switched_form``). The session remembers the last form of each graph, so going back to a graph restores it.
+    # ``_switched_form``). The session pools the values of the arguments of the forms it leaves, so values set in one
+    # graph reach any later graph which has them, and going back to a graph restores them.
 
     def __init__(self, source: SourceWidgets, form: Optional[GraphForm], tree: Optional[Branch] = None) -> None:
         self._source = source
         self._form = form
-        self._remembered: Dict[Type[GraphForm], GraphForm] = {}
-        self._figure = FigureWidget(form.graph().figure if form is not None and form.is_complete() else Figure())
+        self._pool: _Pool = {}
+        self._pooled_selection_points: Optional[Any] = None
+        self._figure = FigureWidget(
+            form._shown_graph().figure  # pylint: disable=protected-access
+            if form is not None and form.is_complete()
+            else Figure()
+        )
         self._done = Button(description="Done", button_style="primary")
         self._errors = Output()
         self._body = VBox([] if form is None else self._form_widgets(form))
@@ -504,6 +565,7 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
             toolbar.append(graphs)
             rows.append(self._menu)
         self._editor = VBox([HBox(toolbar), *rows, self._body, self._figure, self._errors])
+        self._watch_selection()
         self._update_done()
 
     def run(self) -> GraphForm:
@@ -533,9 +595,7 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
             self._update_done()
             try:
                 if self._form is not None:
-                    self._form._poll_redraw(  # pylint: disable=protected-access
-                        lambda graph: _replace_figure(self._figure, graph.figure)
-                    )
+                    self._form._poll_redraw(lambda graph: self._draw(graph.figure))  # pylint: disable=protected-access
             except Exception:  # pylint: disable=broad-except
                 with self._errors:
                     traceback.print_exc()
@@ -564,24 +624,47 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         _on_main_thread(lambda: self._switch(change["new"]))
 
     def _switch(self, graph_class: Optional[Type[GraphForm]]) -> None:
-        # Edit a form of the ``graph_class`` (if any) instead of the current one, which is remembered.
+        # Edit a form of the ``graph_class`` (if any) instead of the current one, whose values are pooled.
         try:
             current = self._form
             if current is not None:
-                self._remembered[type(current)] = current
+                _pooled(self._pool, current)
+                if current._selection_arguments:  # pylint: disable=protected-access
+                    self._pooled_selection_points = current._selection_points  # pylint: disable=protected-access
             if graph_class is None:
                 self._form = None
             else:
-                remembered = self._remembered.get(graph_class)
-                self._form = _switched_form(graph_class, self._source, remembered, current)
+                self._form = _switched_form(graph_class, self._source, self._pool, self._pooled_selection_points)
             self._body.children = [] if self._form is None else self._form_widgets(self._form)
-            _replace_figure(self._figure, Figure())
+            self._draw(Figure())
             if self._form is not None:
                 self._form.request_redraw()
             self._update_done()
         except Exception:  # pylint: disable=broad-except
             with self._errors:
                 traceback.print_exc()
+
+    def _draw(self, figure: Figure) -> None:
+        # Show the ``figure``, and report its selections to the edited form.
+        _replace_figure(self._figure, figure)
+        self._watch_selection()
+
+    def _watch_selection(self) -> None:
+        # Report the selections of the points of the shown figure to the edited form.
+        for trace in self._figure.data:
+            trace.on_selection(self._on_selection)
+            trace.on_deselect(self._on_deselect)
+
+    def _on_selection(self, _trace: Any, _points: Any, selector: Any) -> None:
+        # Widget callbacks run on another thread than the one which runs Julia, which reading the graph does.
+        form = self._form
+        if form is not None:
+            _on_main_thread(lambda: form._on_selection(selector))  # pylint: disable=protected-access
+
+    def _on_deselect(self, _trace: Any, _points: Any) -> None:
+        form = self._form
+        if form is not None:
+            form._on_deselect()  # pylint: disable=protected-access
 
 
 def _check_format(format: str) -> None:  # pylint: disable=redefined-builtin

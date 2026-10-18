@@ -3,12 +3,15 @@ Test the menu of the graphs.
 """
 
 from typing import Any
+from typing import Dict
 from typing import List
+from typing import Tuple
 
 import pytest
 
 import metacellswidgets as mw
 from metacellswidgets.forms import _kind_tree
+from metacellswidgets.forms import _pooled
 from metacellswidgets.forms import _switched_form
 
 from .test_genes_heatmap import _daf
@@ -64,30 +67,26 @@ def test_menu_current() -> None:
 
 def test_switched_form() -> None:
     """
-    A form switched to starts with its remembered arguments, or else with ``None`` for the required ones. It then takes
-    the arguments of the current form which have the same name and type annotation (here ``axis`` and ``tweaks``).
+    A form switched to takes the pooled values whose name and type annotation fit it, the later forms' values replacing
+    the earlier ones', and ``None`` for its other required arguments.
     """
     source = mw.DafWidgets(_daf())
-    current = source.genes_heatmap(axis="block", tweaks=[mw.Title(text="T")])
-    blank = _switched_form(mw.GeneGene, source, None, current)
-    assert blank.arguments() == {
-        "axis": "block",
-        "x_gene": None,
-        "y_gene": None,
-        "colors": None,
-        "sizes": None,
-        "hovers": None,
-        "tweaks": [mw.Title(text="T")],
-    }
+    blank = _switched_form(mw.GeneGene, source, {}, None).arguments()
+    assert (blank["axis"], blank["x_gene"], blank["y_gene"], blank["tweaks"]) == ("metacell", None, None, None)
 
-    remembered = source.gene_gene(x_gene="A", y_gene="B", colors=mw.Type())
-    restored = _switched_form(mw.GeneGene, source, remembered, current).arguments()
-    assert (restored["axis"], restored["x_gene"], restored["y_gene"], restored["colors"]) == (
-        "block",
-        "A",
-        "B",
-        mw.Type(),
+    pool: Dict[str, Tuple[Any, Any]] = {}
+    _pooled(pool, source.gene_gene(x_gene="A", y_gene="B", colors=mw.Type(), selected_box=(0.1, 0.2, 0.1, 0.2)))
+    _pooled(pool, source.genes_heatmap(axis="block", tweaks=[mw.Title(text="T")]))
+    restored = _switched_form(mw.GeneGene, source, pool, None)
+    expected = source.gene_gene(
+        axis="block",
+        x_gene="A",
+        y_gene="B",
+        colors=mw.Type(),
+        selected_box=(0.1, 0.2, 0.1, 0.2),
+        tweaks=[mw.Title(text="T")],
     )
+    assert restored.arguments() == expected.arguments()
 
 
 def test_kind_tree() -> None:

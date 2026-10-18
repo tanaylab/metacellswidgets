@@ -23,5 +23,6 @@ from .graphs import *
 from .kernel import *
 from .properties import *
 from .rewrite import *
+from .selections import *
 from .sources import *
 from .tweaks import *

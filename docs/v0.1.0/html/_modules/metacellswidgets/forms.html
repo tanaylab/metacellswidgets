@@ -102,6 +102,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">overload</span>
@@ -135,6 +136,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_current_cell_source</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_rewritten_cell</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_rewritten_menu_cell</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.selections</span><span class="w"> </span><span class="kn">import</span> <span class="n">_points_key</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.selections</span><span class="w"> </span><span class="kn">import</span> <span class="n">_without_selection</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceWidgets</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.tweaks</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tweak</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.tweaks</span><span class="w"> </span><span class="kn">import</span> <span class="n">TweakPicker</span>
@@ -152,7 +155,7 @@
 
 <div class="viewcode-block" id="GraphForm">
 <a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">GraphForm</span><span class="p">(</span><span class="n">Arguments</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GraphForm</span><span class="p">(</span><span class="n">Arguments</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-instance-attributes</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The base class of the forms of graphs. It holds the data ``source`` the graph is drawn from, and the values of the</span>
 <span class="sd">    graph's arguments (see :py:class:`~metacellswidgets.common.Arguments`). A graph class must derive directly from this</span>
@@ -165,6 +168,10 @@
     <span class="c1"># The data source is written into the code of the cell as the receiver of the call (e.g. ``source.gene_gene(...)``),</span>
     <span class="c1"># not as an argument.</span>
     <span class="n">_not_arguments</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">FrozenSet</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"source"</span><span class="p">])</span>
+
+    <span class="c1"># The arguments which hold the selection of a graph which has one (e.g. ``selected_box``). A graph shown with other</span>
+    <span class="c1"># points than those the selection was made on clears them.</span>
+    <span class="n">_selection_arguments</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">FrozenSet</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
 
     <span class="c1"># Where in its cell the form was created, if it was created by a method of a kind of data source from the top level</span>
     <span class="c1"># of the running cell. Set by ``graph_constructor``.</span>
@@ -180,6 +187,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_bound</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Widget</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_dirty</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_held_redraws</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kept_graph</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Graph</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kept_arguments</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># The points the selection was made on (see ``_points_key``), or ``None`` if it wasn't made in a shown graph</span>
+        <span class="c1"># (e.g. it was given in the code of the cell).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_selection_points</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="GraphForm.exists">
 <a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.exists">[docs]</a>
@@ -214,6 +226,42 @@
             <span class="n">tweak</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">graph</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_shown_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Graph</span><span class="p">:</span>
+        <span class="c1"># The graph, to show. If its points differ from those the selection was made on, the selection is cleared (only</span>
+        <span class="c1"># a change of the look keeps it). The graph is kept, with the arguments it was built from (not counting the</span>
+        <span class="c1"># selection), so what is selected in it can be computed without building it again.</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">()</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">_points_key</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="n">has_selection</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selection_arguments</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_selection</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selection_points</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">points</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selection_points</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selection_arguments</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">_without_selection</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_selection_points</span> <span class="o">=</span> <span class="n">points</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kept_graph</span> <span class="o">=</span> <span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kept_arguments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unselected_arguments</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">graph</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_selection_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Graph</span><span class="p">:</span>
+        <span class="c1"># The graph to compute the selected points in: the kept graph, unless an argument other than the selection</span>
+        <span class="c1"># changed since it was built (or there is none), and then a new one.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kept_graph</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kept_arguments</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unselected_arguments</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shown_graph</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kept_graph</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_unselected_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="c1"># The arguments, other than the selection.</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selection_arguments</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument</span>
+        <span class="c1"># Store the selection plotly reports by the ``selector`` (a box or a lasso) in the shown graph. A graph with a</span>
+        <span class="c1"># selection implements this.</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_deselect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Clear the selection, when it is cleared in the shown graph. A graph with a selection implements this.</span>
+        <span class="k">return</span>
 
 <div class="viewcode-block" id="GraphForm.fill_slots">
 <a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.fill_slots">[docs]</a>
@@ -302,7 +350,7 @@
         <span class="c1"># runs on the main thread (which runs Julia), polled by the interactive display.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_dirty</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_held_redraws</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_complete</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_is_dirty</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="n">redraw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">())</span>
+            <span class="n">redraw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shown_graph</span><span class="p">())</span>
 
 <div class="viewcode-block" id="GraphForm.display">
 <a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.display">[docs]</a>
@@ -328,7 +376,7 @@
         <span class="n">form</span><span class="p">:</span> <span class="n">GraphForm</span> <span class="o">=</span> <span class="bp">self</span>
         <span class="k">if</span> <span class="n">interactive</span><span class="p">:</span>
             <span class="n">form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edit</span><span class="p">(</span><span class="n">_cell_site</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span>  <span class="c1"># pylint: disable=protected-access</span>
-        <span class="n">_show_graph</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">graph</span><span class="p">(),</span> <span class="nb">format</span><span class="p">)</span>
+        <span class="n">_show_graph</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">_shown_graph</span><span class="p">(),</span> <span class="nb">format</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span>
         <span class="k">return</span> <span class="n">form</span></div>
 
 
@@ -558,7 +606,7 @@
         <span class="p">),</span>
         <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">_show_graph</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">graph</span><span class="p">(),</span> <span class="nb">format</span><span class="p">)</span>
+    <span class="n">_show_graph</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">_shown_graph</span><span class="p">(),</span> <span class="nb">format</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span>
     <span class="k">return</span> <span class="n">form</span>
 
 
@@ -576,40 +624,53 @@
     <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">offered</span> <span class="ow">in</span> <span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="n">offered_graphs</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">offered</span> <span class="ow">is</span> <span class="n">graph_class</span><span class="p">)</span>
 
 
+<span class="c1"># The values of the arguments of the forms left during an editing session: per name, the last value and its type</span>
+<span class="c1"># annotation.</span>
+<span class="n">_Pool</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_pooled</span><span class="p">(</span><span class="n">pool</span><span class="p">:</span> <span class="n">_Pool</span><span class="p">,</span> <span class="n">form</span><span class="p">:</span> <span class="n">GraphForm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># Put the arguments of the ``form`` into the ``pool``, replacing the earlier values of the same names.</span>
+    <span class="n">hints</span> <span class="o">=</span> <span class="n">typing</span><span class="o">.</span><span class="n">get_type_hints</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">form</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">form</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">pool</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_switched_form</span><span class="p">(</span>
-    <span class="n">graph_class</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">GraphForm</span><span class="p">],</span>
-    <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span>
-    <span class="n">remembered</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GraphForm</span><span class="p">],</span>
-    <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GraphForm</span><span class="p">],</span>
+    <span class="n">graph_class</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">GraphForm</span><span class="p">],</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">pool</span><span class="p">:</span> <span class="n">_Pool</span><span class="p">,</span> <span class="n">selection_points</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GraphForm</span><span class="p">:</span>
-    <span class="c1"># A form of the ``graph_class`` for the ``source``, to switch to from the ``current`` form (if any). It starts with</span>
-    <span class="c1"># the arguments of the ``remembered`` form of the graph (if any), or else with ``None`` for each required argument.</span>
-    <span class="c1"># Then it takes the arguments of the ``current`` form which have the same name and type annotation.</span>
-    <span class="k">if</span> <span class="n">remembered</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">arguments</span> <span class="o">=</span> <span class="n">remembered</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">parameters</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">graph_class</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">1</span><span class="p">:]</span>
-        <span class="n">arguments</span> <span class="o">=</span> <span class="p">{</span><span class="n">parameter</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">parameters</span> <span class="k">if</span> <span class="n">parameter</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span><span class="p">}</span>
-    <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">hints</span> <span class="o">=</span> <span class="n">typing</span><span class="o">.</span><span class="n">get_type_hints</span><span class="p">(</span><span class="n">graph_class</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span>
-        <span class="n">current_hints</span> <span class="o">=</span> <span class="n">typing</span><span class="o">.</span><span class="n">get_type_hints</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">current</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">current</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">hints</span> <span class="ow">and</span> <span class="n">hints</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">==</span> <span class="n">current_hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
-                <span class="n">arguments</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-    <span class="k">return</span> <span class="n">graph_class</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="o">**</span><span class="n">arguments</span><span class="p">)</span>
+    <span class="c1"># A form of the ``graph_class`` for the ``source``, with the values of the ``pool`` whose name and type annotation fit</span>
+    <span class="c1"># its arguments, and ``None`` for each of its other required arguments. A selection it takes from the ``pool`` was</span>
+    <span class="c1"># made on the ``selection_points``, so it is kept only if the form's graph has the same points.</span>
+    <span class="n">hints</span> <span class="o">=</span> <span class="n">typing</span><span class="o">.</span><span class="n">get_type_hints</span><span class="p">(</span><span class="n">graph_class</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span>
+    <span class="n">arguments</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">graph_class</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="k">if</span> <span class="n">parameter</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">pool</span> <span class="ow">and</span> <span class="n">pool</span><span class="p">[</span><span class="n">parameter</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
+            <span class="n">arguments</span><span class="p">[</span><span class="n">parameter</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pool</span><span class="p">[</span><span class="n">parameter</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">parameter</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="n">arguments</span><span class="p">[</span><span class="n">parameter</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">form</span> <span class="o">=</span> <span class="n">graph_class</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="o">**</span><span class="n">arguments</span><span class="p">)</span>
+    <span class="n">form</span><span class="o">.</span><span class="n">_selection_points</span> <span class="o">=</span> <span class="n">selection_points</span>  <span class="c1"># pylint: disable=protected-access</span>
+    <span class="k">return</span> <span class="n">form</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_EditSession</span><span class="p">:</span>  <span class="c1"># pylint: disable=too-many-instance-attributes</span>
     <span class="c1"># The editor of a form (or, with no form, of a graph to choose), shown until "Done" is clicked. With a ``tree``, it</span>
     <span class="c1"># also has a menu of its graphs, and a "Graphs" button which shows or hides it. The menu is shown at first only if</span>
     <span class="c1"># there is no form. Choosing a graph in the menu replaces the edited form with one of the chosen graph (see</span>
-    <span class="c1"># ``_switched_form``). The session remembers the last form of each graph, so going back to a graph restores it.</span>
+    <span class="c1"># ``_switched_form``). The session pools the values of the arguments of the forms it leaves, so values set in one</span>
+    <span class="c1"># graph reach any later graph which has them, and going back to a graph restores them.</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">form</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GraphForm</span><span class="p">],</span> <span class="n">tree</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Branch</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="o">=</span> <span class="n">source</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_form</span> <span class="o">=</span> <span class="n">form</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_remembered</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">GraphForm</span><span class="p">],</span> <span class="n">GraphForm</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span> <span class="o">=</span> <span class="n">FigureWidget</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">graph</span><span class="p">()</span><span class="o">.</span><span class="n">figure</span> <span class="k">if</span> <span class="n">form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">form</span><span class="o">.</span><span class="n">is_complete</span><span class="p">()</span> <span class="k">else</span> <span class="n">Figure</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="p">:</span> <span class="n">_Pool</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pooled_selection_points</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span> <span class="o">=</span> <span class="n">FigureWidget</span><span class="p">(</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">_shown_graph</span><span class="p">()</span><span class="o">.</span><span class="n">figure</span>  <span class="c1"># pylint: disable=protected-access</span>
+            <span class="k">if</span> <span class="n">form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">form</span><span class="o">.</span><span class="n">is_complete</span><span class="p">()</span>
+            <span class="k">else</span> <span class="n">Figure</span><span class="p">()</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_done</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"Done"</span><span class="p">,</span> <span class="n">button_style</span><span class="o">=</span><span class="s2">"primary"</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span> <span class="o">=</span> <span class="n">Output</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_body</span> <span class="o">=</span> <span class="n">VBox</span><span class="p">([]</span> <span class="k">if</span> <span class="n">form</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form_widgets</span><span class="p">(</span><span class="n">form</span><span class="p">))</span>
@@ -625,6 +686,7 @@
             <span class="n">toolbar</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">graphs</span><span class="p">)</span>
             <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_menu</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_editor</span> <span class="o">=</span> <span class="n">VBox</span><span class="p">([</span><span class="n">HBox</span><span class="p">(</span><span class="n">toolbar</span><span class="p">),</span> <span class="o">*</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_watch_selection</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_done</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GraphForm</span><span class="p">:</span>
@@ -654,9 +716,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_done</span><span class="p">()</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_form</span><span class="o">.</span><span class="n">_poll_redraw</span><span class="p">(</span>  <span class="c1"># pylint: disable=protected-access</span>
-                        <span class="k">lambda</span> <span class="n">graph</span><span class="p">:</span> <span class="n">_replace_figure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span>
-                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_form</span><span class="o">.</span><span class="n">_poll_redraw</span><span class="p">(</span><span class="k">lambda</span> <span class="n">graph</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draw</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">figure</span><span class="p">))</span>  <span class="c1"># pylint: disable=protected-access</span>
             <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
                 <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">:</span>
                     <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
@@ -685,24 +745,47 @@
         <span class="n">_on_main_thread</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_switch</span><span class="p">(</span><span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">]))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_switch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_class</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">GraphForm</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># Edit a form of the ``graph_class`` (if any) instead of the current one, which is remembered.</span>
+        <span class="c1"># Edit a form of the ``graph_class`` (if any) instead of the current one, whose values are pooled.</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span>
             <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_remembered</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">current</span><span class="p">)]</span> <span class="o">=</span> <span class="n">current</span>
+                <span class="n">_pooled</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="p">,</span> <span class="n">current</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">current</span><span class="o">.</span><span class="n">_selection_arguments</span><span class="p">:</span>  <span class="c1"># pylint: disable=protected-access</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_pooled_selection_points</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">_selection_points</span>  <span class="c1"># pylint: disable=protected-access</span>
             <span class="k">if</span> <span class="n">graph_class</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_form</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">remembered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remembered</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">graph_class</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_form</span> <span class="o">=</span> <span class="n">_switched_form</span><span class="p">(</span><span class="n">graph_class</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">,</span> <span class="n">remembered</span><span class="p">,</span> <span class="n">current</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_form</span> <span class="o">=</span> <span class="n">_switched_form</span><span class="p">(</span><span class="n">graph_class</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pooled_selection_points</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form_widgets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_form</span><span class="p">)</span>
-            <span class="n">_replace_figure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="p">,</span> <span class="n">Figure</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_draw</span><span class="p">(</span><span class="n">Figure</span><span class="p">())</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_form</span><span class="o">.</span><span class="n">request_redraw</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_done</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
             <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">:</span>
                 <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">figure</span><span class="p">:</span> <span class="n">Figure</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Show the ``figure``, and report its selections to the edited form.</span>
+        <span class="n">_replace_figure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="p">,</span> <span class="n">figure</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_watch_selection</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_watch_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Report the selections of the points of the shown figure to the edited form.</span>
+        <span class="k">for</span> <span class="n">trace</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="n">trace</span><span class="o">.</span><span class="n">on_selection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_selection</span><span class="p">)</span>
+            <span class="n">trace</span><span class="o">.</span><span class="n">on_deselect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_deselect</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_trace</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">_points</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">selector</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Widget callbacks run on another thread than the one which runs Julia, which reading the graph does.</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span>
+        <span class="k">if</span> <span class="n">form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_on_main_thread</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">form</span><span class="o">.</span><span class="n">_on_selection</span><span class="p">(</span><span class="n">selector</span><span class="p">))</span>  <span class="c1"># pylint: disable=protected-access</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_deselect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_trace</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">_points</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span>
+        <span class="k">if</span> <span class="n">form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">_on_deselect</span><span class="p">()</span>  <span class="c1"># pylint: disable=protected-access</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_format</span><span class="p">(</span><span class="nb">format</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pylint: disable=redefined-builtin</span>

@@ -5,9 +5,11 @@ The part of a graph which differs between kinds (e.g. building its base graph fr
 which each kind implements in its own module (see :py:func:`~metacellswidgets.common.implements`).
 """
 
+from typing import Any
 from typing import List
 from typing import Optional
 from typing import Sequence
+from typing import Tuple
 from typing import cast
 
 import numpy as np
@@ -16,6 +18,8 @@ from ipywidgets import Label  # type: ignore
 from ipywidgets import VBox  # type: ignore
 from ipywidgets import Widget  # type: ignore
 from metacellsgraphspy import Entries
+from plotly.callbacks import BoxSelector  # type: ignore
+from plotly.callbacks import LassoSelector  # type: ignore
 from somegraphspy import Graph
 from somegraphspy import HeatmapGraph
 from somegraphspy import PointsGraph
@@ -36,6 +40,10 @@ from .properties import IsLateral
 from .properties import Property
 from .properties import Slot
 from .properties import Type
+from .selections import _box_of
+from .selections import _lasso_of
+from .selections import _selected_names
+from .selections import _selection_data
 from .sources import SourceWidgets
 from .tweaks import Tweak
 
@@ -54,12 +62,18 @@ def _check_hovers(hovers: Optional[Sequence[Property]], shown: Sequence[Optional
         seen.append(hover)
 
 
-class GeneGene(GraphForm):
+class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
     """
     The expression of ``x_gene`` against ``y_gene``, a point per entry of the ``axis``, on log scale. The points may be
     colored by the ``colors`` property, and sized by the ``sizes`` property. The ``hovers`` properties add lines to the
     hover of each point (left out, there are none).
+
+    Some of the points may be selected, by the ``selected_box`` (the minimal X, maximal X, minimal Y and maximal Y) or
+    the ``selected_lasso`` (its vertices), in the units of the data (e.g. gene fractions). At most one of them may be
+    given. :py:meth:`selected_names` gives the names of the selected entries.
     """
+
+    _selection_arguments = frozenset(["selected_box", "selected_lasso"])
 
     def __init__(
         self,
@@ -71,6 +85,8 @@ class GeneGene(GraphForm):
         colors: Optional[Property] = None,
         sizes: Optional[Property] = None,
         hovers: Optional[Sequence[Property]] = None,
+        selected_box: Optional[Tuple[float, float, float, float]] = None,
+        selected_lasso: Optional[Sequence[Tuple[float, float]]] = None,
         tweaks: Optional[Sequence[Tweak]] = None,
     ) -> None:
         super().__init__(source, tweaks)
@@ -82,6 +98,41 @@ class GeneGene(GraphForm):
         self.sizes = sizes
         self.hovers = None if hovers is None else list(hovers)
         _check_hovers(self.hovers, [colors, sizes], "points")
+        if selected_box is not None and selected_lasso is not None:
+            raise ValueError("at most one of selected_box and selected_lasso may be given")
+        self.selected_box: Optional[Tuple[float, float, float, float]] = (
+            None if selected_box is None else (selected_box[0], selected_box[1], selected_box[2], selected_box[3])
+        )
+        self.selected_lasso: Optional[List[Tuple[float, float]]] = (
+            None if selected_lasso is None else list(selected_lasso)
+        )
+
+    def selected_names(self) -> List[str]:
+        """
+        The names of the entries whose points are inside the selection (``selected_box`` or ``selected_lasso``), in the
+        order of the points, or an empty list if there is no selection. This uses the graph last shown, unless an
+        argument other than the selection changed since, and then it builds the graph again.
+        """
+        if self.selected_box is None and self.selected_lasso is None:
+            return []
+        graph = self._selection_graph()
+        assert isinstance(graph, PointsGraph)
+        return _selected_names(graph, self.selected_box, self.selected_lasso)
+
+    def _on_selection(self, selector: Any) -> None:
+        graph = self._kept_graph
+        if not isinstance(graph, PointsGraph):
+            return
+        if isinstance(selector, BoxSelector):
+            self.selected_box = _box_of(graph, selector.xrange, selector.yrange)
+            self.selected_lasso = None
+        elif isinstance(selector, LassoSelector):
+            self.selected_lasso = _lasso_of(graph, selector.xs, selector.ys)
+            self.selected_box = None
+
+    def _on_deselect(self) -> None:
+        self.selected_box = None
+        self.selected_lasso = None
 
     def editor(self) -> Widget:
         # Every kind of data source offering this graph has genes to pick from.
@@ -116,6 +167,8 @@ class GeneGene(GraphForm):
             self.sizes.fill(self.source, graph.points_sizes_vector_fields(), self.axis)
         for hover_property in self.hovers or []:
             hover_property.fill(self.source, graph.points_entities(), self.axis)
+        if self.selected_box is not None or self.selected_lasso is not None:
+            graph.data.selection = _selection_data(self.selected_box, self.selected_lasso)
 
 
 class GenesHeatmap(GraphForm):

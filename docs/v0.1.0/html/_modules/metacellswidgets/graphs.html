@@ -78,9 +78,11 @@
 <span class="sd">which each kind implements in its own module (see :py:func:`~metacellswidgets.common.implements`).</span>
 <span class="sd">"""</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">cast</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -89,6 +91,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">VBox</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">metacellsgraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Entries</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plotly.callbacks</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoxSelector</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plotly.callbacks</span><span class="w"> </span><span class="kn">import</span> <span class="n">LassoSelector</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">HeatmapGraph</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">PointsGraph</span>
@@ -109,6 +113,10 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">Property</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">Slot</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.selections</span><span class="w"> </span><span class="kn">import</span> <span class="n">_box_of</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.selections</span><span class="w"> </span><span class="kn">import</span> <span class="n">_lasso_of</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.selections</span><span class="w"> </span><span class="kn">import</span> <span class="n">_selected_names</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.selections</span><span class="w"> </span><span class="kn">import</span> <span class="n">_selection_data</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceWidgets</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.tweaks</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tweak</span>
 
@@ -129,12 +137,18 @@
 
 <div class="viewcode-block" id="GeneGene">
 <a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GeneGene">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">GeneGene</span><span class="p">(</span><span class="n">GraphForm</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GeneGene</span><span class="p">(</span><span class="n">GraphForm</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-instance-attributes</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The expression of ``x_gene`` against ``y_gene``, a point per entry of the ``axis``, on log scale. The points may be</span>
 <span class="sd">    colored by the ``colors`` property, and sized by the ``sizes`` property. The ``hovers`` properties add lines to the</span>
 <span class="sd">    hover of each point (left out, there are none).</span>
+
+<span class="sd">    Some of the points may be selected, by the ``selected_box`` (the minimal X, maximal X, minimal Y and maximal Y) or</span>
+<span class="sd">    the ``selected_lasso`` (its vertices), in the units of the data (e.g. gene fractions). At most one of them may be</span>
+<span class="sd">    given. :py:meth:`selected_names` gives the names of the selected entries.</span>
 <span class="sd">    """</span>
+
+    <span class="n">_selection_arguments</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"selected_box"</span><span class="p">,</span> <span class="s2">"selected_lasso"</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -146,6 +160,8 @@
         <span class="n">colors</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Property</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">sizes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Property</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">hovers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Property</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">selected_box</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">selected_lasso</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">tweaks</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Tweak</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">tweaks</span><span class="p">)</span>
@@ -157,6 +173,44 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span> <span class="o">=</span> <span class="n">sizes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hovers</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">hovers</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">hovers</span><span class="p">)</span>
         <span class="n">_check_hovers</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hovers</span><span class="p">,</span> <span class="p">[</span><span class="n">colors</span><span class="p">,</span> <span class="n">sizes</span><span class="p">],</span> <span class="s2">"points"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">selected_box</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">selected_lasso</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"at most one of selected_box and selected_lasso may be given"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected_box</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="kc">None</span> <span class="k">if</span> <span class="n">selected_box</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="n">selected_box</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">selected_box</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">selected_box</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">selected_box</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected_lasso</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="kc">None</span> <span class="k">if</span> <span class="n">selected_lasso</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">selected_lasso</span><span class="p">)</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="GeneGene.selected_names">
+<a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GeneGene.selected_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">selected_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The names of the entries whose points are inside the selection (``selected_box`` or ``selected_lasso``), in the</span>
+<span class="sd">        order of the points, or an empty list if there is no selection. This uses the graph last shown, unless an</span>
+<span class="sd">        argument other than the selection changed since, and then it builds the graph again.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_box</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_lasso</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selection_graph</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">PointsGraph</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_selected_names</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_box</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_lasso</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kept_graph</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">PointsGraph</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">BoxSelector</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_box</span> <span class="o">=</span> <span class="n">_box_of</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">selector</span><span class="o">.</span><span class="n">xrange</span><span class="p">,</span> <span class="n">selector</span><span class="o">.</span><span class="n">yrange</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_lasso</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">LassoSelector</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_lasso</span> <span class="o">=</span> <span class="n">_lasso_of</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">selector</span><span class="o">.</span><span class="n">xs</span><span class="p">,</span> <span class="n">selector</span><span class="o">.</span><span class="n">ys</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_box</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_deselect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected_box</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected_lasso</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="GeneGene.editor">
 <a class="viewcode-back" href="../../graphs.html#metacellswidgets.graphs.GeneGene.editor">[docs]</a>
@@ -195,7 +249,9 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">points_sizes_vector_fields</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">hover_property</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hovers</span> <span class="ow">or</span> <span class="p">[]:</span>
-            <span class="n">hover_property</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">points_entities</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span></div>
+            <span class="n">hover_property</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">points_entities</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_box</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_lasso</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">selection</span> <span class="o">=</span> <span class="n">_selection_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_box</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_lasso</span><span class="p">)</span></div>
 </div>
 
 
