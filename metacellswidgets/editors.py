@@ -6,6 +6,7 @@ Each widget has an observable ``value``: the editors' is the property or the twe
 incomplete), and the pickers' is the chosen string (or ``None`` while nothing is chosen).
 """
 
+import functools
 import inspect
 from typing import Any
 from typing import Callable
@@ -31,6 +32,8 @@ from ipywidgets import Dropdown  # type: ignore
 from ipywidgets import HBox  # type: ignore
 from ipywidgets import Layout  # type: ignore
 from ipywidgets import VBox  # type: ignore
+from ipywidgets import Widget  # type: ignore
+from somegraphspy import LogBase
 
 from .common import Arguments
 from .kernel import _on_main_thread
@@ -54,6 +57,9 @@ __all__: List[str] = [
     "PropertyPicker",
     "ShownProperties",
 ]
+
+# The slots in which a property picker edits the look arguments of the picked property (e.g. its legend).
+_LOOK_SLOTS = frozenset([Slot.COLORS, Slot.SIZES])
 
 
 class GeneChoices(Protocol):  # pylint: disable=too-few-public-methods
@@ -404,7 +410,7 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
         _on_main_thread(lambda: self._show(self._choices(), current))
 
 
-class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstract-method
+class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstract-method,too-many-instance-attributes
     """
     Pick a property of the ``source`` for a ``slot``, for the entries of the ``axis``, starting with the ``current``
     property (if any). The choices are the properties registered for the source's kind and the axis, which suit the
@@ -418,6 +424,11 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
     A picker of a hover may be given the ``shown`` properties of its side (see :py:class:`ShownProperties`). Its choices
     then leave out the properties without arguments which the side already shows, other than its own pick. They follow
     the ``shown`` properties as these change.
+
+    In a colors or a sizes slot, the picker also edits the look arguments of the picked property: a "Show legend" toggle,
+    and for a property shown on a log scale, a choice of log2 or log10. While a look argument is ``None``, its widget
+    shows the default of the property's data source (see :py:meth:`Property.look_default`). Changing a widget sets the
+    argument.
     """
 
     def __init__(
@@ -437,9 +448,49 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
         self._on_axis_change = on_axis_change
         self._shown_properties = shown
         self._look: Dict[str, Any] = {} if current is None else current.look_arguments()
+        self._look_box = HBox()
+        self.children = [*self.children, self._look_box]
         self._show(self._choices(), current)
         if shown is not None:
             shown.observe(self._on_shown_change, names="version")
+
+    def _pick(self, choice: Optional[Type[Arguments]], current: Optional[Arguments]) -> None:
+        super()._pick(choice, current)
+        widgets: List[Widget] = []
+        if choice is not None and self._slot in _LOOK_SLOTS:
+            assert issubclass(choice, Property)
+            look_arguments = choice._look_arguments  # pylint: disable=protected-access
+            if "show_legend" in look_arguments:
+                checkbox = Checkbox(
+                    value=self._look_value(choice, "show_legend"), description="Show legend", indent=False
+                )
+                checkbox.observe(functools.partial(self._on_look_change, "show_legend"), names="value")
+                widgets.append(checkbox)
+            if "log_base" in look_arguments:
+                dropdown = Dropdown(
+                    options=[("log2", LogBase.Log2Base), ("log10", LogBase.Log10Base)],
+                    value=self._look_value(choice, "log_base"),
+                )
+                dropdown.observe(functools.partial(self._on_look_change, "log_base"), names="value")
+                widgets.append(dropdown)
+        self._look_box.children = widgets
+
+    def _look_value(self, choice: Type[Property], name: str) -> Any:
+        # The value of the look argument with the ``name`` to show for the ``choice``: the picker's, or else the default.
+        value = self._look.get(name)
+        return choice.look_default(name) if value is None else value
+
+    def _on_look_change(self, name: str, change: Dict) -> None:
+        _on_main_thread(lambda: self._set_look(name, change["new"]))
+
+    def _set_look(self, name: str, value: Any) -> None:
+        # Set the look argument with the ``name`` to the ``value``, in a copy of the shown property, which becomes the
+        # picker's value (so changing the look of a shown default makes it the value).
+        self._look[name] = value
+        shown = self.shown()
+        if isinstance(shown, Property):
+            self._is_default = False
+            self._set_value(type(shown)(**shown.arguments()))
 
     def _set_value(self, picked: Optional[Arguments]) -> None:
         # The picked property takes the picker's values of the look arguments its class has, since the editors of the

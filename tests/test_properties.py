@@ -4,6 +4,7 @@ Test the property base.
 
 from typing import Any
 
+import metacellsgraphspy as mg
 import pytest
 
 import metacellswidgets as mw
@@ -150,19 +151,20 @@ def test_builtin_properties(prop: Property, code: str, eltype: Eltype) -> None:
 
 def test_factories() -> None:
     """
-    A factory makes a property class without arguments, named and documented as given, which a cell writes back as it
-    would a hand-written one.
+    A factory makes a property class whose only arguments are its look arguments, named, documented and filled as
+    given, which a cell writes back as it would a hand-written one.
     """
     for factory, eltype in (
         (mw.size_property, Eltype.NUMBER),
         (mw.category_property, Eltype.CATEGORICAL),
         (mw.boolean_property, Eltype.BOOLEAN),
     ):
-        made = factory("Made", property="made", doc="Something made.")
+        made = factory("Made", property="made", data_source=mg.fill_n_cells, doc="Something made.")
         assert made.__name__ == "Made"
         assert made.__doc__ == "Something made."
         assert made.__module__ == "metacellswidgets.properties"
         assert made.property_name == "made"
+        assert made.data_source is mg.fill_n_cells
         assert made.eltype == eltype
         assert made.shape == Shape.VECTOR
         assert made().code("mw.Made") == "mw.Made()"

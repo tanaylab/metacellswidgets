@@ -60,6 +60,46 @@ def test_picker_keeps_the_look_arguments() -> None:
     assert picker.value == mw.Type(show_legend=False)
 
 
+def test_look_defaults() -> None:
+    """
+    The defaults of the look arguments are those of the properties' data sources.
+    """
+    assert mw.Type.look_default("show_legend") is True
+    assert mw.IsLateral.look_default("show_legend") is False
+    assert mw.TotalUMIs.look_default("log_base") == mw.LogBase.Log10Base
+    assert mw.GeneExpression.look_default("log_base") == mw.LogBase.Log2Base
+
+
+def test_picker_look_widgets() -> None:
+    """
+    In a colors slot, a property picker shows the look arguments, with their defaults while they are ``None``.
+    Changing one sets it. A hover slot has no look widgets.
+    """
+    source = mw.DafWidgets(_full_daf())
+    picker = PropertyPicker(source, Slot.COLORS, "metacell", mw.TotalUMIs())
+    checkbox, dropdown = picker._look_box.children
+    assert checkbox.value is True
+    assert dropdown.value == mw.LogBase.Log10Base
+    assert picker.value == mw.TotalUMIs()
+
+    dropdown.value = mw.LogBase.Log2Base
+    assert picker.value == mw.TotalUMIs(log_base=mw.LogBase.Log2Base)
+    checkbox.value = False
+    assert picker.value == mw.TotalUMIs(show_legend=False, log_base=mw.LogBase.Log2Base)
+
+    assert not PropertyPicker(source, Slot.HOVERS, "metacell", mw.TotalUMIs())._look_box.children
+
+
+def test_picker_look_of_a_default() -> None:
+    """
+    Changing the look of a shown default makes it the value.
+    """
+    picker = PropertyPicker(mw.DafWidgets(_full_daf()), Slot.COLORS, "metacell", default=mw.Type())
+    assert picker.value is None
+    picker._look_box.children[0].value = False
+    assert picker.value == mw.Type(show_legend=False)
+
+
 def test_hovers_compare_content() -> None:
     """
     A hover showing the same data as the colors is an error, whatever their look arguments.

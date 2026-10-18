@@ -93,7 +93,9 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">metacellsgraphspy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mg</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogBase</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">VectorDataSinks</span>
@@ -226,12 +228,33 @@
     <span class="c1">#: The name the data gives the property, for a property made by a factory (e.g., :py:func:`size_property`).</span>
     <span class="n">property_name</span><span class="p">:</span> <span class="nb">str</span>
 
+    <span class="c1">#: The ``metacellsgraphspy`` data source which fills the property from a ``Daf`` data set (e.g.,</span>
+    <span class="c1">#: ``metacellsgraphspy.fill_total_UMIs``). Its keywords are the property's look arguments, with their defaults.</span>
+    <span class="n">data_source</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+
     <span class="c1"># The arguments which change only how the property is shown, not its data (e.g. ``show_legend``).</span>
     <span class="n">_look_arguments</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">FrozenSet</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
+
+    <span class="c1"># The defaults of the look arguments, as read from the data source, per class and name.</span>
+    <span class="n">_look_defaults</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">_give_own_dispatchers</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">Property</span><span class="p">,</span> <span class="p">(</span><span class="s2">"exists"</span><span class="p">,</span> <span class="s2">"fill"</span><span class="p">,</span> <span class="s2">"editor"</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Property.look_default">
+<a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Property.look_default">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">look_default</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The default of the look argument with the ``name``, which applies while the argument is ``None``. This is the</span>
+<span class="sd">        default of the keyword of the same name of the ``data_source``.</span>
+<span class="sd">        """</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Property</span><span class="o">.</span><span class="n">_look_defaults</span><span class="p">:</span>
+            <span class="n">Property</span><span class="o">.</span><span class="n">_look_defaults</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">mg</span><span class="o">.</span><span class="n">function_default</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">data_source</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Property</span><span class="o">.</span><span class="n">_look_defaults</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
+
 
 <div class="viewcode-block" id="Property.look_arguments">
 <a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Property.look_arguments">[docs]</a>
@@ -322,16 +345,19 @@
     <span class="n">class_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="nb">property</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c1"># pylint: disable=redefined-builtin</span>
+    <span class="n">data_source</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
     <span class="n">doc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Make the class of a property which is a count, such as UMIs, named ``class_name`` and documented by the ``doc``.</span>
-<span class="sd">    The data gives it the name ``property``. Its objects take the look arguments ``show_legend`` and ``log_base``.</span>
+<span class="sd">    The data gives it the name ``property``, and the ``data_source`` fills it. Its objects take the look arguments</span>
+<span class="sd">    ``show_legend`` and ``log_base``.</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="n">_factory_property</span><span class="p">(</span>
         <span class="n">class_name</span><span class="p">,</span>
         <span class="n">eltype</span><span class="o">=</span><span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span><span class="p">,</span>
         <span class="n">property_name</span><span class="o">=</span><span class="nb">property</span><span class="p">,</span>
+        <span class="n">data_source</span><span class="o">=</span><span class="n">data_source</span><span class="p">,</span>
         <span class="n">doc</span><span class="o">=</span><span class="n">doc</span><span class="p">,</span>
         <span class="n">init</span><span class="o">=</span><span class="n">_init_with_show_legend_and_log_base</span><span class="p">,</span>
         <span class="n">look_arguments</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">]),</span>
@@ -345,16 +371,19 @@
     <span class="n">class_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="nb">property</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c1"># pylint: disable=redefined-builtin</span>
+    <span class="n">data_source</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
     <span class="n">doc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Make the class of a property which names a category, such as a type, named ``class_name`` and documented by the</span>
-<span class="sd">    ``doc``. The data gives it the name ``property``. Its objects take the look argument ``show_legend``.</span>
+<span class="sd">    ``doc``. The data gives it the name ``property``, and the ``data_source`` fills it. Its objects take the look</span>
+<span class="sd">    argument ``show_legend``.</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="n">_factory_property</span><span class="p">(</span>
         <span class="n">class_name</span><span class="p">,</span>
         <span class="n">eltype</span><span class="o">=</span><span class="n">Eltype</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,</span>
         <span class="n">property_name</span><span class="o">=</span><span class="nb">property</span><span class="p">,</span>
+        <span class="n">data_source</span><span class="o">=</span><span class="n">data_source</span><span class="p">,</span>
         <span class="n">doc</span><span class="o">=</span><span class="n">doc</span><span class="p">,</span>
         <span class="n">init</span><span class="o">=</span><span class="n">_init_with_show_legend</span><span class="p">,</span>
         <span class="n">look_arguments</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">]),</span>
@@ -368,16 +397,19 @@
     <span class="n">class_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="nb">property</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="c1"># pylint: disable=redefined-builtin</span>
+    <span class="n">data_source</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
     <span class="n">doc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Make the class of a property which is a Boolean flag, named ``class_name`` and documented by the ``doc``. The data</span>
-<span class="sd">    gives it the name ``property``. Its objects take the look argument ``show_legend``.</span>
+<span class="sd">    gives it the name ``property``, and the ``data_source`` fills it. Its objects take the look argument</span>
+<span class="sd">    ``show_legend``.</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="n">_factory_property</span><span class="p">(</span>
         <span class="n">class_name</span><span class="p">,</span>
         <span class="n">eltype</span><span class="o">=</span><span class="n">Eltype</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">,</span>
         <span class="n">property_name</span><span class="o">=</span><span class="nb">property</span><span class="p">,</span>
+        <span class="n">data_source</span><span class="o">=</span><span class="n">data_source</span><span class="p">,</span>
         <span class="n">doc</span><span class="o">=</span><span class="n">doc</span><span class="p">,</span>
         <span class="n">init</span><span class="o">=</span><span class="n">_init_with_show_legend</span><span class="p">,</span>
         <span class="n">look_arguments</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">]),</span>
@@ -406,6 +438,7 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">eltype</span><span class="p">:</span> <span class="n">Eltype</span><span class="p">,</span>
     <span class="n">property_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">data_source</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
     <span class="n">doc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">init</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
     <span class="n">look_arguments</span><span class="p">:</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
@@ -418,16 +451,20 @@
         <span class="s2">"eltype"</span><span class="p">:</span> <span class="n">eltype</span><span class="p">,</span>
         <span class="s2">"shape"</span><span class="p">:</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span><span class="p">,</span>
         <span class="s2">"property_name"</span><span class="p">:</span> <span class="n">property_name</span><span class="p">,</span>
+        <span class="s2">"data_source"</span><span class="p">:</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">data_source</span><span class="p">),</span>
         <span class="s2">"_look_arguments"</span><span class="p">:</span> <span class="n">look_arguments</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="p">(</span><span class="n">Property</span><span class="p">,),</span> <span class="n">namespace</span><span class="p">)</span>
 
 
 <span class="n">Type</span> <span class="o">=</span> <span class="n">category_property</span><span class="p">(</span>
-    <span class="s2">"Type"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"type"</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"The type of each entry, such as the cell type of each metacell, shown in its color."</span>
+    <span class="s2">"Type"</span><span class="p">,</span>
+    <span class="nb">property</span><span class="o">=</span><span class="s2">"type"</span><span class="p">,</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="n">mg</span><span class="o">.</span><span class="n">fill_type</span><span class="p">,</span>
+    <span class="n">doc</span><span class="o">=</span><span class="s2">"The type of each entry, such as the cell type of each metacell, shown in its color."</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="n">Block</span> <span class="o">=</span> <span class="n">category_property</span><span class="p">(</span><span class="s2">"Block"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"block"</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"The block each entry belongs to."</span><span class="p">)</span>
+<span class="n">Block</span> <span class="o">=</span> <span class="n">category_property</span><span class="p">(</span><span class="s2">"Block"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"block"</span><span class="p">,</span> <span class="n">data_source</span><span class="o">=</span><span class="n">mg</span><span class="o">.</span><span class="n">fill_block</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"The block each entry belongs to."</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="GeneExpression">
@@ -440,6 +477,7 @@
 
     <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
     <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span>
+    <span class="n">data_source</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">mg</span><span class="o">.</span><span class="n">fill_gene_expression</span><span class="p">)</span>
     <span class="n">_look_arguments</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gene</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">log_base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LogBase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -449,15 +487,31 @@
 
 
 
-<span class="n">TotalUMIs</span> <span class="o">=</span> <span class="n">size_property</span><span class="p">(</span><span class="s2">"TotalUMIs"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"total_UMIs"</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"The total number of UMIs of each entry."</span><span class="p">)</span>
+<span class="n">TotalUMIs</span> <span class="o">=</span> <span class="n">size_property</span><span class="p">(</span>
+    <span class="s2">"TotalUMIs"</span><span class="p">,</span>
+    <span class="nb">property</span><span class="o">=</span><span class="s2">"total_UMIs"</span><span class="p">,</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="n">mg</span><span class="o">.</span><span class="n">fill_total_UMIs</span><span class="p">,</span>
+    <span class="n">doc</span><span class="o">=</span><span class="s2">"The total number of UMIs of each entry."</span><span class="p">,</span>
+<span class="p">)</span>
 
-<span class="n">NCells</span> <span class="o">=</span> <span class="n">size_property</span><span class="p">(</span><span class="s2">"NCells"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"n_cells"</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"The number of cells of each entry."</span><span class="p">)</span>
+<span class="n">NCells</span> <span class="o">=</span> <span class="n">size_property</span><span class="p">(</span>
+    <span class="s2">"NCells"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"n_cells"</span><span class="p">,</span> <span class="n">data_source</span><span class="o">=</span><span class="n">mg</span><span class="o">.</span><span class="n">fill_n_cells</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"The number of cells of each entry."</span>
+<span class="p">)</span>
 
-<span class="n">NMetacells</span> <span class="o">=</span> <span class="n">size_property</span><span class="p">(</span><span class="s2">"NMetacells"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"n_metacells"</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"The number of metacells of each entry."</span><span class="p">)</span>
+<span class="n">NMetacells</span> <span class="o">=</span> <span class="n">size_property</span><span class="p">(</span>
+    <span class="s2">"NMetacells"</span><span class="p">,</span>
+    <span class="nb">property</span><span class="o">=</span><span class="s2">"n_metacells"</span><span class="p">,</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="n">mg</span><span class="o">.</span><span class="n">fill_n_metacells</span><span class="p">,</span>
+    <span class="n">doc</span><span class="o">=</span><span class="s2">"The number of metacells of each entry."</span><span class="p">,</span>
+<span class="p">)</span>
 
-<span class="n">IsLateral</span> <span class="o">=</span> <span class="n">boolean_property</span><span class="p">(</span><span class="s2">"IsLateral"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"is_lateral"</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"Whether each gene is lateral."</span><span class="p">)</span>
+<span class="n">IsLateral</span> <span class="o">=</span> <span class="n">boolean_property</span><span class="p">(</span>
+    <span class="s2">"IsLateral"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"is_lateral"</span><span class="p">,</span> <span class="n">data_source</span><span class="o">=</span><span class="n">mg</span><span class="o">.</span><span class="n">fill_is_lateral</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"Whether each gene is lateral."</span>
+<span class="p">)</span>
 
-<span class="n">IsMarker</span> <span class="o">=</span> <span class="n">boolean_property</span><span class="p">(</span><span class="s2">"IsMarker"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"is_marker"</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"Whether each gene is a marker gene."</span><span class="p">)</span>
+<span class="n">IsMarker</span> <span class="o">=</span> <span class="n">boolean_property</span><span class="p">(</span>
+    <span class="s2">"IsMarker"</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"is_marker"</span><span class="p">,</span> <span class="n">data_source</span><span class="o">=</span><span class="n">mg</span><span class="o">.</span><span class="n">fill_is_marker</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">"Whether each gene is a marker gene."</span>
+<span class="p">)</span>
 
 
 <div class="viewcode-block" id="MeanCellsPerMetacell">
@@ -469,6 +523,7 @@
 
     <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
     <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span>
+    <span class="n">data_source</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">mg</span><span class="o">.</span><span class="n">fill_mean_cells_per_metacell</span><span class="p">)</span>
     <span class="n">_look_arguments</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">])</span>
     <span class="fm">__init__</span> <span class="o">=</span> <span class="n">_init_with_show_legend_and_log_base</span></div>
 
@@ -484,6 +539,7 @@
 
     <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
     <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span>
+    <span class="n">data_source</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">mg</span><span class="o">.</span><span class="n">fill_mean_total_UMIs_per_metacell</span><span class="p">)</span>
     <span class="n">_look_arguments</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">])</span>
     <span class="fm">__init__</span> <span class="o">=</span> <span class="n">_init_with_show_legend_and_log_base</span></div>
 
@@ -498,6 +554,7 @@
 
     <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">NUMBER</span>
     <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span>
+    <span class="n">data_source</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">mg</span><span class="o">.</span><span class="n">fill_mean_total_UMIs_per_cell</span><span class="p">)</span>
     <span class="n">_look_arguments</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">])</span>
     <span class="fm">__init__</span> <span class="o">=</span> <span class="n">_init_with_show_legend_and_log_base</span></div>
 
@@ -512,6 +569,7 @@
 
     <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">BOOLEAN</span>
     <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span>
+    <span class="n">data_source</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">mg</span><span class="o">.</span><span class="n">fill_boolean</span><span class="p">)</span>
     <span class="n">_look_arguments</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -528,7 +586,8 @@
 <span class="sd">    """</span>
 
     <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">ARRANGEMENT</span>
-    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span></div>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span>
+    <span class="n">data_source</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">mg</span><span class="o">.</span><span class="n">fill_global_flow_order</span><span class="p">)</span></div>
 
 
 
@@ -541,6 +600,7 @@
 
     <span class="n">eltype</span> <span class="o">=</span> <span class="n">Eltype</span><span class="o">.</span><span class="n">COORDINATE</span>
     <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="o">.</span><span class="n">VECTOR</span>
+    <span class="n">data_source</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">mg</span><span class="o">.</span><span class="n">fill_umap</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinate</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">coordinate</span> <span class="o">=</span> <span class="n">coordinate</span></div>

@@ -2432,6 +2432,20 @@ the
 </code> properties as these change.
 </p>
 
+<p>In a colors or a sizes slot, the picker also edits the look arguments of the picked property: a “Show legend” toggle,
+and for a property shown on a log scale, a choice of log2 or log10. While a look argument is 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code>, its widget
+shows the default of the property’s data source (see 
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">Property.look_default()
+</span>
+</code>). Changing a widget sets the
+argument.
+</p>
+
 <dl class="field-list simple">
 
 <dt class="field-odd">Parameters

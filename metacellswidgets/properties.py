@@ -20,7 +20,9 @@ from typing import FrozenSet
 from typing import List
 from typing import Mapping
 from typing import Optional
+from typing import Tuple
 
+import metacellsgraphspy as mg
 from ipywidgets import Widget  # type: ignore
 from somegraphspy import LogBase
 from somegraphspy import VectorDataSinks
@@ -142,12 +144,30 @@ class Property(Arguments):
     #: The name the data gives the property, for a property made by a factory (e.g., :py:func:`size_property`).
     property_name: str
 
+    #: The ``metacellsgraphspy`` data source which fills the property from a ``Daf`` data set (e.g.,
+    #: ``metacellsgraphspy.fill_total_UMIs``). Its keywords are the property's look arguments, with their defaults.
+    data_source: Callable[..., None]
+
     # The arguments which change only how the property is shown, not its data (e.g. ``show_legend``).
     _look_arguments: ClassVar[FrozenSet[str]] = frozenset()
+
+    # The defaults of the look arguments, as read from the data source, per class and name.
+    _look_defaults: ClassVar[Dict[Tuple[type, str], Any]] = {}
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
         _give_own_dispatchers(cls, Property, ("exists", "fill", "editor"))
+
+    @classmethod
+    def look_default(cls, name: str) -> Any:
+        """
+        The default of the look argument with the ``name``, which applies while the argument is ``None``. This is the
+        default of the keyword of the same name of the ``data_source``.
+        """
+        key = (cls, name)
+        if key not in Property._look_defaults:
+            Property._look_defaults[key] = mg.function_default(cls.data_source, name)
+        return Property._look_defaults[key]
 
     def look_arguments(self) -> Dict[str, Any]:
         """
@@ -217,16 +237,19 @@ def size_property(
     class_name: str,
     *,
     property: str,  # pylint: disable=redefined-builtin
+    data_source: Callable[..., None],
     doc: str,
 ) -> Any:
     """
     Make the class of a property which is a count, such as UMIs, named ``class_name`` and documented by the ``doc``.
-    The data gives it the name ``property``. Its objects take the look arguments ``show_legend`` and ``log_base``.
+    The data gives it the name ``property``, and the ``data_source`` fills it. Its objects take the look arguments
+    ``show_legend`` and ``log_base``.
     """
     return _factory_property(
         class_name,
         eltype=Eltype.NUMBER,
         property_name=property,
+        data_source=data_source,
         doc=doc,
         init=_init_with_show_legend_and_log_base,
         look_arguments=frozenset(["show_legend", "log_base"]),
@@ -237,16 +260,19 @@ def category_property(
     class_name: str,
     *,
     property: str,  # pylint: disable=redefined-builtin
+    data_source: Callable[..., None],
     doc: str,
 ) -> Any:
     """
     Make the class of a property which names a category, such as a type, named ``class_name`` and documented by the
-    ``doc``. The data gives it the name ``property``. Its objects take the look argument ``show_legend``.
+    ``doc``. The data gives it the name ``property``, and the ``data_source`` fills it. Its objects take the look
+    argument ``show_legend``.
     """
     return _factory_property(
         class_name,
         eltype=Eltype.CATEGORICAL,
         property_name=property,
+        data_source=data_source,
         doc=doc,
         init=_init_with_show_legend,
         look_arguments=frozenset(["show_legend"]),
@@ -257,16 +283,19 @@ def boolean_property(
     class_name: str,
     *,
     property: str,  # pylint: disable=redefined-builtin
+    data_source: Callable[..., None],
     doc: str,
 ) -> Any:
     """
     Make the class of a property which is a Boolean flag, named ``class_name`` and documented by the ``doc``. The data
-    gives it the name ``property``. Its objects take the look argument ``show_legend``.
+    gives it the name ``property``, and the ``data_source`` fills it. Its objects take the look argument
+    ``show_legend``.
     """
     return _factory_property(
         class_name,
         eltype=Eltype.BOOLEAN,
         property_name=property,
+        data_source=data_source,
         doc=doc,
         init=_init_with_show_legend,
         look_arguments=frozenset(["show_legend"]),
@@ -294,6 +323,7 @@ def _factory_property(
     *,
     eltype: Eltype,
     property_name: str,
+    data_source: Callable[..., None],
     doc: str,
     init: Callable[..., None],
     look_arguments: FrozenSet[str],
@@ -306,16 +336,20 @@ def _factory_property(
         "eltype": eltype,
         "shape": Shape.VECTOR,
         "property_name": property_name,
+        "data_source": staticmethod(data_source),
         "_look_arguments": look_arguments,
     }
     return type(class_name, (Property,), namespace)
 
 
 Type = category_property(
-    "Type", property="type", doc="The type of each entry, such as the cell type of each metacell, shown in its color."
+    "Type",
+    property="type",
+    data_source=mg.fill_type,
+    doc="The type of each entry, such as the cell type of each metacell, shown in its color.",
 )
 
-Block = category_property("Block", property="block", doc="The block each entry belongs to.")
+Block = category_property("Block", property="block", data_source=mg.fill_block, doc="The block each entry belongs to.")
 
 
 class GeneExpression(Property):
@@ -326,6 +360,7 @@ class GeneExpression(Property):
 
     eltype = Eltype.NUMBER
     shape = Shape.VECTOR
+    data_source = staticmethod(mg.fill_gene_expression)
     _look_arguments = frozenset(["show_legend", "log_base"])
 
     def __init__(self, gene: str, *, show_legend: Optional[bool] = None, log_base: Optional[LogBase] = None) -> None:
@@ -334,15 +369,31 @@ class GeneExpression(Property):
         self.log_base = log_base
 
 
-TotalUMIs = size_property("TotalUMIs", property="total_UMIs", doc="The total number of UMIs of each entry.")
+TotalUMIs = size_property(
+    "TotalUMIs",
+    property="total_UMIs",
+    data_source=mg.fill_total_UMIs,
+    doc="The total number of UMIs of each entry.",
+)
 
-NCells = size_property("NCells", property="n_cells", doc="The number of cells of each entry.")
+NCells = size_property(
+    "NCells", property="n_cells", data_source=mg.fill_n_cells, doc="The number of cells of each entry."
+)
 
-NMetacells = size_property("NMetacells", property="n_metacells", doc="The number of metacells of each entry.")
+NMetacells = size_property(
+    "NMetacells",
+    property="n_metacells",
+    data_source=mg.fill_n_metacells,
+    doc="The number of metacells of each entry.",
+)
 
-IsLateral = boolean_property("IsLateral", property="is_lateral", doc="Whether each gene is lateral.")
+IsLateral = boolean_property(
+    "IsLateral", property="is_lateral", data_source=mg.fill_is_lateral, doc="Whether each gene is lateral."
+)
 
-IsMarker = boolean_property("IsMarker", property="is_marker", doc="Whether each gene is a marker gene.")
+IsMarker = boolean_property(
+    "IsMarker", property="is_marker", data_source=mg.fill_is_marker, doc="Whether each gene is a marker gene."
+)
 
 
 class MeanCellsPerMetacell(Property):
@@ -352,6 +403,7 @@ class MeanCellsPerMetacell(Property):
 
     eltype = Eltype.NUMBER
     shape = Shape.VECTOR
+    data_source = staticmethod(mg.fill_mean_cells_per_metacell)
     _look_arguments = frozenset(["show_legend", "log_base"])
     __init__ = _init_with_show_legend_and_log_base
 
@@ -364,6 +416,7 @@ class MeanTotalUMIsPerMetacell(Property):
 
     eltype = Eltype.NUMBER
     shape = Shape.VECTOR
+    data_source = staticmethod(mg.fill_mean_total_UMIs_per_metacell)
     _look_arguments = frozenset(["show_legend", "log_base"])
     __init__ = _init_with_show_legend_and_log_base
 
@@ -375,6 +428,7 @@ class MeanTotalUMIsPerCell(Property):
 
     eltype = Eltype.NUMBER
     shape = Shape.VECTOR
+    data_source = staticmethod(mg.fill_mean_total_UMIs_per_cell)
     _look_arguments = frozenset(["show_legend", "log_base"])
     __init__ = _init_with_show_legend_and_log_base
 
@@ -386,6 +440,7 @@ class BooleanMask(Property):
 
     eltype = Eltype.BOOLEAN
     shape = Shape.VECTOR
+    data_source = staticmethod(mg.fill_boolean)
     _look_arguments = frozenset(["show_legend"])
 
     def __init__(self, name: str, *, show_legend: Optional[bool] = None) -> None:
@@ -400,6 +455,7 @@ class GlobalFlowOrder(Property):
 
     eltype = Eltype.ARRANGEMENT
     shape = Shape.VECTOR
+    data_source = staticmethod(mg.fill_global_flow_order)
 
 
 class UMAP(Property):
@@ -409,6 +465,7 @@ class UMAP(Property):
 
     eltype = Eltype.COORDINATE
     shape = Shape.VECTOR
+    data_source = staticmethod(mg.fill_umap)
 
     def __init__(self, coordinate: str) -> None:
         self.coordinate = coordinate
