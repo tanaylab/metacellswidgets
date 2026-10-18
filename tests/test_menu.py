@@ -8,6 +8,8 @@ from typing import List
 import pytest
 
 import metacellswidgets as mw
+from metacellswidgets.forms import _kind_tree
+from metacellswidgets.forms import _switched_form
 
 from .test_genes_heatmap import _daf
 
@@ -58,6 +60,41 @@ def test_menu_current() -> None:
     assert len(menu.children) == 2
     assert menu.children[1].value is mw.GenesHeatmap
     assert menu.value is mw.GenesHeatmap
+
+
+def test_switched_form() -> None:
+    """
+    A form switched to starts with its remembered arguments, or else with ``None`` for the required ones. It then takes
+    the arguments of the current form which have the same name and type annotation (here ``axis`` and ``tweaks``).
+    """
+    source = mw.DafWidgets(_daf())
+    current = source.genes_heatmap(axis="block", tweaks=[mw.Title(text="T")])
+    blank = _switched_form(mw.GeneGene, source, None, current)
+    assert blank.arguments() == {
+        "axis": "block",
+        "x_gene": None,
+        "y_gene": None,
+        "colors": None,
+        "sizes": None,
+        "hovers": None,
+        "tweaks": [mw.Title(text="T")],
+    }
+
+    remembered = source.gene_gene(x_gene="A", y_gene="B", colors=mw.Type())
+    restored = _switched_form(mw.GeneGene, source, remembered, current).arguments()
+    assert (restored["axis"], restored["x_gene"], restored["y_gene"], restored["colors"]) == (
+        "block",
+        "A",
+        "B",
+        mw.Type(),
+    )
+
+
+def test_kind_tree() -> None:
+    """
+    The tree of a kind's menu is found through its ``graph_menu``.
+    """
+    assert _kind_tree(mw.DafWidgets(_daf())) is mw.DafWidgets.tree
 
 
 def test_menu_method() -> None:

@@ -246,7 +246,7 @@ class GraphForm(Arguments):
                 "by a method of a kind of data source (e.g. source.gene_gene(...))"
             )
         _claim_cell_rewrite()
-        form = _EditSession(self.source, self).run()
+        form = _EditSession(self.source, self, _kind_tree(self.source)).run()
         shell = get_ipython()
         shell.set_next_input(
             _rewritten_cell(
@@ -255,6 +255,7 @@ class GraphForm(Arguments):
                 form_keywords=form.arguments(),
                 display_position=display_site.position,
                 is_interactive=False,
+                form_method=None if type(form) is type(self) else _method_name(self.source, type(form)),
                 namespace=shell.user_ns,
             ),
             replace=True,
@@ -404,7 +405,7 @@ class _GraphMenu:
 
 def graph_menu(tree: Branch) -> _GraphMenu:
     """
-    Offer a menu of the graphs of the ``tree`` as a method of a kind of data source, e.g. ``menu = graph_menu(graphs)``.
+    Offer a menu of the graphs of the ``tree`` as a method of a kind of data source, e.g. ``menu = graph_menu(tree)``.
     Then ``source.menu()`` shows the menu, with an editor of the chosen graph (see :py:class:`GraphMenu`), and rewrites
     its call into the chosen graph's when "Done" is clicked.
     """
@@ -424,13 +425,12 @@ def _show_menu(
         raise RuntimeError("a menu must be shown at the top level of a cell (e.g. source.menu())")
     _claim_cell_rewrite()
     form = _EditSession(source, None, tree).run()
-    method_per_graph = {graph_class: name for name, graph_class in type(source).offered_graphs().items()}
     shell = get_ipython()
     shell.set_next_input(
         _rewritten_menu_cell(
             _current_cell_source(),
             menu_position=call_site.position,
-            method=method_per_graph[type(form)],
+            method=_method_name(source, type(form)),
             form_keywords=form.arguments(),
             format=format,
             namespace=shell.user_ns,
@@ -441,30 +441,69 @@ def _show_menu(
     return form
 
 
-def _blank_form(graph_class: Type[GraphForm], source: SourceWidgets) -> GraphForm:
-    # A form of the ``graph_class`` for the ``source``, with ``None`` for each of its required arguments.
-    parameters = list(inspect.signature(graph_class).parameters.values())[1:]
-    required = {parameter.name: None for parameter in parameters if parameter.default is inspect.Parameter.empty}
-    return graph_class(source, **required)
+def _kind_tree(source: SourceWidgets) -> Optional[Branch]:
+    # The tree of the menu the kind of the ``source`` offers (see ``graph_menu``), if it offers one.
+    for kind in type(source).__mro__:
+        for value in kind.__dict__.values():
+            if isinstance(value, _GraphMenu):
+                return value.tree
+    return None
 
 
-class _EditSession:
-    # The editor of a form, shown until "Done" is clicked. With a ``tree``, it also shows a menu of its graphs, and
-    # choosing a graph there replaces the edited form with a new one of the chosen graph.
+def _method_name(source: SourceWidgets, graph_class: Type[GraphForm]) -> str:
+    # The name of the method by which the kind of the ``source`` offers the ``graph_class``.
+    return next(name for name, offered in type(source).offered_graphs().items() if offered is graph_class)
+
+
+def _switched_form(
+    graph_class: Type[GraphForm],
+    source: SourceWidgets,
+    remembered: Optional[GraphForm],
+    current: Optional[GraphForm],
+) -> GraphForm:
+    # A form of the ``graph_class`` for the ``source``, to switch to from the ``current`` form (if any). It starts with
+    # the arguments of the ``remembered`` form of the graph (if any), or else with ``None`` for each required argument.
+    # Then it takes the arguments of the ``current`` form which have the same name and type annotation.
+    if remembered is not None:
+        arguments = remembered.arguments()
+    else:
+        parameters = list(inspect.signature(graph_class).parameters.values())[1:]
+        arguments = {parameter.name: None for parameter in parameters if parameter.default is inspect.Parameter.empty}
+    if current is not None:
+        hints = typing.get_type_hints(graph_class.__init__)
+        current_hints = typing.get_type_hints(type(current).__init__)
+        for name, value in current.arguments().items():
+            if name in hints and hints[name] == current_hints.get(name):
+                arguments[name] = value
+    return graph_class(source, **arguments)
+
+
+class _EditSession:  # pylint: disable=too-many-instance-attributes
+    # The editor of a form (or, with no form, of a graph to choose), shown until "Done" is clicked. With a ``tree``, it
+    # also has a menu of its graphs, and a "Graphs" button which shows or hides it. The menu is shown at first only if
+    # there is no form. Choosing a graph in the menu replaces the edited form with one of the chosen graph (see
+    # ``_switched_form``). The session remembers the last form of each graph, so going back to a graph restores it.
 
     def __init__(self, source: SourceWidgets, form: Optional[GraphForm], tree: Optional[Branch] = None) -> None:
         self._source = source
         self._form = form
+        self._remembered: Dict[Type[GraphForm], GraphForm] = {}
         self._figure = FigureWidget(form.graph().figure if form is not None and form.is_complete() else Figure())
         self._done = Button(description="Done", button_style="primary")
         self._errors = Output()
         self._body = VBox([] if form is None else self._form_widgets(form))
-        rows: List[Widget] = [HBox([self._done])]
-        if tree is not None:
-            menu = GraphMenu(source, tree)
-            menu.observe(self._on_menu_change, names="value")
-            rows.append(menu)
-        self._editor = VBox([*rows, self._body, self._figure, self._errors])
+        toolbar: List[Widget] = [self._done]
+        rows: List[Widget] = []
+        visible = None if tree is None else tree.visible(source)
+        if tree is not None and visible is not None and (form is None or _path_to(visible, type(form))):
+            self._menu = GraphMenu(source, tree, None if form is None else type(form))
+            self._menu.observe(self._on_menu_change, names="value")
+            self._menu.layout.display = None if form is None else "none"
+            graphs = Button(description="Graphs")
+            graphs.on_click(self._on_graphs)
+            toolbar.append(graphs)
+            rows.append(self._menu)
+        self._editor = VBox([HBox(toolbar), *rows, self._body, self._figure, self._errors])
         self._update_done()
 
     def run(self) -> GraphForm:
@@ -518,17 +557,31 @@ class _EditSession:
     def _update_done(self) -> None:
         self._done.disabled = not self._is_complete()
 
+    def _on_graphs(self, _button: Button) -> None:
+        self._menu.layout.display = "none" if self._menu.layout.display is None else None
+
     def _on_menu_change(self, change: Dict) -> None:
         _on_main_thread(lambda: self._switch(change["new"]))
 
     def _switch(self, graph_class: Optional[Type[GraphForm]]) -> None:
-        # Edit a new form of the ``graph_class`` (if any) instead of the current one.
-        self._form = None if graph_class is None else _blank_form(graph_class, self._source)
-        self._body.children = [] if self._form is None else self._form_widgets(self._form)
-        _replace_figure(self._figure, Figure())
-        if self._form is not None:
-            self._form.request_redraw()
-        self._update_done()
+        # Edit a form of the ``graph_class`` (if any) instead of the current one, which is remembered.
+        try:
+            current = self._form
+            if current is not None:
+                self._remembered[type(current)] = current
+            if graph_class is None:
+                self._form = None
+            else:
+                remembered = self._remembered.get(graph_class)
+                self._form = _switched_form(graph_class, self._source, remembered, current)
+            self._body.children = [] if self._form is None else self._form_widgets(self._form)
+            _replace_figure(self._figure, Figure())
+            if self._form is not None:
+                self._form.request_redraw()
+            self._update_done()
+        except Exception:  # pylint: disable=broad-except
+            with self._errors:
+                traceback.print_exc()
 
 
 def _check_format(format: str) -> None:  # pylint: disable=redefined-builtin

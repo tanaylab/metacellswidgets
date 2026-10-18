@@ -108,7 +108,7 @@ def test_editor() -> None:
     assert form.genes is None
     assert form.row_annotations is None
     assert form.column_annotations is None
-    assert mw.GenesHeatmap in mw.DafWidgets.graphs.leaves()
+    assert mw.GenesHeatmap in mw.DafWidgets.tree.leaves()
 
 
 def test_anndata(tmp_path: Path) -> None:

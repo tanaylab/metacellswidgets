@@ -72,9 +72,9 @@ class DafWidgets(SourceWidgets):
     genes_heatmap = graph_constructor(GenesHeatmap)
 
     #: The tree of the graphs offered, as shown in the menus.
-    graphs = Branch("Graphs", [GeneGene, GenesHeatmap])
+    tree = Branch("Graphs", [GeneGene, GenesHeatmap])
 
-    menu = graph_menu(graphs)
+    menu = graph_menu(tree)
 
     def __init__(self, daf: DafReader) -> None:
         self.daf = daf

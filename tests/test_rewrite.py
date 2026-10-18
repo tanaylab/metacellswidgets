@@ -212,12 +212,12 @@ def test_other_display_keywords_are_kept() -> None:
     )
 
 
-def test_new_callee() -> None:
+def test_new_method() -> None:
     """
-    The form call's callee can be replaced, when a menu picked another graph.
+    The form call's method can be replaced on the same receiver, when the editor switched to another graph.
     """
     source = "form = mw.form(daf)\nform.display(interactive=True)\n"
-    assert _rewrite(source, {"x_gene": "C"}, form_callee="mw.other_form") == (
+    assert _rewrite(source, {"x_gene": "C"}, form_method="other_form") == (
         "form = mw.other_form(daf, x_gene='C')\nform.display(interactive=False)\n"
     )
 

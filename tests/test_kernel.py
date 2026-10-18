@@ -215,7 +215,8 @@ def _send_state(client: Any, widget: Dict[str, Any], state: Dict[str, Any]) -> N
     time.sleep(1)
 
 
-# Makes a small ``daf`` of the expression of three genes in two metacells, for the interactive forms to show.
+# Makes a small ``daf`` of the expression of three genes in two metacells, for the interactive forms to show. The marker
+# ranks and the log fractions are for the genes heatmap.
 _DAF_SETUP = (
     "import numpy as np\n"
     "import dafpy as dp\n"
@@ -223,8 +224,11 @@ _DAF_SETUP = (
     "daf = dp.memory_daf(name='genes')\n"
     "daf.add_axis('gene', ['A', 'B', 'D'])\n"
     "daf.add_axis('metacell', ['M1', 'M2'])\n"
+    "daf.set_vector('gene', 'marker_rank', np.array([1, 2, 3], dtype='uint32'))\n"
     "daf.set_matrix('gene', 'metacell', 'linear_fraction', "
     "np.array([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]], dtype='float32', order='F'))\n"
+    "daf.set_matrix('gene', 'metacell', 'log_linear_fraction', "
+    "np.array([[-3.0, -2.0], [-1.5, -1.0], [-0.5, -0.2]], dtype='float32', order='F'))\n"
 )
 
 
@@ -306,6 +310,38 @@ def test_menu_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
     _click(client, done)
     assert _rewritten_text(client, message_id) == (
         "form = mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='D').display(interactive=False)"
+    )
+
+
+def _is_graphs_button(state: Dict[str, Any]) -> bool:
+    # Whether the widget state is of the "Graphs" button.
+    return state.get("_model_name") == "ButtonModel" and state.get("description") == "Graphs"
+
+
+def test_graphs_button_switches_the_graph(kernel: Tuple[Any, Any]) -> None:
+    """
+    In an interactive form, the "Graphs" button shows the menu; choosing another graph there and clicking "Done"
+    rewrites the form call into the chosen graph's, on the same receiver, keeping the arguments they share.
+    """
+    _, client = kernel
+    _execute(client, _DAF_SETUP)
+
+    cell = "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.display(interactive=True)\n"
+    message_id = client.execute(cell)
+    widgets = _opened_widgets(
+        client, lambda state: _is_done_button(state) or _is_graphs_button(state) or _is_graph_menu(state), 3
+    )
+    done = next(widget for widget in widgets if _is_done_button(widget))
+    graphs = next(widget for widget in widgets if _is_graphs_button(widget))
+    menu = next(widget for widget in widgets if _is_graph_menu(widget))
+
+    time.sleep(1)
+    _click(client, graphs)
+    _send_state(client, menu, {"index": menu["_options_labels"].index("GenesHeatmap")})
+    time.sleep(2)
+    _click(client, done)
+    assert _rewritten_text(client, message_id) == (
+        "form = mw.DafWidgets(daf).genes_heatmap(axis='metacell')\nform.display(interactive=False)"
     )
 
 

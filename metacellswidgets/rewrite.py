@@ -178,20 +178,23 @@ def _rewritten_cell(
     form_keywords: Mapping[str, Any],
     display_position: _Position,
     is_interactive: bool,
-    form_callee: Optional[str] = None,
+    form_method: Optional[str] = None,
     namespace: Optional[Mapping[str, Any]] = None,
 ) -> str:
     # The code of the cell with the form call's keyword arguments set to ``form_keywords`` (leaving out those which are
-    # ``None``), its callee replaced by ``form_callee`` (if given), and the display call's ``interactive`` set to
-    # ``is_interactive``. The form call may be on another line than the display call, or chained to it. Values with a
-    # ``code`` method (e.g. properties) name their classes as the cell's ``namespace`` does.
+    # ``None``), its method replaced by ``form_method`` on the same receiver (if given), and the display call's
+    # ``interactive`` set to ``is_interactive``. The form call may be on another line than the display call, or chained
+    # to it. Values with a ``code`` method (e.g. properties) name their classes as the cell's ``namespace`` does.
     tree = ast.parse(source)
     namespace = _cell_namespace(tree, namespace)
     form_call = _top_level_call(tree, form_position, "form")
     display_call = _top_level_call(tree, display_position, "display")
 
-    if form_callee is None:
+    if form_method is None:
         form_callee = _segment(source, form_call.func)
+    else:
+        assert isinstance(form_call.func, ast.Attribute)
+        form_callee = f"{_segment(source, form_call.func.value)}.{form_method}"
     form_text = _call_text(source, form_call, form_callee, form_keywords, namespace)
 
     display_arguments = [_segment(source, argument) for argument in display_call.args]

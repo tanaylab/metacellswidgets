@@ -74,7 +74,7 @@ def test_trees(kind: Type[mw.SourceWidgets]) -> None:
     """
     Each graph appears at most once in the tree of a kind, and is offered by the kind as a method.
     """
-    leaves = getattr(kind, "graphs").leaves()
+    leaves = getattr(kind, "tree").leaves()
     assert len(set(leaves)) == len(leaves)
     assert set(leaves) <= set(kind.offered_graphs().values())
 
