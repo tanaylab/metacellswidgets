@@ -91,6 +91,12 @@ class ArgumentsEditor(HBox):  # pylint: disable=too-many-ancestors,abstract-meth
         """
         return self.value
 
+    def update_graph(self, graph: Any) -> None:  # pylint: disable=unused-argument
+        """
+        Called with the ``graph`` the form shows, each time it is drawn, so an editor whose starting values come from
+        the graph (e.g. a tweak's size) can follow it. A value the user set is kept. By default, nothing changes.
+        """
+
 
 class Picker(HBox):  # pylint: disable=too-many-ancestors,abstract-method
     """
@@ -600,6 +606,12 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
 
     def shown(self) -> List[_Item]:
         return [row.value for row in self._rows if row.value is not None]
+
+    def update_graph(self, graph: Any) -> None:
+        for row in self._rows:
+            row.update_graph(graph)
+        if self._blank_row is not None:
+            self._blank_row.update_graph(graph)
 
     def remove_values(self, values: Collection[_Item]) -> None:
         """

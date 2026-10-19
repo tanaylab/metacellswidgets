@@ -117,6 +117,29 @@ def test_revert() -> None:
     assert menu_session._menu.value is None
 
 
+def test_incomplete_form() -> None:
+    """
+    The editor of an incomplete form is shown when the editing starts with it, when a switch picks it, and when Revert
+    goes back to it.
+    """
+    # pylint: disable=protected-access
+    source = mw.DafWidgets(_daf())
+    session = _EditSession(source, _switched_form(mw.GeneGene, source, {}, None), mw.DafWidgets.tree)
+    assert session._tweaks is not None
+    session._switch(mw.GenesHeatmap)
+    assert isinstance(session._form, mw.GenesHeatmap)
+    session._switch(mw.GeneGene)
+    assert isinstance(session._form, mw.GeneGene) and not session._form.is_complete()
+    assert session._tweaks is not None
+    session._revert()
+    assert isinstance(session._form, mw.GeneGene) and not session._form.is_complete()
+    assert session._tweaks is not None
+
+    menu_session = _EditSession(source, None, mw.DafWidgets.tree)
+    menu_session._switch(mw.GeneGene)
+    assert menu_session._tweaks is not None
+
+
 def test_kind_tree() -> None:
     """
     The tree of a kind's menu is found through its ``graph_menu``.

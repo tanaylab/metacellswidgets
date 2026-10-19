@@ -149,6 +149,7 @@
 <span class="sd">    given. :py:meth:`selected_names` gives the names of the selected entries.</span>
 <span class="sd">    """</span>
 
+    <span class="n">graph_type</span> <span class="o">=</span> <span class="n">PointsGraph</span>
     <span class="n">_selection_arguments</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"selected_box"</span><span class="p">,</span> <span class="s2">"selected_lasso"</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -272,6 +273,8 @@
 <span class="sd">    An annotation also adds a line to the hover of each cell. The ``row_hovers`` and ``column_hovers`` properties add</span>
 <span class="sd">    more lines, without annotating (left out, there are none).</span>
 <span class="sd">    """</span>
+
+    <span class="n">graph_type</span> <span class="o">=</span> <span class="n">HeatmapGraph</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>

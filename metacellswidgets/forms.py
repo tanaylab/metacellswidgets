@@ -92,6 +92,10 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
     :py:class:`~metacellswidgets.tweaks.Tweak`), or ``None`` for none.
     """
 
+    #: The type of the graph the form builds (e.g. ``PointsGraph``), which decides which tweaks apply to it. Each graph
+    #: sets this.
+    graph_type: ClassVar[Type[Graph]]
+
     # The data source is written into the code of the cell as the receiver of the call (e.g. ``source.gene_gene(...)``),
     # not as an argument.
     _not_arguments: ClassVar[FrozenSet[str]] = frozenset(["source"])
@@ -278,10 +282,10 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
         return form
 
     def _tweaks_editor(self) -> ListEditor[Tweak]:
-        # The editor of the tweaks: a list of them, under a "Tweaks" header, collapsed. A new tweak's editor starts from
-        # the graph as it is when the tweak is added.
+        # The editor of the tweaks: a list of them, under a "Tweaks" header, collapsed. The choices of each row are the
+        # tweaks of the form's graph type, and a new tweak's editor starts from the graph last shown (if any).
         def make_row(current: Optional[Tweak]) -> TweakPicker:
-            return TweakPicker(self.source, self._untweaked_graph(), current)
+            return TweakPicker(self.source, type(self).graph_type, self._kept_graph, current)
 
         tweaks = ListEditor(make_row, self.tweaks, title="Tweaks")
         self.bind(tweaks=tweaks)
@@ -565,6 +569,7 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         revert = Button(description="Revert")
         revert.on_click(self._on_revert)
         self._errors = Output()
+        self._tweaks: Optional[ListEditor[Tweak]] = None
         self._body = VBox([] if form is None else self._form_widgets(form))
         toolbar: List[Widget] = [self._done, revert]
         rows: List[Widget] = []
@@ -609,7 +614,7 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
             self._update_done()
             try:
                 if self._form is not None:
-                    self._form._poll_redraw(lambda graph: self._draw(graph.figure))  # pylint: disable=protected-access
+                    self._form._poll_redraw(self._redraw)  # pylint: disable=protected-access
             except Exception:  # pylint: disable=broad-except
                 with self._errors:
                     traceback.print_exc()
@@ -622,7 +627,15 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
 
     def _form_widgets(self, form: GraphForm) -> List[Widget]:
         # The widgets editing the arguments of the ``form``, and its tweaks.
-        return [form.editor(), form._tweaks_editor()]  # pylint: disable=protected-access
+        editor = form.editor()
+        self._tweaks = form._tweaks_editor()  # pylint: disable=protected-access
+        return [editor, self._tweaks]
+
+    def _redraw(self, graph: Graph) -> None:
+        # Show the redrawn ``graph``, and let the editors of the tweaks follow it.
+        self._draw(graph.figure)
+        if self._tweaks is not None:
+            self._tweaks.update_graph(graph)
 
     def _is_complete(self) -> bool:
         # Whether there is a form to rewrite the cell with: one is chosen, and its arguments are complete.
@@ -682,6 +695,7 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
 
     def _show_form(self) -> None:
         # Show the widgets of the edited form (if any), and an empty figure until its graph is drawn.
+        self._tweaks = None
         self._body.children = [] if self._form is None else self._form_widgets(self._form)
         self._draw(Figure())
         if self._form is not None:

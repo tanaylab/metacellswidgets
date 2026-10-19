@@ -74,6 +74,7 @@ class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
     given. :py:meth:`selected_names` gives the names of the selected entries.
     """
 
+    graph_type = PointsGraph
     _selection_arguments = frozenset(["selected_box", "selected_lasso"])
 
     def __init__(
@@ -185,6 +186,8 @@ class GenesHeatmap(GraphForm):
     An annotation also adds a line to the hover of each cell. The ``row_hovers`` and ``column_hovers`` properties add
     more lines, without annotating (left out, there are none).
     """
+
+    graph_type = HeatmapGraph
 
     def __init__(
         self,

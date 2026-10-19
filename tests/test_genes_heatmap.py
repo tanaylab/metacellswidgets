@@ -50,6 +50,7 @@ def test_defaults() -> None:
     assert form.default_column_annotations() == [mw.Type()]
     graph = form.graph()
     assert isinstance(graph, HeatmapGraph)
+    assert mw.GenesHeatmap.graph_type is HeatmapGraph
     assert _list(graph.data.rows.entities.names) == ["A", "B", "C"]
     assert _list(graph.data.columns.entities.names) == ["M1", "M2", "M3"]
     assert [annotation.colors.title for annotation in graph.data.rows.annotations] == ["lateral"]

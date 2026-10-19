@@ -167,6 +167,10 @@
 <span class="sd">    :py:class:`~metacellswidgets.tweaks.Tweak`), or ``None`` for none.</span>
 <span class="sd">    """</span>
 
+    <span class="c1">#: The type of the graph the form builds (e.g. ``PointsGraph``), which decides which tweaks apply to it. Each graph</span>
+    <span class="c1">#: sets this.</span>
+    <span class="n">graph_type</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Graph</span><span class="p">]]</span>
+
     <span class="c1"># The data source is written into the code of the cell as the receiver of the call (e.g. ``source.gene_gene(...)``),</span>
     <span class="c1"># not as an argument.</span>
     <span class="n">_not_arguments</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">FrozenSet</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"source"</span><span class="p">])</span>
@@ -383,10 +387,10 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_tweaks_editor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ListEditor</span><span class="p">[</span><span class="n">Tweak</span><span class="p">]:</span>
-        <span class="c1"># The editor of the tweaks: a list of them, under a "Tweaks" header, collapsed. A new tweak's editor starts from</span>
-        <span class="c1"># the graph as it is when the tweak is added.</span>
+        <span class="c1"># The editor of the tweaks: a list of them, under a "Tweaks" header, collapsed. The choices of each row are the</span>
+        <span class="c1"># tweaks of the form's graph type, and a new tweak's editor starts from the graph last shown (if any).</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">make_row</span><span class="p">(</span><span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tweak</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">TweakPicker</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">TweakPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_untweaked_graph</span><span class="p">(),</span> <span class="n">current</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">TweakPicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">graph_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kept_graph</span><span class="p">,</span> <span class="n">current</span><span class="p">)</span>
 
         <span class="n">tweaks</span> <span class="o">=</span> <span class="n">ListEditor</span><span class="p">(</span><span class="n">make_row</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tweaks</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"Tweaks"</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">tweaks</span><span class="o">=</span><span class="n">tweaks</span><span class="p">)</span>
@@ -689,6 +693,7 @@
         <span class="n">revert</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"Revert"</span><span class="p">)</span>
         <span class="n">revert</span><span class="o">.</span><span class="n">on_click</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_revert</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span> <span class="o">=</span> <span class="n">Output</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ListEditor</span><span class="p">[</span><span class="n">Tweak</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_body</span> <span class="o">=</span> <span class="n">VBox</span><span class="p">([]</span> <span class="k">if</span> <span class="n">form</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form_widgets</span><span class="p">(</span><span class="n">form</span><span class="p">))</span>
         <span class="n">toolbar</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Widget</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_done</span><span class="p">,</span> <span class="n">revert</span><span class="p">]</span>
         <span class="n">rows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Widget</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -733,7 +738,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_done</span><span class="p">()</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_form</span><span class="o">.</span><span class="n">_poll_redraw</span><span class="p">(</span><span class="k">lambda</span> <span class="n">graph</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draw</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">figure</span><span class="p">))</span>  <span class="c1"># pylint: disable=protected-access</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_form</span><span class="o">.</span><span class="n">_poll_redraw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_redraw</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span>
             <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
                 <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">:</span>
                     <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
@@ -746,7 +751,15 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_form_widgets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">form</span><span class="p">:</span> <span class="n">GraphForm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Widget</span><span class="p">]:</span>
         <span class="c1"># The widgets editing the arguments of the ``form``, and its tweaks.</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">form</span><span class="o">.</span><span class="n">editor</span><span class="p">(),</span> <span class="n">form</span><span class="o">.</span><span class="n">_tweaks_editor</span><span class="p">()]</span>  <span class="c1"># pylint: disable=protected-access</span>
+        <span class="n">editor</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">editor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">_tweaks_editor</span><span class="p">()</span>  <span class="c1"># pylint: disable=protected-access</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">editor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_redraw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Show the redrawn ``graph``, and let the editors of the tweaks follow it.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_draw</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span><span class="o">.</span><span class="n">update_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_is_complete</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="c1"># Whether there is a form to rewrite the cell with: one is chosen, and its arguments are complete.</span>
@@ -806,6 +819,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_show_form</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Show the widgets of the edited form (if any), and an empty figure until its graph is drawn.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form_widgets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_form</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_draw</span><span class="p">(</span><span class="n">Figure</span><span class="p">())</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

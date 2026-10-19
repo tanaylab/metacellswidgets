@@ -6,6 +6,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from somegraphspy import PointsGraph
 
 import metacellswidgets as mw
 
@@ -76,6 +77,8 @@ def test_gene_gene_of_daf() -> None:
     """
     form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B", colors=mw.Type(), sizes=mw.NCells())
     graph = form.graph()
+    assert isinstance(graph, PointsGraph)
+    assert mw.GeneGene.graph_type is PointsGraph
     assert graph.data.x.vector is not None
     assert list(np.asarray(graph.data.x.vector)) == [np.float32(0.1), np.float32(0.2), np.float32(0.3)]
     assert graph.data.points.colors.vector is not None

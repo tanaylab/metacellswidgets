@@ -28,7 +28,9 @@ class _Width(mw.Tweak):
         graph.configuration.figure.width = self.width
 
     @classmethod
-    def editor(cls, source: mw.SourceWidgets, graph: sg.Graph, current: Optional[mw.Tweak]) -> Optional[Widget]:
+    def editor(
+        cls, source: mw.SourceWidgets, graph: Optional[sg.Graph], current: Optional[mw.Tweak]
+    ) -> Optional[Widget]:
         return Widget()
 
 
@@ -268,15 +270,36 @@ def test_legends_editor() -> None:
 
 def test_tweak_picker() -> None:
     """
-    A tweak picker offers the tweaks of the graph's type, the built-in ones first, after an empty choice. Picking one
-    shows its editor, which starts from the graph.
+    A tweak picker offers the tweaks of the graph type, the built-in ones first, after an empty choice. Picking one
+    shows its editor, which starts from the graph, if there is one.
     """
     source = mw.DafWidgets(_full_daf())
     graph = _points_graph()
-    picker = mw.TweakPicker(source, graph)
+    graph.configuration.figure.width = 600
+    picker = mw.TweakPicker(source, sg.PointsGraph, graph)
     assert picker.value is None
     dropdown = picker.children[0]
     assert [label for label, _choice in dropdown.options][:4] == ["", "Size", "Title", "Legends"]
     dropdown.value = mw.Size
-    assert picker.value == mw.Size(width=700, height=450)
-    assert mw.TweakPicker(source, graph, mw.Title(text="Genes")).value == mw.Title(text="Genes")
+    assert picker.value == mw.Size(width=600, height=450)
+    assert mw.TweakPicker(source, sg.PointsGraph, graph, mw.Title(text="Genes")).value == mw.Title(text="Genes")
+
+    no_graph = mw.TweakPicker(source, sg.PointsGraph, None)
+    no_graph.children[0].value = mw.Size
+    assert no_graph.value == mw.Size(width=700, height=450)
+
+
+def test_size_follows_the_graph() -> None:
+    """
+    A dimension of a size which isn't given follows the shown graph; a given one is kept.
+    """
+    picker = mw.TweakPicker(mw.DafWidgets(_full_daf()), sg.PointsGraph, None, mw.Size(width=640))
+    graph = _points_graph()
+    graph.configuration.figure.width = 500
+    graph.configuration.figure.height = 300
+    picker.update_graph(graph)
+    editor = picker._editor  # pylint: disable=protected-access
+    assert editor is not None
+    width_number, height_number = editor.children[1], editor.children[3]
+    assert (width_number.value, height_number.value) == (640, 300)
+    assert picker.value == mw.Size(width=640)

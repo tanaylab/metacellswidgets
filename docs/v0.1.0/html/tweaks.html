@@ -282,6 +282,19 @@
 </span>
 </code>
 </a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.tweaks.TweakPicker.update_graph">
+<code class="docutils literal notranslate">
+<span class="pre">TweakPicker.update_graph()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
 </li>
 
 <li class="toctree-l3">
@@ -1169,18 +1182,35 @@ it for each graph type it applies to; for any other graph type, this is an error
 <code class="docutils literal notranslate">
 <span class="pre">graph
 </span>
-</code> is the form’s graph without its tweaks, e.g. for starting from its title. The widget’s 
-<code class="docutils literal notranslate">
-<span class="pre">value
-</span>
-</code> is
-the tweak, or 
+</code> is the form’s graph as last shown, e.g. for starting a new tweak from its title, or 
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
-</code> while the arguments are incomplete. A tweak without arguments has no editor. A tweak
-whose editor doesn’t depend on the data defines this in its class. Otherwise, it implements this for each kind
-of data source with 
+</code> if no
+graph was shown yet (e.g. while the form is incomplete); the editor then starts from the tweak’s own defaults.
+When the shown graph changes, the editor’s 
+<code class="docutils literal notranslate">
+<span class="pre">update_graph
+</span>
+</code> is called with the new one (see
+
+<a class="reference internal" href="editors.html#metacellswidgets.editors.ArgumentsEditor.update_graph" title="metacellswidgets.editors.ArgumentsEditor.update_graph">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">update_graph()
+</span>
+</code>
+</a>). The widget’s 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is the tweak, or
+
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> while the arguments are incomplete. A tweak without arguments has no editor. A tweak whose editor
+doesn’t depend on the data defines this in its class. Otherwise, it implements this for each kind of data
+source with 
 <a class="reference internal" href="common.html#metacellswidgets.common.implements" title="metacellswidgets.common.implements">
 <code class="xref py py-func docutils literal notranslate">
 <span class="pre">implements()
@@ -1215,6 +1245,10 @@ of data source with
 <strong>graph
 </strong> (
 <em>Graph
+</em>
+<em> | 
+</em>
+<em>None
 </em>)
 </p>
 </li>
@@ -1544,18 +1578,35 @@ it for each graph type it applies to; for any other graph type, this is an error
 <code class="docutils literal notranslate">
 <span class="pre">graph
 </span>
-</code> is the form’s graph without its tweaks, e.g. for starting from its title. The widget’s 
-<code class="docutils literal notranslate">
-<span class="pre">value
-</span>
-</code> is
-the tweak, or 
+</code> is the form’s graph as last shown, e.g. for starting a new tweak from its title, or 
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
-</code> while the arguments are incomplete. A tweak without arguments has no editor. A tweak
-whose editor doesn’t depend on the data defines this in its class. Otherwise, it implements this for each kind
-of data source with 
+</code> if no
+graph was shown yet (e.g. while the form is incomplete); the editor then starts from the tweak’s own defaults.
+When the shown graph changes, the editor’s 
+<code class="docutils literal notranslate">
+<span class="pre">update_graph
+</span>
+</code> is called with the new one (see
+
+<a class="reference internal" href="editors.html#metacellswidgets.editors.ArgumentsEditor.update_graph" title="metacellswidgets.editors.ArgumentsEditor.update_graph">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">update_graph()
+</span>
+</code>
+</a>). The widget’s 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is the tweak, or
+
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> while the arguments are incomplete. A tweak without arguments has no editor. A tweak whose editor
+doesn’t depend on the data defines this in its class. Otherwise, it implements this for each kind of data
+source with 
 <a class="reference internal" href="common.html#metacellswidgets.common.implements" title="metacellswidgets.common.implements">
 <code class="xref py py-func docutils literal notranslate">
 <span class="pre">implements()
@@ -1590,6 +1641,10 @@ of data source with
 <strong>graph
 </strong> (
 <em>Graph
+</em>
+<em> | 
+</em>
+<em>None
 </em>)
 </p>
 </li>
@@ -1873,18 +1928,35 @@ it for each graph type it applies to; for any other graph type, this is an error
 <code class="docutils literal notranslate">
 <span class="pre">graph
 </span>
-</code> is the form’s graph without its tweaks, e.g. for starting from its title. The widget’s 
-<code class="docutils literal notranslate">
-<span class="pre">value
-</span>
-</code> is
-the tweak, or 
+</code> is the form’s graph as last shown, e.g. for starting a new tweak from its title, or 
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
-</code> while the arguments are incomplete. A tweak without arguments has no editor. A tweak
-whose editor doesn’t depend on the data defines this in its class. Otherwise, it implements this for each kind
-of data source with 
+</code> if no
+graph was shown yet (e.g. while the form is incomplete); the editor then starts from the tweak’s own defaults.
+When the shown graph changes, the editor’s 
+<code class="docutils literal notranslate">
+<span class="pre">update_graph
+</span>
+</code> is called with the new one (see
+
+<a class="reference internal" href="editors.html#metacellswidgets.editors.ArgumentsEditor.update_graph" title="metacellswidgets.editors.ArgumentsEditor.update_graph">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">update_graph()
+</span>
+</code>
+</a>). The widget’s 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is the tweak, or
+
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> while the arguments are incomplete. A tweak without arguments has no editor. A tweak whose editor
+doesn’t depend on the data defines this in its class. Otherwise, it implements this for each kind of data
+source with 
 <a class="reference internal" href="common.html#metacellswidgets.common.implements" title="metacellswidgets.common.implements">
 <code class="xref py py-func docutils literal notranslate">
 <span class="pre">implements()
@@ -1919,6 +1991,10 @@ of data source with
 <strong>graph
 </strong> (
 <em>Graph
+</em>
+<em> | 
+</em>
+<em>None
 </em>)
 </p>
 </li>
@@ -2252,18 +2328,35 @@ it for each graph type it applies to; for any other graph type, this is an error
 <code class="docutils literal notranslate">
 <span class="pre">graph
 </span>
-</code> is the form’s graph without its tweaks, e.g. for starting from its title. The widget’s 
-<code class="docutils literal notranslate">
-<span class="pre">value
-</span>
-</code> is
-the tweak, or 
+</code> is the form’s graph as last shown, e.g. for starting a new tweak from its title, or 
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
-</code> while the arguments are incomplete. A tweak without arguments has no editor. A tweak
-whose editor doesn’t depend on the data defines this in its class. Otherwise, it implements this for each kind
-of data source with 
+</code> if no
+graph was shown yet (e.g. while the form is incomplete); the editor then starts from the tweak’s own defaults.
+When the shown graph changes, the editor’s 
+<code class="docutils literal notranslate">
+<span class="pre">update_graph
+</span>
+</code> is called with the new one (see
+
+<a class="reference internal" href="editors.html#metacellswidgets.editors.ArgumentsEditor.update_graph" title="metacellswidgets.editors.ArgumentsEditor.update_graph">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">update_graph()
+</span>
+</code>
+</a>). The widget’s 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is the tweak, or
+
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> while the arguments are incomplete. A tweak without arguments has no editor. A tweak whose editor
+doesn’t depend on the data defines this in its class. Otherwise, it implements this for each kind of data
+source with 
 <a class="reference internal" href="common.html#metacellswidgets.common.implements" title="metacellswidgets.common.implements">
 <code class="xref py py-func docutils literal notranslate">
 <span class="pre">implements()
@@ -2298,6 +2391,10 @@ of data source with
 <strong>graph
 </strong> (
 <em>Graph
+</em>
+<em> | 
+</em>
+<em>None
 </em>)
 </p>
 </li>
@@ -2399,17 +2496,17 @@ of data source with
 </dt>
 
 <dd>
-<p>Pick a tweak of the 
+<p>Pick a tweak of a graph of the 
 <code class="docutils literal notranslate">
-<span class="pre">graph
+<span class="pre">graph_type
 </span>
 </code>, starting with the 
 <code class="docutils literal notranslate">
 <span class="pre">current
 </span>
-</code> tweak (if any). The choices are the registered tweaks
-which apply to the type of the graph; or none. Picking a tweak with arguments shows its editor, which gets the
-
+</code> tweak (if any). The choices are the
+registered tweaks which apply to the graph type; or none. Picking a tweak with arguments shows its editor, which
+gets the 
 <code class="docutils literal notranslate">
 <span class="pre">source
 </span>
@@ -2417,7 +2514,11 @@ which apply to the type of the graph; or none. Picking a tweak with arguments sh
 <code class="docutils literal notranslate">
 <span class="pre">graph
 </span>
-</code>.
+</code> the form last showed (or 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> if it showed none yet).
 </p>
 
 <dl class="field-list simple">
@@ -2443,9 +2544,28 @@ which apply to the type of the graph; or none. Picking a tweak with arguments sh
 
 <li>
 <p>
+<strong>graph_type
+</strong> (
+<em>Type
+</em>
+<em>[
+</em>
+<em>Graph
+</em>
+<em>]
+</em>)
+</p>
+</li>
+
+<li>
+<p>
 <strong>graph
 </strong> (
 <em>Graph
+</em>
+<em> | 
+</em>
+<em>None
 </em>)
 </p>
 </li>
@@ -2470,6 +2590,77 @@ which apply to the type of the graph; or none. Picking a tweak with arguments sh
 </dd>
 
 </dl>
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.tweaks.TweakPicker.update_graph">
+
+<span class="sig-name descname">
+<span class="pre">update_graph
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">graph
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/tweaks.html#TweakPicker.update_graph">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.tweaks.TweakPicker.update_graph" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Called with the 
+<code class="docutils literal notranslate">
+<span class="pre">graph
+</span>
+</code> the form shows, each time it is drawn, so an editor whose starting values come from
+the graph (e.g. a tweak’s size) can follow it. A value the user set is kept. By default, nothing changes.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>graph
+</strong> (
+<em>Any
+</em>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>None
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
 
 </dd>
 </dl>
