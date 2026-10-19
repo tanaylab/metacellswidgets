@@ -129,6 +129,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.kernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">_MainThreadJobs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.kernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">_on_main_thread</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.kernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">_owned_subshell_id</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.kernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">_reporting_callback_errors</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.kernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">_route_to_subshell</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.kernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">_routing_new_widgets</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.rewrite</span><span class="w"> </span><span class="kn">import</span> <span class="n">_CallSite</span>
@@ -737,7 +738,7 @@
                 <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">:</span>
                     <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
 
-        <span class="k">with</span> <span class="n">_routing_new_widgets</span><span class="p">(</span><span class="n">_owned_subshell_id</span><span class="p">()):</span>
+        <span class="k">with</span> <span class="n">_routing_new_widgets</span><span class="p">(</span><span class="n">_owned_subshell_id</span><span class="p">()),</span> <span class="n">_reporting_callback_errors</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">):</span>
             <span class="n">jobs</span><span class="o">.</span><span class="n">serve</span><span class="p">(</span><span class="n">is_done</span><span class="p">,</span> <span class="n">on_poll</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_editor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>

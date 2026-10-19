@@ -56,6 +56,7 @@ from .editors import ListEditor
 from .kernel import _MainThreadJobs
 from .kernel import _on_main_thread
 from .kernel import _owned_subshell_id
+from .kernel import _reporting_callback_errors
 from .kernel import _route_to_subshell
 from .kernel import _routing_new_widgets
 from .rewrite import _CallSite
@@ -613,7 +614,7 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
                 with self._errors:
                     traceback.print_exc()
 
-        with _routing_new_widgets(_owned_subshell_id()):
+        with _routing_new_widgets(_owned_subshell_id()), _reporting_callback_errors(self._errors):
             jobs.serve(is_done, on_poll)
         self._editor.close()
         assert self._form is not None

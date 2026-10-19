@@ -173,6 +173,39 @@ def test_widget_messages_reach_a_blocked_cell(kernel: Tuple[Any, Any]) -> None:
     assert job_thread == "MainThread"
 
 
+def test_callback_errors_are_reported(kernel: Tuple[Any, Any]) -> None:
+    """
+    While reporting, an exception raised in a widget callback is shown in the given output.
+    """
+    _, client = kernel
+    model_id = _execute(
+        client,
+        "import threading\n"
+        "import ipywidgets\n"
+        "from metacellswidgets.kernel import _MainThreadJobs, _owned_subshell_id, _reporting_callback_errors\n"
+        "from metacellswidgets.kernel import _route_to_subshell\n"
+        "output = ipywidgets.Output()\n"
+        "text = ipywidgets.Text()\n"
+        "jobs = _MainThreadJobs()\n"
+        "is_done = threading.Event()\n"
+        "def fail(_change):\n"
+        "    raise ValueError('callback failed')\n"
+        "text.observe(fail, names='value')\n"
+        "_route_to_subshell(text, _owned_subshell_id())\n"
+        "print(text.model_id)\n",
+    ).strip()
+
+    # Serving ends once the output shows the exception, so it is reported before the reporting stops.
+    message_id = client.execute(
+        "with _reporting_callback_errors(output):\n"
+        "    jobs.serve(is_done, lambda: is_done.set() if output.outputs else None)\n"
+        "print('callback failed' in ''.join(entry.get('text', '') for entry in output.outputs))\n"
+    )
+    time.sleep(1)
+    _send_state(client, {"comm_id": model_id}, {"value": "x"})
+    assert _outputs(client, message_id, timeout=60).split()[-1] == "True"
+
+
 def _is_gene_picker(state: Dict[str, Any]) -> bool:
     # Whether the widget state is of the combobox of a gene picker.
     return state.get("_model_name") == "ComboboxModel" and state.get("placeholder") == "Gene"

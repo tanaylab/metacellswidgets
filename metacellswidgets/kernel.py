@@ -1,7 +1,7 @@
 """
 Let an editor block its cell while its widgets keep working.
 
-An interactive form blocks the cell that displays it until the user clicks "Done". Three things make that work:
+An interactive form blocks the cell that displays it until the user clicks "Done". Four things make that work:
 
 * The editor's widgets are routed to a kernel subshell this module owns. The subshell's thread handles their messages
   while the cell blocks the main thread. ``ipykernel`` would otherwise send them to the main shell, where they would
@@ -15,11 +15,15 @@ An interactive form blocks the cell that displays it until the user clicks "Done
   flush never returns on a subshell thread, so it is wrapped to only run on the main thread. This happens when this
   module is imported.
 
+* ``ipywidgets`` shows an exception raised in a widget callback by IPython's ``showtraceback``. While the editor is
+  shown, these exceptions go to its error area instead, next to its graph.
+
 All of this uses internals of ``ipykernel`` 7, which is why the package requires ``ipykernel>=7.3,<8``.
 """
 
 import queue
 import threading
+import traceback
 from contextlib import contextmanager
 from typing import Any
 from typing import Callable
@@ -116,6 +120,28 @@ def _routing_new_widgets(subshell_id: str) -> Iterator[None]:
         yield
     finally:
         Widget.on_widget_constructed(previous)
+
+
+@contextmanager
+def _reporting_callback_errors(output: Any) -> Iterator[None]:
+    # Show the exceptions of widget callbacks in the ``output`` (e.g. the error area of an editor), where the user sees
+    # them. ``ipywidgets`` catches an exception raised while handling a frontend message, and shows it by IPython's
+    # ``showtraceback``, which this replaces on the shell. The replacement runs inside that ``except``, so the exception
+    # is still the current one. On exit, the shell's own ``showtraceback`` (or a previous replacement) is restored.
+    shell = get_ipython()
+    previous = shell.__dict__.get("showtraceback")
+
+    def show_traceback(*_args: Any, **_kwargs: Any) -> None:
+        output.append_stderr(traceback.format_exc())
+
+    shell.showtraceback = show_traceback
+    try:
+        yield
+    finally:
+        if previous is None:
+            del shell.showtraceback
+        else:
+            shell.showtraceback = previous
 
 
 # pylint: disable=missing-function-docstring
