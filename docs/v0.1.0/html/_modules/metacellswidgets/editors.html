@@ -158,12 +158,15 @@
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The base class of the widgets editing the arguments of a property or a tweak. Its ``value`` is the property or the</span>
 <span class="sd">    tweak, or ``None`` while its arguments are incomplete. It is ``is_blank`` while nothing is picked at all (e.g., a</span>
-<span class="sd">    class picked whose arguments are still missing is not blank).</span>
+<span class="sd">    class picked whose arguments are still missing is not blank). It isn't ``is_valid`` while it keeps an object which</span>
+<span class="sd">    isn't valid in its context (e.g., a property the current axis doesn't have); its ``value`` is then ``None``.</span>
 <span class="sd">    """</span>
 
     <span class="n">value</span> <span class="o">=</span> <span class="n">traitlets</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">is_blank</span> <span class="o">=</span> <span class="n">traitlets</span><span class="o">.</span><span class="n">Bool</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">is_valid</span> <span class="o">=</span> <span class="n">traitlets</span><span class="o">.</span><span class="n">Bool</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ArgumentsEditor.shown">
 <a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.ArgumentsEditor.shown">[docs]</a>
@@ -389,13 +392,17 @@
 
 <span class="sd">    A picker may have a ``default`` object. While nothing was given or changed, the picker shows the ``default`` (picked,</span>
 <span class="sd">    with its arguments), and its ``value`` stays ``None`` until the first change. A "Reset to default" button, shown</span>
-<span class="sd">    while the ``value`` isn't ``None``, goes back to showing the ``default``. A given object which isn't one of the</span>
-<span class="sd">    choices (e.g., after the axis changed), or whose arguments aren't valid, gives way to the ``default``.</span>
+<span class="sd">    while the ``value`` isn't ``None``, goes back to showing the ``default``.</span>
+
+<span class="sd">    The picker keeps the object it was given or changed to. An object isn't valid if it isn't one of the choices (e.g.,</span>
+<span class="sd">    after the axis changed), or if its arguments aren't valid. While the kept object isn't valid, the picker isn't</span>
+<span class="sd">    ``is_valid``: it shows the ``default`` (or nothing), and its ``value`` is ``None``. Any change replaces the kept</span>
+<span class="sd">    object.</span>
 
 <span class="sd">    A picker may be for the entries of an ``axis``, which may be an :py:class:`AxisPicker` to follow. The ``default``</span>
 <span class="sd">    may then be a function giving the default object for an axis. When the followed axis changes, the choices change</span>
-<span class="sd">    with it. A picker showing its default shows the default of the new axis. A changed picker keeps its object if it is</span>
-<span class="sd">    still one of the choices and its arguments are valid for the new axis, and otherwise gives way to the default.</span>
+<span class="sd">    with it. A picker showing its default shows the default of the new axis. A changed picker shows what its kept object</span>
+<span class="sd">    becomes on the new axis, if that is valid. When the axis changes back, it shows the kept object again.</span>
 
 <span class="sd">    A subclass makes its widget, then calls ``_show`` with its choices and the object it starts with. It implements</span>
 <span class="sd">    ``_editor_of``, which makes the editor of a choice. A subclass which follows an axis also implements ``_choices``,</span>
@@ -413,6 +420,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">axis</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">AxisPicker</span><span class="p">)</span> <span class="k">else</span> <span class="n">axis</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_given_default</span> <span class="o">=</span> <span class="n">default</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shown_choices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Arguments</span><span class="p">]]</span> <span class="o">=</span> <span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kept</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Arguments</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kept_axis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_default</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_updating</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_editor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ArgumentsEditor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -468,6 +477,27 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_is_updating</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">choices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Arguments</span><span class="p">]],</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Arguments</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Show the ``choices``, keeping the ``current`` object (if any).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kept</span> <span class="o">=</span> <span class="n">current</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kept_axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_show_kept</span><span class="p">(</span><span class="n">choices</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_show_kept</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">choices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Arguments</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Show the ``choices``, with what the kept object becomes on the current axis picked, if it is valid.</span>
+        <span class="n">shown</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kept</span>
+        <span class="k">if</span> <span class="n">shown</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kept_axis</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kept_axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">shown</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_axis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kept_axis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">,</span> <span class="n">shown</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_display</span><span class="p">(</span><span class="n">choices</span><span class="p">,</span> <span class="n">shown</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kept</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_keep_value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Keep the ``value`` the picker was changed to.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kept_axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">choices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Arguments</span><span class="p">]],</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Arguments</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Show the ``choices``, with the ``current`` object picked if it is one of them and its arguments are valid.</span>
         <span class="c1"># Otherwise, show the default (if it is one of them), or nothing.</span>
         <span class="n">choice</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">type</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
@@ -483,7 +513,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_options</span><span class="p">(</span><span class="n">choices</span><span class="p">,</span> <span class="n">choice</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pick</span><span class="p">(</span><span class="n">choice</span><span class="p">,</span> <span class="n">current</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_default</span> <span class="ow">and</span> <span class="n">current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_show</span><span class="p">(</span><span class="n">choices</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_display</span><span class="p">(</span><span class="n">choices</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_pick</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">choice</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Arguments</span><span class="p">]],</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Arguments</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Pick the ``choice``, starting its editor (if it has one) with the ``current`` object.</span>
@@ -513,21 +543,24 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_on_dropdown_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_updating</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_is_default</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="n">_on_main_thread</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pick</span><span class="p">(</span><span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">],</span> <span class="kc">None</span><span class="p">))</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">pick</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_pick</span><span class="p">(</span><span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">],</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_keep_value</span><span class="p">()</span>
+
+            <span class="n">_on_main_thread</span><span class="p">(</span><span class="n">pick</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_on_editor_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_default</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_value</span><span class="p">(</span><span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_keep_value</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_on_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_button</span><span class="p">:</span> <span class="n">Button</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">_on_main_thread</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_show</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shown_choices</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_on_axis_picker_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">old_axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span>
-        <span class="k">assert</span> <span class="n">old_axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="o">=</span> <span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">]</span>
-        <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_axis</span><span class="p">(</span><span class="n">old_axis</span><span class="p">,</span> <span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-        <span class="n">_on_main_thread</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_show</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_choices</span><span class="p">(),</span> <span class="n">current</span><span class="p">))</span></div>
+        <span class="n">_on_main_thread</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_show_kept</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_choices</span><span class="p">()))</span></div>
 
 
 
@@ -614,6 +647,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shown</span><span class="p">,</span> <span class="n">Property</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_is_default</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_value</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">shown</span><span class="p">)(</span><span class="o">**</span><span class="n">shown</span><span class="o">.</span><span class="n">arguments</span><span class="p">()))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_keep_value</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">picked</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Arguments</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># The picked property takes the picker's values of the look arguments its class has, since the editors of the</span>

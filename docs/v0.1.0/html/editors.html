@@ -555,7 +555,20 @@ tweak, or
 <span class="pre">is_blank
 </span>
 </code> while nothing is picked at all (e.g., a
-class picked whose arguments are still missing is not blank).
+class picked whose arguments are still missing is not blank). It isn’t 
+<code class="docutils literal notranslate">
+<span class="pre">is_valid
+</span>
+</code> while it keeps an object which
+isn’t valid in its context (e.g., a property the current axis doesn’t have); its 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is then 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code>.
 </p>
 
 <dl class="py method">
@@ -922,12 +935,29 @@ while the
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
-</code>. A given object which isn’t one of the
-choices (e.g., after the axis changed), or whose arguments aren’t valid, gives way to the 
+</code>.
+</p>
+
+<p>The picker keeps the object it was given or changed to. An object isn’t valid if it isn’t one of the choices (e.g.,
+after the axis changed), or if its arguments aren’t valid. While the kept object isn’t valid, the picker isn’t
+
+<code class="docutils literal notranslate">
+<span class="pre">is_valid
+</span>
+</code>: it shows the 
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
-</code>.
+</code> (or nothing), and its 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code>. Any change replaces the kept
+object.
 </p>
 
 <p>A picker may be for the entries of an 
@@ -946,8 +976,8 @@ choices (e.g., after the axis changed), or whose arguments aren’t valid, gives
 </span>
 </code>
 may then be a function giving the default object for an axis. When the followed axis changes, the choices change
-with it. A picker showing its default shows the default of the new axis. A changed picker keeps its object if it is
-still one of the choices and its arguments are valid for the new axis, and otherwise gives way to the default.
+with it. A picker showing its default shows the default of the new axis. A changed picker shows what its kept object
+becomes on the new axis, if that is valid. When the axis changes back, it shows the kept object again.
 </p>
 
 <p>A subclass makes its widget, then calls 

@@ -77,12 +77,15 @@ class ArgumentsEditor(HBox):  # pylint: disable=too-many-ancestors,abstract-meth
     """
     The base class of the widgets editing the arguments of a property or a tweak. Its ``value`` is the property or the
     tweak, or ``None`` while its arguments are incomplete. It is ``is_blank`` while nothing is picked at all (e.g., a
-    class picked whose arguments are still missing is not blank).
+    class picked whose arguments are still missing is not blank). It isn't ``is_valid`` while it keeps an object which
+    isn't valid in its context (e.g., a property the current axis doesn't have); its ``value`` is then ``None``.
     """
 
     value = traitlets.Any(None, allow_none=True)
 
     is_blank = traitlets.Bool(True)
+
+    is_valid = traitlets.Bool(True)
 
     def shown(self) -> Any:
         """
@@ -278,13 +281,17 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
 
     A picker may have a ``default`` object. While nothing was given or changed, the picker shows the ``default`` (picked,
     with its arguments), and its ``value`` stays ``None`` until the first change. A "Reset to default" button, shown
-    while the ``value`` isn't ``None``, goes back to showing the ``default``. A given object which isn't one of the
-    choices (e.g., after the axis changed), or whose arguments aren't valid, gives way to the ``default``.
+    while the ``value`` isn't ``None``, goes back to showing the ``default``.
+
+    The picker keeps the object it was given or changed to. An object isn't valid if it isn't one of the choices (e.g.,
+    after the axis changed), or if its arguments aren't valid. While the kept object isn't valid, the picker isn't
+    ``is_valid``: it shows the ``default`` (or nothing), and its ``value`` is ``None``. Any change replaces the kept
+    object.
 
     A picker may be for the entries of an ``axis``, which may be an :py:class:`AxisPicker` to follow. The ``default``
     may then be a function giving the default object for an axis. When the followed axis changes, the choices change
-    with it. A picker showing its default shows the default of the new axis. A changed picker keeps its object if it is
-    still one of the choices and its arguments are valid for the new axis, and otherwise gives way to the default.
+    with it. A picker showing its default shows the default of the new axis. A changed picker shows what its kept object
+    becomes on the new axis, if that is valid. When the axis changes back, it shows the kept object again.
 
     A subclass makes its widget, then calls ``_show`` with its choices and the object it starts with. It implements
     ``_editor_of``, which makes the editor of a choice. A subclass which follows an axis also implements ``_choices``,
@@ -302,6 +309,8 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
         self._axis: Optional[str] = axis.value if isinstance(axis, AxisPicker) else axis
         self._given_default = default
         self._shown_choices: Sequence[Type[Arguments]] = ()
+        self._kept: Optional[Arguments] = None
+        self._kept_axis: Optional[str] = None
         self._is_default = False
         self._is_updating = False
         self._editor: Optional[ArgumentsEditor] = None
@@ -354,6 +363,27 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
             self._is_updating = False
 
     def _show(self, choices: Sequence[Type[Arguments]], current: Optional[Arguments]) -> None:
+        # Show the ``choices``, keeping the ``current`` object (if any).
+        self._kept = current
+        self._kept_axis = self._axis
+        self._show_kept(choices)
+
+    def _show_kept(self, choices: Sequence[Type[Arguments]]) -> None:
+        # Show the ``choices``, with what the kept object becomes on the current axis picked, if it is valid.
+        shown = self._kept
+        if shown is not None and self._kept_axis != self._axis:
+            assert self._kept_axis is not None and self._axis is not None
+            shown = self._on_axis(self._kept_axis, self._axis, shown)
+        self._display(choices, shown)
+        self.is_valid = self._kept is None or self.value is not None
+
+    def _keep_value(self) -> None:
+        # Keep the ``value`` the picker was changed to.
+        self._kept = self.value
+        self._kept_axis = self._axis
+        self.is_valid = True
+
+    def _display(self, choices: Sequence[Type[Arguments]], current: Optional[Arguments]) -> None:
         # Show the ``choices``, with the ``current`` object picked if it is one of them and its arguments are valid.
         # Otherwise, show the default (if it is one of them), or nothing.
         choice = None if current is None else type(current)
@@ -369,7 +399,7 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
         self._set_options(choices, choice)
         self._pick(choice, current)
         if not self._is_default and current is not None and self.value is None:
-            self._show(choices, None)
+            self._display(choices, None)
 
     def _pick(self, choice: Optional[Type[Arguments]], current: Optional[Arguments]) -> None:
         # Pick the ``choice``, starting its editor (if it has one) with the ``current`` object.
@@ -399,21 +429,24 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
     def _on_dropdown_change(self, change: Dict) -> None:
         if not self._is_updating:
             self._is_default = False
-            _on_main_thread(lambda: self._pick(change["new"], None))
+
+            def pick() -> None:
+                self._pick(change["new"], None)
+                self._keep_value()
+
+            _on_main_thread(pick)
 
     def _on_editor_change(self, change: Dict) -> None:
         self._is_default = False
         self._set_value(change["new"])
+        self._keep_value()
 
     def _on_reset(self, _button: Button) -> None:
         _on_main_thread(lambda: self._show(self._shown_choices, None))
 
     def _on_axis_picker_change(self, change: Dict) -> None:
-        old_axis = self._axis
-        assert old_axis is not None
         self._axis = change["new"]
-        current = self._on_axis(old_axis, change["new"], self.value)
-        _on_main_thread(lambda: self._show(self._choices(), current))
+        _on_main_thread(lambda: self._show_kept(self._choices()))
 
 
 class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstract-method,too-many-instance-attributes
@@ -497,6 +530,7 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
         if isinstance(shown, Property):
             self._is_default = False
             self._set_value(type(shown)(**shown.arguments()))
+            self._keep_value()
 
     def _set_value(self, picked: Optional[Arguments]) -> None:
         # The picked property takes the picker's values of the look arguments its class has, since the editors of the

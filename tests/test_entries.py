@@ -79,6 +79,7 @@ def test_entry_filters() -> None:
 def test_entry_filter_on_axis() -> None:
     """
     On the block axis, an environment becomes the neighborhood of the same block, also in a picker following the axis.
+    Back on the metacell axis, the picker shows the environment again.
     """
     source = mw.DafWidgets(_daf())
     assert mw.InEnvironment(block="B1").on_axis(source, "block") == mw.InNeighborhood(block="B1")
@@ -89,6 +90,8 @@ def test_entry_filter_on_axis() -> None:
     assert picker.value == mw.InEnvironment(block="B1")
     axis._dropdown.value = "block"
     assert picker.value == mw.InNeighborhood(block="B1")
+    axis._dropdown.value = "metacell"
+    assert picker.value == mw.InEnvironment(block="B1")
 
 
 def test_entry_filter_editors() -> None:

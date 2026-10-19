@@ -73,7 +73,8 @@ def test_property_picker_current() -> None:
 
 def test_property_picker_follows_axis() -> None:
     """
-    When the axis changes, a property the new axis has is kept, with its arguments; any other is dropped.
+    When the axis changes, a property the new axis has is kept, with its arguments. Any other isn't valid, and the
+    picker's value is ``None``, until the axis changes back. A change while it isn't valid replaces it.
     """
     source = mw.DafWidgets(_full_daf())
 
@@ -85,8 +86,22 @@ def test_property_picker_follows_axis() -> None:
 
     axis = AxisPicker(source, ["metacell", "block"])
     picker = PropertyPicker(source, Slot.COLORS, axis, mw.Block())
+    assert picker.is_valid
     axis._dropdown.value = "block"
     assert picker.value is None
+    assert not picker.is_valid
+    axis._dropdown.value = "metacell"
+    assert picker.value == mw.Block()
+    assert picker.is_valid
+
+    axis._dropdown.value = "block"
+    picker._dropdown.value = mw.NMetacells
+    assert picker.value == mw.NMetacells()
+    assert picker.is_valid
+    axis._dropdown.value = "metacell"
+    assert picker.value is None
+    axis._dropdown.value = "block"
+    assert picker.value == mw.NMetacells()
 
     axis = AxisPicker(source, ["metacell", "block"])
     picker = PropertyPicker(source, Slot.COLORS, axis, mw.BooleanMask("is_doublet"))
@@ -97,7 +112,8 @@ def test_property_picker_follows_axis() -> None:
 
 def test_property_picker_on_axis_change() -> None:
     """
-    A function may decide which property the slot holds when the axis changes.
+    A function may decide which property the slot holds when the axis changes. When the axis changes back, the slot
+    holds its property again.
     """
     source = mw.DafWidgets(_full_daf())
 
@@ -109,12 +125,15 @@ def test_property_picker_on_axis_change() -> None:
     picker = PropertyPicker(source, Slot.COLORS, axis, mw.Block(), on_axis_change=_to_type)
     axis._dropdown.value = "block"
     assert picker.value == mw.Type()
+    axis._dropdown.value = "metacell"
+    assert picker.value == mw.Block()
 
 
 def test_property_picker_default() -> None:
     """
     A picker shows its default while its value stays ``None``. A change makes the value explicit, and the reset button
-    returns to the default. A property which no longer fits the axis gives way to the default.
+    returns to the default. A property which no longer fits the axis gives way to the default, until the axis changes
+    back. So does a given property which doesn't fit the axis.
     """
     source = mw.DafWidgets(_full_daf())
     axis = AxisPicker(source, ["metacell", "block"])
@@ -135,3 +154,11 @@ def test_property_picker_default() -> None:
     axis._dropdown.value = "block"
     assert picker.value is None
     assert picker._dropdown.value is mw.Type
+    axis._dropdown.value = "metacell"
+    assert picker.value == mw.Block()
+    assert picker._dropdown.value is mw.Block
+
+    given = PropertyPicker(source, Slot.COLORS, "block", mw.Block(), default=mw.Type())
+    assert given.value is None
+    assert given._dropdown.value is mw.Type
+    assert not given.is_valid
