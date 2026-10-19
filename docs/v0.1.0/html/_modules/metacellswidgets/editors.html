@@ -177,6 +177,16 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span></div>
 
 
+<div class="viewcode-block" id="ArgumentsEditor.intended">
+<a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.ArgumentsEditor.intended">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">intended</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        What the editor was given or changed to, including what isn't valid in its context. By default, this is its</span>
+<span class="sd">        ``value``.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span></div>
+
+
 <div class="viewcode-block" id="ArgumentsEditor.update_graph">
 <a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.ArgumentsEditor.update_graph">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pylint: disable=unused-argument</span>
@@ -471,6 +481,12 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_default</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="ClassPicker.intended">
+<a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.ClassPicker.intended">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">intended</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Arguments</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kept</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">choices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Arguments</span><span class="p">]],</span> <span class="n">choice</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Arguments</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -786,6 +802,15 @@
 <a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.ListEditor.shown">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">shown</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">_Item</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ListEditor.intended">
+<a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.ListEditor.intended">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">intended</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">_Item</span><span class="p">]]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_default</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">intended_items</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">intended</span><span class="p">()</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">intended_items</span> <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">_Item</span><span class="p">]:</span>

@@ -93,6 +93,13 @@ class ArgumentsEditor(HBox):  # pylint: disable=too-many-ancestors,abstract-meth
         """
         return self.value
 
+    def intended(self) -> Any:
+        """
+        What the editor was given or changed to, including what isn't valid in its context. By default, this is its
+        ``value``.
+        """
+        return self.value
+
     def update_graph(self, graph: Any) -> None:  # pylint: disable=unused-argument
         """
         Called with the ``graph`` the form shows, each time it is drawn, so an editor whose starting values come from
@@ -355,6 +362,9 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
         if self._is_default:
             return self._default()
         return self.value
+
+    def intended(self) -> Optional[Arguments]:
+        return self._kept
 
     def _set_options(self, choices: Sequence[Type[Arguments]], choice: Optional[Type[Arguments]]) -> None:
         # Offer the ``choices`` (after the empty one), with the ``choice`` picked, without touching its editor.
@@ -658,6 +668,12 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
 
     def shown(self) -> List[_Item]:
         return self._values()
+
+    def intended(self) -> Optional[List[_Item]]:
+        if self._is_default:
+            return None
+        intended_items = [row.intended() for row in self._rows]
+        return [item for item in intended_items if item is not None]
 
     def _values(self) -> List[_Item]:
         # The objects of the shown rows which have one.

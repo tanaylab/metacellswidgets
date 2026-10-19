@@ -52,6 +52,7 @@ from somegraphspy import Graph
 
 from .common import Arguments
 from .common import _give_own_dispatchers
+from .editors import ArgumentsEditor
 from .editors import ListEditor
 from .kernel import _MainThreadJobs
 from .kernel import _on_main_thread
@@ -221,11 +222,13 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
 
     def bind(self, **widgets: Widget) -> None:
         """
-        Tie each of the arguments to the ``widgets`` with its name. When the ``value`` of a widget changes, so does the
-        argument, and the graph is redrawn.
+        Tie each of the arguments to the ``widgets`` with its name. The argument takes the ``value`` of its widget at
+        once, which leaves out what isn't valid in the editor's context (e.g. a property the axis doesn't have). When the
+        ``value`` of a widget changes, so does the argument, and the graph is redrawn.
         """
         for name, widget in widgets.items():
             self._bound[name] = widget
+            setattr(self, name, widget.value)
             widget.observe(functools.partial(self._on_bound_change, name), names="value")
 
     def _on_bound_change(self, name: str, change: Dict) -> None:
@@ -521,9 +524,14 @@ _Pool = Dict[str, Tuple[Any, Any]]
 
 
 def _pooled(pool: _Pool, form: GraphForm) -> None:
-    # Put the arguments of the ``form`` into the ``pool``, replacing the earlier values of the same names.
+    # Put the arguments of the ``form`` into the ``pool``, replacing the earlier values of the same names. An argument
+    # edited by an ``ArgumentsEditor`` is pooled with what the editor intends, including what isn't valid for this form
+    # (e.g. a hidden tweak which applies to another graph type).
     hints = typing.get_type_hints(type(form).__init__)
     for name, value in form.arguments().items():
+        widget = form._bound.get(name)  # pylint: disable=protected-access
+        if isinstance(widget, ArgumentsEditor):
+            value = widget.intended()
         pool[name] = (value, hints.get(name))
 
 
@@ -533,14 +541,21 @@ def _switched_form(
     # A form of the ``graph_class`` for the ``source``, with the values of the ``pool`` whose name and type annotation fit
     # its arguments, and ``None`` for each of its other required arguments. A selection it takes from the ``pool`` was
     # made on the ``selection_points``, so it is kept only if the form's graph has the same points.
+    #
+    # The pooled values are intended values, which the checks of the constructor may reject (e.g. a hidden hover which
+    # the colors show). So they are set after the form is constructed, and its editors leave out what isn't valid (see
+    # ``GraphForm.bind``).
     hints = typing.get_type_hints(graph_class.__init__)
-    arguments: Dict[str, Any] = {}
+    required: Dict[str, Any] = {}
+    pooled: Dict[str, Any] = {}
     for parameter in list(inspect.signature(graph_class).parameters.values())[1:]:
         if parameter.name in pool and pool[parameter.name][1] == hints.get(parameter.name):
-            arguments[parameter.name] = pool[parameter.name][0]
-        elif parameter.default is inspect.Parameter.empty:
-            arguments[parameter.name] = None
-    form = graph_class(source, **arguments)
+            pooled[parameter.name] = pool[parameter.name][0]
+        if parameter.default is inspect.Parameter.empty:
+            required[parameter.name] = None
+    form = graph_class(source, **required)
+    for name, value in pooled.items():
+        setattr(form, name, value)
     form._selection_points = selection_points  # pylint: disable=protected-access
     return form
 
@@ -560,17 +575,20 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         self._pool: _Pool = {}
         self._pooled_selection_points: Optional[Any] = None
         self._is_reverting = False
-        self._figure = FigureWidget(
-            form._shown_graph().figure  # pylint: disable=protected-access
-            if form is not None and form.is_complete()
-            else Figure()
-        )
         self._done = Button(description="Done", button_style="primary")
         revert = Button(description="Revert")
         revert.on_click(self._on_revert)
         self._errors = Output()
         self._tweaks: Optional[ListEditor[Tweak]] = None
+        # The editors are made before the graph is drawn, since binding them leaves out of the form's arguments what
+        # isn't valid.
         self._body = VBox([] if form is None else self._form_widgets(form))
+        graph = (
+            form._shown_graph() if form is not None and form.is_complete() else None  # pylint: disable=protected-access
+        )
+        self._figure = FigureWidget(Figure() if graph is None else graph.figure)
+        if graph is not None and self._tweaks is not None:
+            self._tweaks.update_graph(graph)
         toolbar: List[Widget] = [self._done, revert]
         rows: List[Widget] = []
         self._menu: Optional[GraphMenu] = None

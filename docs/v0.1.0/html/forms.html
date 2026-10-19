@@ -1305,12 +1305,17 @@ rule overrides this.
 <code class="docutils literal notranslate">
 <span class="pre">widgets
 </span>
-</code> with its name. When the 
+</code> with its name. The argument takes the 
 <code class="docutils literal notranslate">
 <span class="pre">value
 </span>
-</code> of a widget changes, so does the
-argument, and the graph is redrawn.
+</code> of its widget at
+once, which leaves out what isn’t valid in the editor’s context (e.g. a property the axis doesn’t have). When the
+
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> of a widget changes, so does the argument, and the graph is redrawn.
 </p>
 
 <dl class="field-list simple">

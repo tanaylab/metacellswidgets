@@ -16,6 +16,7 @@ from metacellswidgets.forms import _pooled
 from metacellswidgets.forms import _switched_form
 
 from .test_genes_heatmap import _daf
+from .test_tweaks import _Heatmaps
 
 # A tree with a sub-menu, so a path may have more than one level.
 _TREE = mw.Branch("Graphs", [mw.GeneGene, mw.Branch("Heatmaps", [mw.GenesHeatmap])])
@@ -138,6 +139,34 @@ def test_incomplete_form() -> None:
     menu_session = _EditSession(source, None, mw.DafWidgets.tree)
     menu_session._switch(mw.GeneGene)
     assert menu_session._tweaks is not None
+
+
+def test_intended_values() -> None:
+    """
+    The arguments of an edited form leave out what isn't valid in its editors' context: a tweak of another graph type,
+    and a hover which the colors show. The pool keeps these for the next graphs, without failing the checks of their
+    constructors.
+    """
+    # pylint: disable=protected-access
+    source = mw.DafWidgets(_daf())
+    form = source.gene_gene(x_gene="A", y_gene="B", hovers=[mw.Type()], tweaks=[_Heatmaps()])
+    session = _EditSession(source, form, mw.DafWidgets.tree)
+    assert form.tweaks == []
+    form._bound["colors"]._dropdown.value = mw.Type
+    assert form.hovers == []
+
+    session._switch(mw.GenesHeatmap)
+    assert session._form is not None
+    assert session._form.tweaks == [_Heatmaps()]
+
+    session._switch(mw.GeneGene)
+    switched = session._form
+    assert isinstance(switched, mw.GeneGene)
+    assert switched.colors == mw.Type()
+    assert switched.hovers == []
+    assert switched.tweaks == []
+    switched._bound["colors"]._dropdown.value = None
+    assert switched.hovers == [mw.Type()]
 
 
 def test_kind_tree() -> None:
