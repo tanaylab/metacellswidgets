@@ -271,7 +271,8 @@ def test_legends_editor() -> None:
 def test_tweak_picker() -> None:
     """
     A tweak picker offers the tweaks of the graph type, the built-in ones first, after an empty choice. Picking one
-    shows its editor, which starts from the graph, if there is one.
+    shows its editor, which starts from the graph, if there is one. A tweak which doesn't apply to the graph type isn't
+    valid.
     """
     source = mw.DafWidgets(_full_daf())
     graph = _points_graph()
@@ -287,6 +288,10 @@ def test_tweak_picker() -> None:
     no_graph = mw.TweakPicker(source, sg.PointsGraph, None)
     no_graph.children[0].value = mw.Size
     assert no_graph.value == mw.Size(width=700, height=450)
+
+    other_type = mw.TweakPicker(source, sg.PointsGraph, graph, _Heatmaps())
+    assert other_type.value is None
+    assert not other_type.is_valid
 
 
 def test_size_follows_the_graph() -> None:

@@ -101,7 +101,8 @@ def test_gene_gene_hovers() -> None:
 def test_gene_gene_hovers_are_new() -> None:
     """
     A hover which the colors, the sizes, or another hover already show is an error. While editing, the hovers offer
-    only what the points don't already show, and a hover which the colors come to show is removed.
+    only what the points don't already show. A hover which the colors come to show is hidden, until the colors show
+    something else.
     """
     source = mw.DafWidgets(_full_daf())
     with pytest.raises(ValueError):
@@ -122,6 +123,10 @@ def test_gene_gene_hovers_are_new() -> None:
     assert form.colors == mw.Type()
     assert form.hovers == []
     assert mw.Type not in [choice for _label, choice in blank_row.children[0].options]
+
+    colors.children[0].value = mw.Block
+    assert form.colors == mw.Block()
+    assert form.hovers == [mw.Type()]
 
 
 def test_gene_gene_of_blocks() -> None:

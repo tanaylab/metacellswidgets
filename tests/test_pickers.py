@@ -129,6 +129,18 @@ def test_property_picker_on_axis_change() -> None:
     assert picker.value == mw.Block()
 
 
+def test_property_picker_close() -> None:
+    """
+    A closed picker no longer follows its axis.
+    """
+    source = mw.DafWidgets(_full_daf())
+    axis = AxisPicker(source, ["metacell", "block"])
+    picker = PropertyPicker(source, Slot.COLORS, axis, mw.Block())
+    picker.close()
+    axis._dropdown.value = "block"
+    assert picker.value == mw.Block()
+
+
 def test_property_picker_default() -> None:
     """
     A picker shows its default while its value stays ``None``. A change makes the value explicit, and the reset button

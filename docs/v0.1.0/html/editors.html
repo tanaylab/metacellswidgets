@@ -172,6 +172,15 @@
 <ul>
 
 <li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.editors.ClassPicker.close">
+<code class="docutils literal notranslate">
+<span class="pre">ClassPicker.close()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
 <a class="reference internal" href="#metacellswidgets.editors.ClassPicker.shown">
 <code class="docutils literal notranslate">
 <span class="pre">ClassPicker.shown()
@@ -251,15 +260,6 @@
 </a>
 </li>
 
-<li class="toctree-l4">
-<a class="reference internal" href="#metacellswidgets.editors.ListEditor.remove_values">
-<code class="docutils literal notranslate">
-<span class="pre">ListEditor.remove_values()
-</span>
-</code>
-</a>
-</li>
-
 </ul>
 
 </li>
@@ -316,6 +316,19 @@
 </span>
 </code>
 </a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.editors.PropertyPicker.close">
+<code class="docutils literal notranslate">
+<span class="pre">PropertyPicker.close()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
 </li>
 
 <li class="toctree-l3">
@@ -1078,6 +1091,56 @@ the new axis.
 
 <dl class="py method">
 
+<dt class="sig sig-object py" id="metacellswidgets.editors.ClassPicker.close">
+
+<span class="sig-name descname">
+<span class="pre">close
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/editors.html#ClassPicker.close">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.editors.ClassPicker.close" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Close method.
+</p>
+
+<p>Closes the underlying comm.
+When the comm is closed, all of the widget views are automatically
+removed from the front-end.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>None
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
 <dt class="sig sig-object py" id="metacellswidgets.editors.ClassPicker.shown">
 
 <span class="sig-name descname">
@@ -1604,6 +1667,25 @@ blank row. The list always ends with a blank row; picking something in it makes 
 new blank row. Each row of the list has buttons to move it up or down, or to remove it.
 </p>
 
+<p>A row which isn’t 
+<code class="docutils literal notranslate">
+<span class="pre">is_valid
+</span>
+</code> (see 
+<a class="reference internal" href="#metacellswidgets.editors.ArgumentsEditor" title="metacellswidgets.editors.ArgumentsEditor">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">ArgumentsEditor
+</span>
+</code>
+</a>) is hidden, and its object is left out of the
+
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code>. It is shown again in its place once it is valid. Moving a row up or down swaps it with the adjacent shown
+row. The hidden rows after each of the two move with it. A removed row is closed.
+</p>
+
 <p>The list starts with a row per object of the 
 <code class="docutils literal notranslate">
 <span class="pre">current
@@ -1925,87 +2007,6 @@ the graph (e.g. a tweak’s size) can follow it. A value the user set is kept. B
 <strong>graph
 </strong> (
 <em>Any
-</em>)
-</p>
-
-</dd>
-
-<dt class="field-even">Return type
-<span class="colon">:
-</span>
-</dt>
-
-<dd class="field-even">
-<p>None
-</p>
-
-</dd>
-
-</dl>
-
-</dd>
-</dl>
-
-
-<dl class="py method">
-
-<dt class="sig sig-object py" id="metacellswidgets.editors.ListEditor.remove_values">
-
-<span class="sig-name descname">
-<span class="pre">remove_values
-</span>
-</span>
-<span class="sig-paren">(
-</span>
-<em class="sig-param">
-<span class="n">
-<span class="pre">values
-</span>
-</span>
-</em>
-<span class="sig-paren">)
-</span>
-<a class="reference internal" href="_modules/metacellswidgets/editors.html#ListEditor.remove_values">
-<span class="viewcode-link">
-<span class="pre">[source]
-</span>
-</span>
-</a>
-<a class="headerlink" href="#metacellswidgets.editors.ListEditor.remove_values" title="Link to this definition">
-</a>
-</dt>
-
-<dd>
-<p>Remove the rows whose value is one of the 
-<code class="docutils literal notranslate">
-<span class="pre">values
-</span>
-</code>. This is a change of the list, like removing the rows by
-their buttons. If no row has one of the 
-<code class="docutils literal notranslate">
-<span class="pre">values
-</span>
-</code>, nothing changes.
-</p>
-
-<dl class="field-list simple">
-
-<dt class="field-odd">Parameters
-<span class="colon">:
-</span>
-</dt>
-
-<dd class="field-odd">
-<p>
-<strong>values
-</strong> (
-<em>Collection
-</em>
-<em>[
-</em>
-<em>_Item
-</em>
-<em>]
 </em>)
 </p>
 
@@ -2619,7 +2620,14 @@ the
 <code class="docutils literal notranslate">
 <span class="pre">shown
 </span>
-</code> properties as these change.
+</code> properties as these change. A pick which another editor of the side comes to show isn’t valid (see
+
+<a class="reference internal" href="#metacellswidgets.editors.ClassPicker" title="metacellswidgets.editors.ClassPicker">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">ClassPicker
+</span>
+</code>
+</a>), until that editor no longer shows it.
 </p>
 
 <p>In a colors or a sizes slot, the picker also edits the look arguments of the picked property: a “Show legend” toggle,
@@ -2805,6 +2813,56 @@ argument.
 
 </dl>
 
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.editors.PropertyPicker.close">
+
+<span class="sig-name descname">
+<span class="pre">close
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/editors.html#PropertyPicker.close">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.editors.PropertyPicker.close" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Close method.
+</p>
+
+<p>Closes the underlying comm.
+When the comm is closed, all of the widget views are automatically
+removed from the front-end.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>None
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
 </dd>
 </dl>
 
@@ -2873,8 +2931,14 @@ sizes of its points), and those of its
 included. The pickers of the hovers are given this, so they don’t offer what the side already shows.
 </p>
 
-<p>No hover duplicates the properties of the editors. When an editor comes to show a property which is also a hover,
-the hover is removed from the list.
+<p>No shown hover duplicates the properties of the editors. When an editor comes to show a property which is also a
+hover, the hover is hidden (see 
+<a class="reference internal" href="#metacellswidgets.editors.PropertyPicker" title="metacellswidgets.editors.PropertyPicker">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">PropertyPicker
+</span>
+</code>
+</a>), until the editor no longer shows it.
 </p>
 
 <p>It is made before the hovers list (whose pickers are given it), and then told to 

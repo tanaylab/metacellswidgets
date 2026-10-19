@@ -10,7 +10,6 @@ import functools
 import inspect
 from typing import Any
 from typing import Callable
-from typing import Collection
 from typing import Dict
 from typing import FrozenSet
 from typing import Generic
@@ -320,8 +319,14 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
         self._reset.on_click(self._on_reset)
         self.children = [self._dropdown, self._editor_box, self._reset]
         self._dropdown.observe(self._on_dropdown_change, names="value")
-        if isinstance(axis, AxisPicker):
-            axis.observe(self._on_axis_picker_change, names="value")
+        self._axis_picker = axis if isinstance(axis, AxisPicker) else None
+        if self._axis_picker is not None:
+            self._axis_picker.observe(self._on_axis_picker_change, names="value")
+
+    def close(self) -> None:
+        if self._axis_picker is not None:
+            self._axis_picker.unobserve(self._on_axis_picker_change, names="value")
+        super().close()
 
     def _editor_of(self, choice: Type[Arguments], current: Optional[Arguments]) -> Optional[ArgumentsEditor]:
         # The editor of the arguments of the ``choice``, starting with the ``current`` object (if any); or ``None`` if
@@ -462,7 +467,8 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
 
     A picker of a hover may be given the ``shown`` properties of its side (see :py:class:`ShownProperties`). Its choices
     then leave out the properties without arguments which the side already shows, other than its own pick. They follow
-    the ``shown`` properties as these change.
+    the ``shown`` properties as these change. A pick which another editor of the side comes to show isn't valid (see
+    :py:class:`ClassPicker`), until that editor no longer shows it.
 
     In a colors or a sizes slot, the picker also edits the look arguments of the picked property: a "Show legend" toggle,
     and for a property shown on a log scale, a choice of log2 or log10. While a look argument is ``None``, its widget
@@ -547,8 +553,9 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
         choices = self._source.properties(axis=self._axis, slot=self._slot)
         if self._shown_properties is None:
             return choices
-        own = self.shown()
-        covered = [shown for shown in self._shown_properties.properties() if not shown.has_same_content(own)]
+        # The picker's own value is one of the shown properties. Only this object is left out, so an equal property
+        # which another editor shows still covers it.
+        covered = [shown for shown in self._shown_properties.properties() if shown is not self.value]
         return [
             choice
             for choice in choices
@@ -557,8 +564,15 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
 
     def _on_shown_change(self, _change: Dict) -> None:
         choices = self._choices()
-        if choices != list(self._shown_choices):
+        if self._kept is not None and (type(self._kept) in choices) != self.is_valid:
+            _on_main_thread(lambda: self._show_kept(self._choices()))
+        elif choices != list(self._shown_choices):
             self._set_options(choices, self._dropdown.value)
+
+    def close(self) -> None:
+        if self._shown_properties is not None:
+            self._shown_properties.unobserve(self._on_shown_change, names="version")
+        super().close()
 
     def _editor_of(self, choice: Type[Arguments], current: Optional[Arguments]) -> Optional[ArgumentsEditor]:
         assert issubclass(choice, Property)
@@ -589,6 +603,10 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
     ``title`` (collapsed at first). Each row is a picker made by ``make_row``, which gets the object the row starts with, or ``None`` for a
     blank row. The list always ends with a blank row; picking something in it makes it a row of the list, and appends a
     new blank row. Each row of the list has buttons to move it up or down, or to remove it.
+
+    A row which isn't ``is_valid`` (see :py:class:`ArgumentsEditor`) is hidden, and its object is left out of the
+    ``value``. It is shown again in its place once it is valid. Moving a row up or down swaps it with the adjacent shown
+    row. The hidden rows after each of the two move with it. A removed row is closed.
 
     The list starts with a row per object of the ``current`` list. If there is no ``current`` list, it shows the
     ``default`` list (if any), and its ``value`` stays ``None`` until the first change. Otherwise, the ``value`` is the
@@ -639,7 +657,11 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
         return self._given_default
 
     def shown(self) -> List[_Item]:
-        return [row.value for row in self._rows if row.value is not None]
+        return self._values()
+
+    def _values(self) -> List[_Item]:
+        # The objects of the shown rows which have one.
+        return [row.value for row in self._rows if row.is_valid and row.value is not None]
 
     def update_graph(self, graph: Any) -> None:
         for row in self._rows:
@@ -647,31 +669,22 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
         if self._blank_row is not None:
             self._blank_row.update_graph(graph)
 
-    def remove_values(self, values: Collection[_Item]) -> None:
-        """
-        Remove the rows whose value is one of the ``values``. This is a change of the list, like removing the rows by
-        their buttons. If no row has one of the ``values``, nothing changes.
-        """
-        removed_rows = [row for row in self._rows if row.value is not None and row.value in values]
-        if not removed_rows:
-            return
-        for row in removed_rows:
-            self._drop(row)
-        self._is_default = False
-        self._update()
-
     def _fill(self, items: Optional[Sequence[_Item]]) -> None:
-        # Show a row per object of the ``items``, and then a blank row.
-        for row in self._rows:
-            row.unobserve(self._on_row_change, names="value")
+        # Show a row per object of the ``items``, and then a blank row, closing the rows they replace.
+        replaced_rows = list(self._rows)
+        for row in replaced_rows:
+            self._unobserve_row(row)
         if self._blank_row is not None:
             self._blank_row.unobserve(self._on_blank_row_change, names="is_blank")
+            replaced_rows.append(self._blank_row)
         self._rows = []
         self._row_boxes = []
         for item in items or []:
             self._append(self._make_row(item))
         self._new_blank_row()
         self._update()
+        for row in replaced_rows:
+            row.close()
 
     def _new_blank_row(self) -> None:
         # Make the blank row at the end of the list, which becomes a row of the list once something is picked in it.
@@ -687,31 +700,44 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
         move_down.on_click(lambda _button: self._move(row, 1))
         remove.on_click(lambda _button: self._remove(row))
         row.observe(self._on_row_change, names="value")
+        row.observe(self._on_row_is_valid_change, names="is_valid")
         self._rows.append(row)
         self._row_boxes.append(HBox([row, move_up, move_down, remove], layout=Layout(align_items="flex-start")))
 
+    def _unobserve_row(self, row: ArgumentsEditor) -> None:
+        row.unobserve(self._on_row_change, names="value")
+        row.unobserve(self._on_row_is_valid_change, names="is_valid")
+
     def _move(self, row: ArgumentsEditor, offset: int) -> None:
-        # Move the ``row`` by the ``offset``, unless that would move it past either end.
-        index = self._rows.index(row)
-        other_index = index + offset
-        if 0 <= other_index < len(self._rows):
-            rows, row_boxes = self._rows, self._row_boxes
-            rows[index], rows[other_index] = rows[other_index], rows[index]
-            row_boxes[index], row_boxes[other_index] = row_boxes[other_index], row_boxes[index]
+        # Swap the ``row`` with the adjacent shown row before it (an ``offset`` of -1) or after it (1), unless there is
+        # none. Each of the two moves with the hidden rows after it.
+        shown_indices = [index for index, each_row in enumerate(self._rows) if each_row.is_valid]
+        position = shown_indices.index(self._rows.index(row))
+        first_position = min(position, position + offset)
+        if 0 <= first_position and first_position + 1 < len(shown_indices):
+            first_start, second_start = shown_indices[first_position], shown_indices[first_position + 1]
+            second_end = len(self._rows)
+            if first_position + 2 < len(shown_indices):
+                second_end = shown_indices[first_position + 2]
+            order = [
+                *range(first_start),
+                *range(second_start, second_end),
+                *range(first_start, second_start),
+                *range(second_end, len(self._rows)),
+            ]
+            self._rows = [self._rows[index] for index in order]
+            self._row_boxes = [self._row_boxes[index] for index in order]
             self._is_default = False
             self._update()
 
     def _remove(self, row: ArgumentsEditor) -> None:
-        self._drop(row)
-        self._is_default = False
-        self._update()
-
-    def _drop(self, row: ArgumentsEditor) -> None:
-        # Take the ``row`` out of the list, without updating the shown rows and the value.
         index = self._rows.index(row)
-        row.unobserve(self._on_row_change, names="value")
+        self._unobserve_row(row)
         del self._rows[index]
         del self._row_boxes[index]
+        self._is_default = False
+        self._update()
+        row.close()
 
     def _on_blank_row_change(self, change: Dict) -> None:
         if not change["new"]:
@@ -731,6 +757,9 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
         self._is_default = False
         self._update()
 
+    def _on_row_is_valid_change(self, _change: Dict) -> None:
+        self._update()
+
     def _on_reset(self, _button: Button) -> None:
         def reset() -> None:
             self._is_default = True
@@ -744,12 +773,15 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
             _on_main_thread(lambda: self._fill(self._default()))
 
     def _update(self) -> None:
-        # Show the rows in their order, then the blank row, and set the value from them.
-        self._rows_box.children = [*self._row_boxes, self._blank_row]
+        # Show the valid rows in their order, then the blank row, and set the value from them.
+        self._rows_box.children = [
+            *[row_box for row, row_box in zip(self._rows, self._row_boxes) if row.is_valid],
+            self._blank_row,
+        ]
         if self._is_default:
             self.value = None
         else:
-            self.value = [row.value for row in self._rows if row.value is not None]
+            self.value = self._values()
         self._reset.layout.display = "none" if self.value is None or self._given_default is None else None
 
 
@@ -759,8 +791,8 @@ class ShownProperties(traitlets.HasTraits):
     sizes of its points), and those of its ``hovers`` list. Each editor counts with what it shows, its default
     included. The pickers of the hovers are given this, so they don't offer what the side already shows.
 
-    No hover duplicates the properties of the editors. When an editor comes to show a property which is also a hover,
-    the hover is removed from the list.
+    No shown hover duplicates the properties of the editors. When an editor comes to show a property which is also a
+    hover, the hover is hidden (see :py:class:`PropertyPicker`), until the editor no longer shows it.
 
     It is made before the hovers list (whose pickers are given it), and then told to ``watch`` the editors, the list,
     and the axis they follow.
@@ -807,9 +839,4 @@ class ShownProperties(traitlets.HasTraits):
         return properties
 
     def _on_change(self, _change: Dict) -> None:
-        assert self._hovers is not None
-        shown = self._editors_properties()
-        self._hovers.remove_values(
-            [hover for hover in self._hovers.shown() if any(hover.has_same_content(other) for other in shown)]
-        )
         self.version += 1

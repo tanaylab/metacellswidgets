@@ -76,6 +76,38 @@ def test_list_editor() -> None:
     assert reset.layout.display == "none"
 
 
+def test_list_editor_hidden_rows() -> None:
+    """
+    A row which isn't valid is hidden and left out of the value, until it is valid again. Moving a row swaps it with the
+    adjacent shown row, each with the hidden rows after it. A removed row is closed.
+    """
+    first, hidden, second = mw.Title(text="A"), mw.Title(text="X"), mw.Title(text="B")
+    rows: List[_Row] = []
+
+    def make_row(current: Optional[Arguments]) -> _Row:
+        row = _Row(current)
+        rows.append(row)
+        return row
+
+    editor = ListEditor(make_row, [first, hidden, second], title="Titles")
+    rows[1].value = None
+    rows[1].is_valid = False
+    _reset, rows_box = _parts(editor)
+    assert editor.value == [first, second]
+    assert len(rows_box.children) == 3
+
+    rows_box.children[1].children[1].click()
+    assert editor.value == [second, first]
+    rows[1].value = hidden
+    rows[1].is_valid = True
+    assert editor.value == [second, first, hidden]
+
+    assert rows[2].comm is not None
+    rows_box.children[0].children[3].click()
+    assert editor.value == [first, hidden]
+    assert rows[2].comm is None
+
+
 def test_list_editor_default() -> None:
     """
     Without a current list, a list editor shows the default, and its value stays ``None`` until the first change. The
