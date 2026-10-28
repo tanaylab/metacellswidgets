@@ -17,13 +17,11 @@ from typing import Concatenate
 from typing import Dict
 from typing import Generic
 from typing import List
-from typing import Optional
 from typing import ParamSpec
 from typing import Sequence
 from typing import Set
 from typing import Type
 from typing import TypeVar
-from typing import Union
 from typing import overload
 
 from .properties import Property
@@ -56,8 +54,8 @@ class _GraphConstructor(Generic[_Parameters, _Graph]):
     def __get__(self, source: "SourceWidgets", owner: type) -> Callable[_Parameters, _Graph]: ...
 
     def __get__(
-        self, source: Optional["SourceWidgets"], owner: type
-    ) -> Union["_GraphConstructor[_Parameters, _Graph]", Callable[_Parameters, _Graph]]:
+        self, source: "SourceWidgets | None", owner: type
+    ) -> "_GraphConstructor[_Parameters, _Graph] | Callable[_Parameters, _Graph]":
         if source is None:
             return self
         graph_class = self.graph_class

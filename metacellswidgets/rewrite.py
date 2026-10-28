@@ -20,7 +20,6 @@ from types import ModuleType
 from typing import Any
 from typing import List
 from typing import Mapping
-from typing import Optional
 from typing import Tuple
 
 from dafpy.julia_import import DefaultValue
@@ -56,7 +55,7 @@ def _call_position(frame: FrameType) -> _Position:
     return (line, end_line, column, end_column)
 
 
-def _cell_site(frame: FrameType) -> Optional[_CallSite]:
+def _cell_site(frame: FrameType) -> _CallSite | None:
     # Where the call running in the frame was made, if the frame is the top level code of the running cell. Otherwise
     # (outside IPython, or in a function the cell calls), ``None``.
     shell = get_ipython()
@@ -65,7 +64,7 @@ def _cell_site(frame: FrameType) -> Optional[_CallSite]:
     return _CallSite(cell_token=_current_cell_token(), position=_call_position(frame))
 
 
-_REWRITTEN_CELL_TOKEN: Optional[int] = None
+_REWRITTEN_CELL_TOKEN: int | None = None
 
 
 def _claim_cell_rewrite() -> None:
@@ -117,7 +116,7 @@ def _top_level_call(tree: ast.Module, position: _Position, what: str) -> ast.Cal
     return call
 
 
-def _path_to_call(node: ast.AST, position: _Position) -> Optional[List[ast.AST]]:
+def _path_to_call(node: ast.AST, position: _Position) -> List[ast.AST] | None:
     # The nodes from ``node`` down to the call at the position.
     if isinstance(node, ast.Call) and _node_position(node) == position:
         return [node]
@@ -153,7 +152,7 @@ def _callee_of(cls: type, namespace: Mapping[str, Any]) -> str:
     )
 
 
-def _literal_text(name: str, value: Any, namespace: Optional[Mapping[str, Any]] = None) -> str:
+def _literal_text(name: str, value: Any, namespace: Mapping[str, Any] | None = None) -> str:
     # The code of a value, which must read back as the same value. An object with a ``code`` method (e.g. a property)
     # is written by it, naming its class as the namespace does, or by its bare name if there is no namespace (e.g. for
     # its ``repr``). An enum value is written as its class (named the same way) and its member's name, e.g.
@@ -184,8 +183,8 @@ def _rewritten_cell(
     form_keywords: Mapping[str, Any],
     display_position: _Position,
     is_interactive: bool,
-    form_method: Optional[str] = None,
-    namespace: Optional[Mapping[str, Any]] = None,
+    form_method: str | None = None,
+    namespace: Mapping[str, Any] | None = None,
 ) -> str:
     # The code of the cell with the form call's keyword arguments set to ``form_keywords`` (leaving out those which are
     # ``None`` or ``DEFAULT``), its method replaced by ``form_method`` on the same receiver (if given), and the display call's
@@ -231,7 +230,7 @@ def _rewritten_menu_cell(
     method: str,
     form_keywords: Mapping[str, Any],
     format: str,  # pylint: disable=redefined-builtin
-    namespace: Optional[Mapping[str, Any]] = None,
+    namespace: Mapping[str, Any] | None = None,
 ) -> str:
     # The code of the cell with the menu call replaced by a call of the ``method`` on the same receiver, with the
     # ``form_keywords`` (leaving out those which are ``None`` or ``DEFAULT``), and displayed with ``interactive=False`` and the
@@ -248,7 +247,7 @@ def _rewritten_menu_cell(
     return _replaced(source, [(_span(menu_call), f"{form_text}.display({', '.join(display_arguments)})")])
 
 
-def _cell_namespace(tree: ast.Module, namespace: Optional[Mapping[str, Any]]) -> Optional[Mapping[str, Any]]:
+def _cell_namespace(tree: ast.Module, namespace: Mapping[str, Any] | None) -> Mapping[str, Any] | None:
     # The ``namespace``, with the names the cell itself uses (e.g. ``mw``) first, so they are preferred for naming
     # classes over other names for the same things.
     if namespace is None:
@@ -259,10 +258,10 @@ def _cell_namespace(tree: ast.Module, namespace: Optional[Mapping[str, Any]]) ->
 
 def _call_text(
     source: str,
-    call: Optional[ast.Call],
+    call: ast.Call | None,
     callee: str,
     keywords: Mapping[str, Any],
-    namespace: Optional[Mapping[str, Any]],
+    namespace: Mapping[str, Any] | None,
 ) -> str:
     # The code calling the ``callee`` with the positional arguments of the ``call`` (if any) as written, and the
     # ``keywords`` (leaving out those which are ``None`` or ``DEFAULT``).

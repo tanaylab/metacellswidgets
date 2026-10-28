@@ -7,10 +7,8 @@ which each kind implements in its own module (see :py:func:`~metacellswidgets.co
 
 from typing import Any
 from typing import List
-from typing import Optional
 from typing import Sequence
 from typing import Tuple
-from typing import Union
 from typing import cast
 
 import numpy as np
@@ -58,7 +56,7 @@ __all__: List[str] = [
 
 # Fail if one of the ``hovers`` shows the same data as another one, or as one of the properties the ``side`` already
 # shows (regardless of their look arguments).
-def _check_hovers(hovers: Optional[Sequence[Property]], shown: Sequence[Optional[Property]], side: str) -> None:
+def _check_hovers(hovers: Sequence[Property] | None, shown: Sequence[Property | None], side: str) -> None:
     seen = [shown_property for shown_property in shown if shown_property is not None]
     for hover in hovers or []:
         if any(hover.has_same_content(seen_property) for seen_property in seen):
@@ -87,30 +85,28 @@ class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
         axis: str = "metacell",
         x_gene: str,
         y_gene: str,
-        colors: Optional[Property] = None,
-        sizes: Optional[Property] = None,
-        hovers: Optional[Sequence[Property]] = None,
-        selected_box: Optional[Tuple[float, float, float, float]] = None,
-        selected_lasso: Optional[Sequence[Tuple[float, float]]] = None,
-        tweaks: Optional[Sequence[Tweak]] = None,
+        colors: Property | None = None,
+        sizes: Property | None = None,
+        hovers: Sequence[Property] | None = None,
+        selected_box: Tuple[float, float, float, float] | None = None,
+        selected_lasso: Sequence[Tuple[float, float]] | None = None,
+        tweaks: Sequence[Tweak] | None = None,
     ) -> None:
         super().__init__(source, tweaks)
         self.axis = axis
         # While editing, a gene may not be picked yet.
-        self.x_gene: Optional[str] = x_gene
-        self.y_gene: Optional[str] = y_gene
+        self.x_gene: str | None = x_gene
+        self.y_gene: str | None = y_gene
         self.colors = colors
         self.sizes = sizes
         self.hovers = None if hovers is None else list(hovers)
         _check_hovers(self.hovers, [colors, sizes], "points")
         if selected_box is not None and selected_lasso is not None:
             raise ValueError("at most one of selected_box and selected_lasso may be given")
-        self.selected_box: Optional[Tuple[float, float, float, float]] = (
+        self.selected_box: Tuple[float, float, float, float] | None = (
             None if selected_box is None else (selected_box[0], selected_box[1], selected_box[2], selected_box[3])
         )
-        self.selected_lasso: Optional[List[Tuple[float, float]]] = (
-            None if selected_lasso is None else list(selected_lasso)
-        )
+        self.selected_lasso: List[Tuple[float, float]] | None = None if selected_lasso is None else list(selected_lasso)
 
     def selected_names(self) -> List[str]:
         """
@@ -197,13 +193,13 @@ class GenesHeatmap(GraphForm):
         source: SourceWidgets,
         *,
         axis: str = "metacell",
-        genes: Union[GeneSelection, DefaultValue] = DEFAULT,
-        entries: Optional[Sequence[EntryFilter]] = None,
-        row_annotations: Union[Sequence[Property], DefaultValue] = DEFAULT,
-        column_annotations: Union[Sequence[Property], DefaultValue] = DEFAULT,
-        row_hovers: Optional[Sequence[Property]] = None,
-        column_hovers: Optional[Sequence[Property]] = None,
-        tweaks: Optional[Sequence[Tweak]] = None,
+        genes: GeneSelection | DefaultValue = DEFAULT,
+        entries: Sequence[EntryFilter] | None = None,
+        row_annotations: Sequence[Property] | DefaultValue = DEFAULT,
+        column_annotations: Sequence[Property] | DefaultValue = DEFAULT,
+        row_hovers: Sequence[Property] | None = None,
+        column_hovers: Sequence[Property] | None = None,
+        tweaks: Sequence[Tweak] | None = None,
     ) -> None:
         super().__init__(source, tweaks)
         self.axis = axis
@@ -237,7 +233,7 @@ class GenesHeatmap(GraphForm):
         """
         return [property_class() for property_class in (IsLateral,) if property_class.exists(self.source, "gene")]
 
-    def default_column_annotations(self, axis: Union[str, DefaultValue] = DEFAULT) -> List[Property]:
+    def default_column_annotations(self, axis: str | DefaultValue = DEFAULT) -> List[Property]:
         """
         The annotations of the columns (the entries) when ``column_annotations`` is left out: the type of each entry,
         if the data has it. The entries are of the ``axis`` (by default, the form's).
@@ -251,11 +247,11 @@ class GenesHeatmap(GraphForm):
         """
         return (TopMarkers() if isinstance(self.genes, DefaultValue) else self.genes).genes(self.source)
 
-    def selected_entries(self) -> Optional[np.ndarray]:
+    def selected_entries(self) -> np.ndarray | None:
         """
         The mask of the entries which pass all the ``entries`` filters, or ``None`` for all of them.
         """
-        mask: Optional[np.ndarray] = None
+        mask: np.ndarray | None = None
         for entry_filter in self.entries or []:
             filter_mask = entry_filter.mask(self.source, self.axis)
             mask = filter_mask if mask is None else mask & filter_mask

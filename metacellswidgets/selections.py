@@ -15,7 +15,6 @@ Which points are selected is computed in plotted coordinates, since the edges of
 import math
 from typing import Any
 from typing import List
-from typing import Optional
 from typing import Sequence
 from typing import Tuple
 
@@ -83,7 +82,7 @@ def _lasso_of(graph: PointsGraph, xs: Sequence[float], ys: Sequence[float]) -> _
     return [(_rounded(_data_value(x_scale, xs[index])), _rounded(_data_value(y_scale, ys[index]))) for index in indices]
 
 
-def _selection_data(box: Optional[_Box], lasso: Optional[Sequence[Tuple[float, float]]]) -> SelectionData:
+def _selection_data(box: _Box | None, lasso: Sequence[Tuple[float, float]] | None) -> SelectionData:
     # The graph's ``selection`` for the ``box`` or the ``lasso`` (at most one of them).
     if box is not None:
         return SelectionData(box=box)
@@ -92,7 +91,7 @@ def _selection_data(box: Optional[_Box], lasso: Optional[Sequence[Tuple[float, f
     return SelectionData()
 
 
-def _points_key(graph: Any) -> Optional[Tuple[Any, ...]]:
+def _points_key(graph: Any) -> Tuple[Any, ...] | None:
     # What a selection in the ``graph`` depends on: the X and Y of each point in data units, the names of the points, and
     # which of them are shown. Only a change of these clears the selection (a change of the look keeps it). ``None`` for
     # a graph which isn't a points graph.
@@ -102,7 +101,7 @@ def _points_key(graph: Any) -> Optional[Tuple[Any, ...]]:
     return (tuple(xs), tuple(ys), tuple(names), None if mask is None else tuple(mask))
 
 
-def _points_of(graph: PointsGraph) -> Tuple[List[float], List[float], List[str], Optional[List[bool]]]:
+def _points_of(graph: PointsGraph) -> Tuple[List[float], List[float], List[str], List[bool] | None]:
     # The X and Y of each point of the ``graph`` in data units, the names of the points, and which of them are shown (or
     # ``None`` if all are).
     entities = graph.data.points.entities
@@ -119,9 +118,7 @@ def _without_selection(graph: Any) -> None:
         graph.data.selection = SelectionData()
 
 
-def _selected_names(
-    graph: PointsGraph, box: Optional[_Box], lasso: Optional[Sequence[Tuple[float, float]]]
-) -> List[str]:
+def _selected_names(graph: PointsGraph, box: _Box | None, lasso: Sequence[Tuple[float, float]] | None) -> List[str]:
     # The names of the shown points of the ``graph`` inside the ``box`` or the ``lasso``, in the order of the points.
     if box is None and lasso is None:
         return []

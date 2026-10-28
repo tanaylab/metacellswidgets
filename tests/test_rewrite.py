@@ -8,7 +8,6 @@ the running frames, the same way the forms do.
 import sys
 from typing import Any
 from typing import Dict
-from typing import Optional
 
 import numpy as np
 import pytest
@@ -34,9 +33,9 @@ class _Recorder:
     """
 
     def __init__(self) -> None:
-        self.form_position: Optional[_Position] = None
-        self.display_position: Optional[_Position] = None
-        self.menu_position: Optional[_Position] = None
+        self.form_position: _Position | None = None
+        self.display_position: _Position | None = None
+        self.menu_position: _Position | None = None
 
     def menu(self, **_keywords: Any) -> "_Recorder":
         """

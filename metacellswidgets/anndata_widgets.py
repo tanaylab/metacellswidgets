@@ -8,7 +8,6 @@ geometric mean, used as it is stored). This kind offers only a few properties, o
 from typing import Callable
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Sequence
 from typing import Tuple
 
@@ -168,7 +167,7 @@ def _fill_gene_expression(self: GeneExpression, source: AnnDataWidgets, sinks: V
 
 @implements(GeneExpression.editor, AnnDataWidgets)
 def _gene_expression_editor(
-    _cls: type, source: AnnDataWidgets, _axis: str, current: Optional[GeneExpression]
+    _cls: type, source: AnnDataWidgets, _axis: str, current: GeneExpression | None
 ) -> PickerEditor:
     return PickerEditor(GenePicker(source, None if current is None else current.gene), GeneExpression)
 
@@ -184,7 +183,7 @@ def _fill_umap(self: UMAP, source: AnnDataWidgets, sinks: VectorDataSinks, _axis
 
 
 @implements(UMAP.editor, AnnDataWidgets)
-def _umap_editor(_cls: type, _source: AnnDataWidgets, _axis: str, current: Optional[UMAP]) -> PickerEditor:
+def _umap_editor(_cls: type, _source: AnnDataWidgets, _axis: str, current: UMAP | None) -> PickerEditor:
     return PickerEditor(NamePicker(["x", "y"], None if current is None else current.coordinate), UMAP)
 
 

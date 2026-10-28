@@ -4,7 +4,6 @@ Test the widgets for editing the arguments of properties and tweaks.
 
 from typing import Any
 from typing import List
-from typing import Optional
 from typing import Tuple
 
 from dafpy.julia_import import DEFAULT
@@ -28,11 +27,11 @@ class _Row(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-meth
     A row of a list, whose value is picked directly.
     """
 
-    def __init__(self, current: Optional[Arguments]) -> None:
+    def __init__(self, current: Arguments | None) -> None:
         super().__init__()
         self.pick(current)
 
-    def pick(self, value: Optional[Arguments]) -> None:
+    def pick(self, value: Arguments | None) -> None:
         """
         Pick the ``value``, as a user would.
         """
@@ -86,7 +85,7 @@ def test_list_editor_hidden_rows() -> None:
     first, hidden, second = mw.Title(text="A"), mw.Title(text="X"), mw.Title(text="B")
     rows: List[_Row] = []
 
-    def make_row(current: Optional[Arguments]) -> _Row:
+    def make_row(current: Arguments | None) -> _Row:
         row = _Row(current)
         rows.append(row)
         return row

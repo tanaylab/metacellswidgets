@@ -2,8 +2,6 @@
 Test the pickers of axes and properties.
 """
 
-from typing import Optional
-
 from dafpy.julia_import import DEFAULT
 
 import metacellswidgets as mw
@@ -119,7 +117,7 @@ def test_property_picker_on_axis_change() -> None:
     """
     source = mw.DafWidgets(_full_daf())
 
-    def _to_type(old_axis: str, new_axis: str, current: Optional[mw.Property]) -> Optional[mw.Property]:
+    def _to_type(old_axis: str, new_axis: str, current: mw.Property | None) -> mw.Property | None:
         assert (old_axis, new_axis, current) == ("metacell", "block", mw.Block())
         return mw.Type()
 

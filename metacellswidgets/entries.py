@@ -14,11 +14,9 @@ from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Protocol
 from typing import Sequence
 from typing import Type
-from typing import Union
 from typing import cast
 
 import metacellsgraphspy as mg
@@ -100,8 +98,8 @@ class GeneSelection(Arguments):
 
     @classmethod
     def editor(
-        cls, source: SourceWidgets, current: Optional["GeneSelection"]  # pylint: disable=unused-argument
-    ) -> Optional[Widget]:
+        cls, source: SourceWidgets, current: "GeneSelection | None"  # pylint: disable=unused-argument
+    ) -> Widget | None:
         """
         A widget for editing the selection's arguments, starting from the ``current`` selection (if any). Its ``value``
         is the selection, or ``None`` while the arguments are incomplete. A selection without arguments has no editor.
@@ -136,8 +134,8 @@ class EntryFilter(Arguments):
 
     @classmethod
     def editor(
-        cls, source: SourceWidgets, current: Optional["EntryFilter"]  # pylint: disable=unused-argument
-    ) -> Optional[Widget]:
+        cls, source: SourceWidgets, current: "EntryFilter | None"  # pylint: disable=unused-argument
+    ) -> Widget | None:
         """
         A widget for editing the filter's arguments, starting from the ``current`` filter (if any). Its ``value`` is the
         filter, or ``None`` while the arguments are incomplete. A filter without arguments has no editor.
@@ -152,7 +150,7 @@ class EntryFilter(Arguments):
         """
         raise TypeError(f"{type(self).__name__}.mask is not implemented for: {type(source).__name__}")
 
-    def on_axis(self, source: SourceWidgets, axis: str) -> Optional["EntryFilter"]:
+    def on_axis(self, source: SourceWidgets, axis: str) -> "EntryFilter | None":
         """
         What the filter becomes for the entries of another ``axis`` of the ``source``: by default, itself if it exists
         there, and nothing otherwise.
@@ -169,7 +167,7 @@ class TopMarkers(GeneSelection):
         self.count = count
 
     @classmethod
-    def editor(cls, source: SourceWidgets, current: Optional[GeneSelection]) -> Widget:
+    def editor(cls, source: SourceWidgets, current: GeneSelection | None) -> Widget:
         assert current is None or isinstance(current, TopMarkers)
         return _CountEditor(TopMarkers() if current is None else current)
 
@@ -213,7 +211,7 @@ class GeneList(GeneSelection):
         self.names = list(names)
 
     @classmethod
-    def editor(cls, source: SourceWidgets, current: Optional[GeneSelection]) -> Widget:
+    def editor(cls, source: SourceWidgets, current: GeneSelection | None) -> Widget:
         assert current is None or isinstance(current, GeneList)
         genes = cast(GeneChoices, source)
         return _NamesEditor(
@@ -230,8 +228,8 @@ class _NamesEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstr
 
     def __init__(
         self,
-        make_row: Callable[[Optional[str]], ArgumentsEditor],
-        current: Optional[Sequence[str]],
+        make_row: Callable[[str | None], ArgumentsEditor],
+        current: Sequence[str] | None,
         build: Callable[[List[str]], Arguments],
         *,
         title: str,
@@ -261,7 +259,7 @@ class OfTypes(EntryFilter):
         self.types = list(types)
 
     @classmethod
-    def editor(cls, source: SourceWidgets, current: Optional[EntryFilter]) -> Widget:
+    def editor(cls, source: SourceWidgets, current: EntryFilter | None) -> Widget:
         assert current is None or isinstance(current, OfTypes)
         type_names = cast(TypeNames, source).type_names()
         return _NamesEditor(
@@ -281,7 +279,7 @@ class InNeighborhood(EntryFilter):
         self.block = block
 
     @classmethod
-    def editor(cls, source: SourceWidgets, current: Optional[EntryFilter]) -> Widget:
+    def editor(cls, source: SourceWidgets, current: EntryFilter | None) -> Widget:
         assert current is None or isinstance(current, InNeighborhood)
         block_names = cast(BlockNames, source).block_names()
         return PickerEditor(
@@ -299,14 +297,14 @@ class InEnvironment(EntryFilter):
         self.block = block
 
     @classmethod
-    def editor(cls, source: SourceWidgets, current: Optional[EntryFilter]) -> Widget:
+    def editor(cls, source: SourceWidgets, current: EntryFilter | None) -> Widget:
         assert current is None or isinstance(current, InEnvironment)
         block_names = cast(BlockNames, source).block_names()
         return PickerEditor(
             ComboPicker(block_names, None if current is None else current.block, placeholder="Block"), InEnvironment
         )
 
-    def on_axis(self, source: SourceWidgets, axis: str) -> Optional[EntryFilter]:
+    def on_axis(self, source: SourceWidgets, axis: str) -> EntryFilter | None:
         if axis == "block":
             return InNeighborhood(self.block).on_axis(source, axis)
         return super().on_axis(source, axis)
@@ -324,12 +322,12 @@ class GeneSelectionPicker(ClassPicker):  # pylint: disable=too-many-ancestors,ab
     (:py:class:`TopMarkers`) is shown, and the ``value`` is ``DEFAULT``.
     """
 
-    def __init__(self, source: SourceWidgets, current: Union[None, GeneSelection, DefaultValue] = DEFAULT) -> None:
+    def __init__(self, source: SourceWidgets, current: None | GeneSelection | DefaultValue = DEFAULT) -> None:
         super().__init__(default=TopMarkers())
         self._source = source
         self._show([choice for choice in _GENE_SELECTIONS if choice.exists(source)], current)
 
-    def _editor_of(self, choice: Type[Arguments], current: Optional[Arguments]) -> Optional[ArgumentsEditor]:
+    def _editor_of(self, choice: Type[Arguments], current: Arguments | None) -> ArgumentsEditor | None:
         assert issubclass(choice, GeneSelection)
         assert current is None or isinstance(current, GeneSelection)
         return choice.editor(self._source, current)
@@ -343,9 +341,7 @@ class EntryFilterPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abst
     neighborhood on the block axis).
     """
 
-    def __init__(
-        self, source: SourceWidgets, axis: Union[str, AxisPicker], current: Optional[EntryFilter] = None
-    ) -> None:
+    def __init__(self, source: SourceWidgets, axis: str | AxisPicker, current: EntryFilter | None = None) -> None:
         super().__init__(axis=axis)
         self._source = source
         self._show(self._choices(), current)
@@ -355,14 +351,14 @@ class EntryFilterPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abst
         assert self._axis is not None
         return [choice for choice in _ENTRY_FILTERS if choice.exists(self._source, self._axis)]
 
-    def _editor_of(self, choice: Type[Arguments], current: Optional[Arguments]) -> Optional[ArgumentsEditor]:
+    def _editor_of(self, choice: Type[Arguments], current: Arguments | None) -> ArgumentsEditor | None:
         assert issubclass(choice, EntryFilter)
         assert current is None or isinstance(current, EntryFilter)
         return choice.editor(self._source, current)
 
     def _on_axis(  # pylint: disable=unused-argument
-        self, old_axis: str, new_axis: str, current: Optional[Arguments]
-    ) -> Optional[Arguments]:
+        self, old_axis: str, new_axis: str, current: Arguments | None
+    ) -> Arguments | None:
         assert current is None or isinstance(current, EntryFilter)
         if current is None:
             return None

@@ -19,9 +19,7 @@ from typing import Dict
 from typing import FrozenSet
 from typing import List
 from typing import Mapping
-from typing import Optional
 from typing import Tuple
-from typing import Union
 
 import metacellsgraphspy as mg
 from dafpy.julia_import import DEFAULT
@@ -217,8 +215,8 @@ class Property(Arguments):
 
     @classmethod
     def editor(
-        cls, source: "SourceWidgets", axis: str, current: Optional["Property"]  # pylint: disable=unused-argument
-    ) -> Optional[Widget]:
+        cls, source: "SourceWidgets", axis: str, current: "Property | None"  # pylint: disable=unused-argument
+    ) -> Widget | None:
         """
         A widget for editing the property's arguments for the ``axis`` of the ``source``, starting from the
         ``current`` property (if any). Its ``value`` is the property, or ``None`` while the arguments are incomplete.
@@ -303,7 +301,7 @@ def boolean_property(
 
 
 # The constructor of a property whose only argument is ``show_legend``.
-def _init_with_show_legend(self: Property, *, show_legend: Union[bool, DefaultValue] = DEFAULT) -> None:
+def _init_with_show_legend(self: Property, *, show_legend: bool | DefaultValue = DEFAULT) -> None:
     setattr(self, "show_legend", show_legend)
 
 
@@ -311,8 +309,8 @@ def _init_with_show_legend(self: Property, *, show_legend: Union[bool, DefaultVa
 def _init_with_show_legend_and_log_base(
     self: Property,
     *,
-    show_legend: Union[bool, DefaultValue] = DEFAULT,
-    log_base: Union[LogBase, DefaultValue] = DEFAULT,
+    show_legend: bool | DefaultValue = DEFAULT,
+    log_base: LogBase | DefaultValue = DEFAULT,
 ) -> None:
     setattr(self, "show_legend", show_legend)
     setattr(self, "log_base", log_base)
@@ -370,8 +368,8 @@ class GeneExpression(Property):
         self,
         gene: str,
         *,
-        show_legend: Union[bool, DefaultValue] = DEFAULT,
-        log_base: Union[LogBase, DefaultValue] = DEFAULT,
+        show_legend: bool | DefaultValue = DEFAULT,
+        log_base: LogBase | DefaultValue = DEFAULT,
     ) -> None:
         self.gene = gene
         self.show_legend = show_legend
@@ -452,7 +450,7 @@ class BooleanMask(Property):
     data_source = staticmethod(mg.fill_boolean)
     _look_arguments = frozenset(["show_legend"])
 
-    def __init__(self, name: str, *, show_legend: Union[bool, DefaultValue] = DEFAULT) -> None:
+    def __init__(self, name: str, *, show_legend: bool | DefaultValue = DEFAULT) -> None:
         self.name = name
         self.show_legend = show_legend
 

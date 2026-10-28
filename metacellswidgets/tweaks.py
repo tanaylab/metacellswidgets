@@ -60,11 +60,9 @@ from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Tuple
 from typing import Type
 from typing import TypeVar
-from typing import Union
 from typing import cast
 from typing import get_type_hints
 from typing import overload
@@ -130,9 +128,9 @@ class Tweak(Arguments):
     def editor(
         cls,
         source: "SourceWidgets",  # pylint: disable=unused-argument
-        graph: Optional[Graph],  # pylint: disable=unused-argument
-        current: Optional["Tweak"],  # pylint: disable=unused-argument
-    ) -> Optional[Widget]:
+        graph: Graph | None,  # pylint: disable=unused-argument
+        current: "Tweak | None",  # pylint: disable=unused-argument
+    ) -> Widget | None:
         """
         A widget for editing the tweak's arguments for the ``source``, starting from the ``current`` tweak (if any). The
         ``graph`` is the form's graph as last shown, e.g. for starting a new tweak from its title, or ``None`` if no
@@ -161,7 +159,7 @@ def tweak(target: _Tweak) -> _Tweak: ...
 def tweak(target: Callable[[Any, "SourceWidgets"], None]) -> Type[Tweak]: ...
 
 
-def tweak(target: Union[Type[Tweak], Callable[[Any, "SourceWidgets"], None]]) -> Type[Tweak]:
+def tweak(target: Type[Tweak] | Callable[[Any, "SourceWidgets"], None]) -> Type[Tweak]:
     """
     Register a tweak, so the editor offers it for the graphs it applies to. On a tweak class, return the class. On a
     function, return a new tweak class without arguments, with the function's name and documentation, whose ``apply``
@@ -220,8 +218,8 @@ class TweakPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstract-m
         self,
         source: "SourceWidgets",
         graph_type: Type[Graph],
-        graph: Optional[Graph],
-        current: Optional[Tweak] = None,
+        graph: Graph | None,
+        current: Tweak | None = None,
     ) -> None:
         super().__init__()
         self._source = source
@@ -233,7 +231,7 @@ class TweakPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstract-m
         if self._editor is not None:
             self._editor.update_graph(graph)
 
-    def _editor_of(self, choice: Type[Arguments], current: Optional[Arguments]) -> Optional[ArgumentsEditor]:
+    def _editor_of(self, choice: Type[Arguments], current: Arguments | None) -> ArgumentsEditor | None:
         assert issubclass(choice, Tweak)
         assert current is None or isinstance(current, Tweak)
         return choice.editor(self._source, self._graph, current)
@@ -251,9 +249,7 @@ class Size(Tweak):
     has it. A dimension which is ``None`` is left for Plotly to choose.
     """
 
-    def __init__(
-        self, width: Union[int, None, DefaultValue] = DEFAULT, height: Union[int, None, DefaultValue] = DEFAULT
-    ) -> None:
+    def __init__(self, width: int | None | DefaultValue = DEFAULT, height: int | None | DefaultValue = DEFAULT) -> None:
         self.width = width
         self.height = height
 
@@ -268,8 +264,8 @@ class Size(Tweak):
     def editor(
         cls,
         source: "SourceWidgets",  # pylint: disable=unused-argument
-        graph: Optional[Graph],
-        current: Optional[Tweak],
+        graph: Graph | None,
+        current: Tweak | None,
     ) -> ArgumentsEditor:
         assert current is None or isinstance(current, Size)
         return _SizeEditor(graph, current)
@@ -279,7 +275,7 @@ class _Dimension:
     # The checkbox and the number of one dimension of a ``Size``. The dimension is given while the checkbox is checked,
     # and the number is disabled while it isn't. While it isn't, the number shows the ``start``.
 
-    def __init__(self, description: str, value: Union[int, None, DefaultValue], start: int) -> None:
+    def __init__(self, description: str, value: int | None | DefaultValue, start: int) -> None:
         is_given = isinstance(value, int)
         self.checkbox = Checkbox(value=is_given, indent=False, layout=Layout(width="auto"))
         self.number = IntText(
@@ -300,13 +296,13 @@ class _Dimension:
             self.number.value = start
 
     @property
-    def value(self) -> Union[int, DefaultValue]:  # pylint: disable=missing-function-docstring
+    def value(self) -> int | DefaultValue:  # pylint: disable=missing-function-docstring
         # The dimension, or ``DEFAULT`` if it isn't given.
         return int(self.number.value) if self.checkbox.value else DEFAULT
 
 
 # The width and the height of the figure of the ``graph`` (or Plotly's default size), from which a ``Size`` starts.
-def _start_size(graph: Optional[Graph]) -> Tuple[int, int]:
+def _start_size(graph: Graph | None) -> Tuple[int, int]:
     figure = None if graph is None else graph.configuration.figure
     width = _DEFAULT_WIDTH if figure is None or figure.width is None else figure.width
     height = _DEFAULT_HEIGHT if figure is None or figure.height is None else figure.height
@@ -317,7 +313,7 @@ class _SizeEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
     # The editor of a ``Size``: a checkbox and a number for each of the width and the height. A new ``Size`` gives both,
     # at the size of the shown graph (or Plotly's default size). A dimension which isn't given follows the shown graph.
 
-    def __init__(self, graph: Optional[Graph], current: Optional[Size]) -> None:
+    def __init__(self, graph: Graph | None, current: Size | None) -> None:
         super().__init__()
         start_width, start_height = _start_size(graph)
         self._width = _Dimension("Width", start_width if current is None else current.width, start_width)
@@ -345,7 +341,7 @@ class Title(Tweak):
     Set the title of the figure to the ``text``, or remove the title if it is ``None``.
     """
 
-    def __init__(self, text: Optional[str]) -> None:
+    def __init__(self, text: str | None) -> None:
         self.text = text
 
     def apply(self, graph: Graph, source: "SourceWidgets") -> None:  # pylint: disable=unused-argument
@@ -355,8 +351,8 @@ class Title(Tweak):
     def editor(
         cls,
         source: "SourceWidgets",  # pylint: disable=unused-argument
-        graph: Optional[Graph],
-        current: Optional[Tweak],
+        graph: Graph | None,
+        current: Tweak | None,
     ) -> ArgumentsEditor:
         assert current is None or isinstance(current, Title)
         if current is not None:
@@ -367,7 +363,7 @@ class Title(Tweak):
 class _TitleEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
     # The editor of a ``Title``: a text box, which starts with the ``text``. An empty box removes the title.
 
-    def __init__(self, text: Optional[str]) -> None:
+    def __init__(self, text: str | None) -> None:
         super().__init__()
         self._text = Text(value="" if text is None else text, placeholder="Title")
         self.children = [self._text]
@@ -395,8 +391,8 @@ class Legends(Tweak):
     def editor(
         cls,
         source: "SourceWidgets",  # pylint: disable=unused-argument
-        graph: Optional[Graph],  # pylint: disable=unused-argument
-        current: Optional[Tweak],
+        graph: Graph | None,  # pylint: disable=unused-argument
+        current: Tweak | None,
     ) -> ArgumentsEditor:
         assert current is None or isinstance(current, Legends)
         return _LegendsEditor(True if current is None else current.is_shown)

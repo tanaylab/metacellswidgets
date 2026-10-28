@@ -28,11 +28,9 @@ from typing import FrozenSet
 from typing import Iterator
 from typing import List
 from typing import Literal
-from typing import Optional
 from typing import Sequence
 from typing import Tuple
 from typing import Type
-from typing import Union
 from typing import overload
 
 import traitlets  # type: ignore
@@ -107,23 +105,23 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
 
     # Where in its cell the form was created, if it was created by a method of a kind of data source from the top level
     # of the running cell. Set by ``graph_constructor``.
-    _call_site: Optional[_CallSite] = None
+    _call_site: _CallSite | None = None
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
         _give_own_dispatchers(cls, GraphForm, ("exists", "base_graph"))
 
-    def __init__(self, source: SourceWidgets, tweaks: Optional[Sequence[Tweak]] = None) -> None:
+    def __init__(self, source: SourceWidgets, tweaks: Sequence[Tweak] | None = None) -> None:
         self.source = source
         self.tweaks = None if tweaks is None else list(tweaks)
         self._bound: Dict[str, Widget] = {}
         self._is_dirty = False
         self._held_redraws = 0
-        self._kept_graph: Optional[Graph] = None
-        self._kept_arguments: Optional[Dict[str, Any]] = None
+        self._kept_graph: Graph | None = None
+        self._kept_arguments: Dict[str, Any] | None = None
         # The points the selection was made on (see ``_points_key``), or ``None`` if it wasn't made in a shown graph
         # (e.g. it was given in the code of the cell).
-        self._selection_points: Optional[Any] = None
+        self._selection_points: Any | None = None
 
     @classmethod
     def exists(cls, source: SourceWidgets) -> bool:  # pylint: disable=unused-argument
@@ -287,14 +285,14 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
     def _tweaks_editor(self) -> ListEditor[Tweak]:
         # The editor of the tweaks: a list of them, under a "Tweaks" header, collapsed. The choices of each row are the
         # tweaks of the form's graph type, and a new tweak's editor starts from the graph last shown (if any).
-        def make_row(current: Optional[Tweak]) -> TweakPicker:
+        def make_row(current: Tweak | None) -> TweakPicker:
             return TweakPicker(self.source, type(self).graph_type, self._kept_graph, current)
 
         tweaks = ListEditor(make_row, self.tweaks, title="Tweaks")
         self.bind(tweaks=tweaks)
         return tweaks
 
-    def _edit(self, display_site: Optional[_CallSite]) -> "GraphForm":
+    def _edit(self, display_site: _CallSite | None) -> "GraphForm":
         # Show the editor until "Done" is clicked, then rewrite the cell. Returns the form the editor ended with.
         call_site = self._call_site
         if call_site is None or display_site is None or display_site.cell_token != call_site.cell_token:
@@ -336,7 +334,7 @@ class Branch:
     """
 
     name: str
-    children: Sequence[Union[Type[GraphForm], "Branch"]]
+    children: "Sequence[Type[GraphForm] | Branch]"
 
     def leaves(self) -> List[Type[GraphForm]]:
         """
@@ -350,12 +348,12 @@ class Branch:
                 leaves.append(child)
         return leaves
 
-    def visible(self, source: SourceWidgets) -> Optional["Branch"]:
+    def visible(self, source: SourceWidgets) -> "Branch | None":
         """
         The tree as shown for the ``source``: without the graphs which don't exist for it, nor the branches left empty.
         If nothing is left, ``None``.
         """
-        children: List[Union[Type[GraphForm], Branch]] = []
+        children: List[Type[GraphForm] | Branch] = []
         for child in self.children:
             if isinstance(child, Branch):
                 visible_child = child.visible(source)
@@ -367,7 +365,7 @@ class Branch:
 
 
 # A node of the tree of the graphs: a graph class (a leaf), or a branch.
-_Node = Union[Type[GraphForm], Branch]
+_Node = Type[GraphForm] | Branch
 
 
 class GraphMenu(HBox):  # pylint: disable=too-many-ancestors,abstract-method
@@ -382,7 +380,7 @@ class GraphMenu(HBox):  # pylint: disable=too-many-ancestors,abstract-method
 
     value = traitlets.Any(None, allow_none=True)
 
-    def __init__(self, source: SourceWidgets, tree: Branch, current: Optional[Type[GraphForm]] = None) -> None:
+    def __init__(self, source: SourceWidgets, tree: Branch, current: Type[GraphForm] | None = None) -> None:
         super().__init__()
         visible = tree.visible(source)
         if visible is None:
@@ -392,7 +390,7 @@ class GraphMenu(HBox):  # pylint: disable=too-many-ancestors,abstract-method
         self._dropdowns: List[Dropdown] = []
         self._set_path([] if current is None else _path_to(visible, current))
 
-    def show(self, graph_class: Optional[Type[GraphForm]]) -> None:
+    def show(self, graph_class: Type[GraphForm] | None) -> None:
         """
         Show the path to the ``graph_class`` (if it is in the tree), or nothing chosen.
         """
@@ -448,7 +446,7 @@ class _GraphMenu:
     @overload
     def __get__(self, source: SourceWidgets, owner: type) -> Callable[..., GraphForm]: ...
 
-    def __get__(self, source: Optional[SourceWidgets], owner: type) -> Union["_GraphMenu", Callable[..., GraphForm]]:
+    def __get__(self, source: SourceWidgets | None, owner: type) -> "_GraphMenu | Callable[..., GraphForm]":
         if source is None:
             return self
         tree = self.tree
@@ -478,7 +476,7 @@ def graph_menu(tree: Branch) -> _GraphMenu:
 def _show_menu(
     source: SourceWidgets,
     tree: Branch,
-    call_site: Optional[_CallSite],
+    call_site: _CallSite | None,
     format: _Format,  # pylint: disable=redefined-builtin
 ) -> GraphForm:
     # Show the menu of the graphs of the ``tree`` until "Done" is clicked, then rewrite the menu call (at the
@@ -504,7 +502,7 @@ def _show_menu(
     return form
 
 
-def _kind_tree(source: SourceWidgets) -> Optional[Branch]:
+def _kind_tree(source: SourceWidgets) -> Branch | None:
     # The tree of the menu the kind of the ``source`` offers (see ``graph_menu``), if it offers one.
     for kind in type(source).__mro__:
         for value in kind.__dict__.values():
@@ -536,7 +534,7 @@ def _pooled(pool: _Pool, form: GraphForm) -> None:
 
 
 def _switched_form(
-    graph_class: Type[GraphForm], source: SourceWidgets, pool: _Pool, selection_points: Optional[Any]
+    graph_class: Type[GraphForm], source: SourceWidgets, pool: _Pool, selection_points: Any | None
 ) -> GraphForm:
     # A form of the ``graph_class`` for the ``source``, with the values of the ``pool`` whose name and type annotation fit
     # its arguments, and ``None`` for each of its other required arguments. A selection it takes from the ``pool`` was
@@ -568,18 +566,18 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
     # graph reach any later graph which has them, and going back to a graph restores them. A "Revert" button goes back
     # to the graph and the arguments the session started with (or to no graph), and clears the pool.
 
-    def __init__(self, source: SourceWidgets, form: Optional[GraphForm], tree: Optional[Branch] = None) -> None:
+    def __init__(self, source: SourceWidgets, form: GraphForm | None, tree: Branch | None = None) -> None:
         self._source = source
         self._form = form
         self._original = None if form is None else (type(form), copy.deepcopy(form.arguments()))
         self._pool: _Pool = {}
-        self._pooled_selection_points: Optional[Any] = None
+        self._pooled_selection_points: Any | None = None
         self._is_reverting = False
         self._done = Button(description="Done", button_style="primary")
         revert = Button(description="Revert")
         revert.on_click(self._on_revert)
         self._errors = Output()
-        self._tweaks: Optional[ListEditor[Tweak]] = None
+        self._tweaks: ListEditor[Tweak] | None = None
         # The editors are made before the graph is drawn, since binding them leaves out of the form's arguments what
         # isn't valid.
         self._body = VBox([] if form is None else self._form_widgets(form))
@@ -591,7 +589,7 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
             self._tweaks.update_graph(graph)
         toolbar: List[Widget] = [self._done, revert]
         rows: List[Widget] = []
-        self._menu: Optional[GraphMenu] = None
+        self._menu: GraphMenu | None = None
         visible = None if tree is None else tree.visible(source)
         if tree is not None and visible is not None and (form is None or _path_to(visible, type(form))):
             self._menu = GraphMenu(source, tree, None if form is None else type(form))
@@ -694,7 +692,7 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
             with self._errors:
                 traceback.print_exc()
 
-    def _switch(self, graph_class: Optional[Type[GraphForm]]) -> None:
+    def _switch(self, graph_class: Type[GraphForm] | None) -> None:
         # Edit a form of the ``graph_class`` (if any) instead of the current one, whose values are pooled.
         try:
             current = self._form

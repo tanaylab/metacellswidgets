@@ -30,7 +30,6 @@ from typing import Callable
 from typing import Dict
 from typing import Iterator
 from typing import List
-from typing import Optional
 from typing import TypeVar
 
 from dafpy.julia_import import jl
@@ -62,7 +61,7 @@ def _wrap_julia_flush_hook() -> None:
 
 _wrap_julia_flush_hook()
 
-_OWNED_SUBSHELL_ID: Optional[str] = None
+_OWNED_SUBSHELL_ID: str | None = None
 
 
 def _owned_subshell_id() -> str:
@@ -178,7 +177,7 @@ class _MainThreadJobs:
         # Make ``serve`` check its condition now, rather than at its next poll.
         self._jobs.put(lambda: None)
 
-    def serve(self, is_done: threading.Event, on_poll: Optional[Callable[[], None]] = None) -> None:
+    def serve(self, is_done: threading.Event, on_poll: Callable[[], None] | None = None) -> None:
         # Run handed jobs on the main thread until ``is_done`` is set. Call ``on_poll`` between jobs, about every 0.1
         # seconds. While serving, these are the jobs ``_on_main_thread`` hands work to.
         global _SERVING_JOBS  # pylint: disable=global-statement
@@ -199,7 +198,7 @@ class _MainThreadJobs:
 
 # pylint: enable=missing-function-docstring
 
-_SERVING_JOBS: Optional[_MainThreadJobs] = None
+_SERVING_JOBS: _MainThreadJobs | None = None
 
 
 def _on_main_thread(function: Callable[[], T]) -> T:

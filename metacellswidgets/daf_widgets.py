@@ -5,7 +5,6 @@ The ``Daf`` kind of data source: a single ``Daf`` data set of metacells.
 from typing import Callable
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Sequence
 from typing import Tuple
 
@@ -216,9 +215,7 @@ def _fill_gene_expression(self: GeneExpression, source: DafWidgets, sinks: Vecto
 
 
 @implements(GeneExpression.editor, DafWidgets)
-def _gene_expression_editor(
-    _cls: type, source: DafWidgets, _axis: str, current: Optional[GeneExpression]
-) -> PickerEditor:
+def _gene_expression_editor(_cls: type, source: DafWidgets, _axis: str, current: GeneExpression | None) -> PickerEditor:
     return PickerEditor(GenePicker(source, None if current is None else current.gene), GeneExpression)
 
 
@@ -269,7 +266,7 @@ def _fill_boolean_mask(self: BooleanMask, source: DafWidgets, sinks: VectorDataS
 
 
 @implements(BooleanMask.editor, DafWidgets)
-def _boolean_mask_editor(_cls: type, source: DafWidgets, axis: str, current: Optional[BooleanMask]) -> PickerEditor:
+def _boolean_mask_editor(_cls: type, source: DafWidgets, axis: str, current: BooleanMask | None) -> PickerEditor:
     current_name = None if current is None else current.name
     return PickerEditor(NamePicker(source.boolean_vectors(axis), current_name), BooleanMask)
 
@@ -295,7 +292,7 @@ def _fill_umap(self: UMAP, source: DafWidgets, sinks: VectorDataSinks, axis: str
 
 
 @implements(UMAP.editor, DafWidgets)
-def _umap_editor(_cls: type, _source: DafWidgets, _axis: str, current: Optional[UMAP]) -> PickerEditor:
+def _umap_editor(_cls: type, _source: DafWidgets, _axis: str, current: UMAP | None) -> PickerEditor:
     return PickerEditor(NamePicker(["x", "y"], None if current is None else current.coordinate), UMAP)
 
 

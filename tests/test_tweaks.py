@@ -4,7 +4,6 @@ Test the tweaks.
 
 from typing import Any
 from typing import List
-from typing import Optional
 
 import pytest
 import somegraphspy as sg
@@ -28,9 +27,7 @@ class _Width(mw.Tweak):
         graph.configuration.figure.width = self.width
 
     @classmethod
-    def editor(
-        cls, source: mw.SourceWidgets, graph: Optional[sg.Graph], current: Optional[mw.Tweak]
-    ) -> Optional[Widget]:
+    def editor(cls, source: mw.SourceWidgets, graph: sg.Graph | None, current: mw.Tweak | None) -> Widget | None:
         return Widget()
 
 

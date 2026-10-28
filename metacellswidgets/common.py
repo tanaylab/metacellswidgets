@@ -12,7 +12,6 @@ from typing import Dict
 from typing import FrozenSet
 from typing import List
 from typing import Mapping
-from typing import Optional
 from typing import Sequence
 from typing import TypeVar
 
@@ -55,7 +54,7 @@ class Arguments:
             if parameter.kind not in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)
         }
 
-    def code(self, callee: str, namespace: Optional[Mapping[str, Any]] = None) -> str:
+    def code(self, callee: str, namespace: Mapping[str, Any] | None = None) -> str:
         """
         The code which creates the object with its arguments, calling the ``callee`` (e.g., ``mw.GeneExpression``),
         leaving out those which are ``DEFAULT``. Arguments which are themselves such objects name their classes as the
