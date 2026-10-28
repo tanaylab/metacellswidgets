@@ -6,7 +6,7 @@ says what kind of values it produces (its ``eltype``), and that decides which sl
 a property, and how to fill a graph from it, is implemented separately for each kind of data source.
 
 Some arguments change only how a property is shown, not its data: ``show_legend``, and for a property shown on a log
-scale, ``log_base``. They mirror the keywords of the property's data source in ``metacellsgraphspy``, and ``None``
+scale, ``log_base``. They mirror the keywords of the property's data source in ``metacellsgraphspy``, and ``DEFAULT``
 leaves the data source's default. They are the property's look arguments.
 """
 
@@ -21,8 +21,11 @@ from typing import List
 from typing import Mapping
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 import metacellsgraphspy as mg
+from dafpy.julia_import import DEFAULT
+from dafpy.julia_import import DefaultValue
 from ipywidgets import Widget  # type: ignore
 from somegraphspy import LogBase
 from somegraphspy import VectorDataSinks
@@ -161,8 +164,8 @@ class Property(Arguments):
     @classmethod
     def look_default(cls, name: str) -> Any:
         """
-        The default of the look argument with the ``name``, which applies while the argument is ``None``. This is the
-        default of the keyword of the same name of the ``data_source``.
+        The default of the look argument with the ``name``, which applies while the argument is ``DEFAULT``. This is
+        the default of the keyword of the same name of the ``data_source``.
         """
         key = (cls, name)
         if key not in Property._look_defaults:
@@ -171,17 +174,22 @@ class Property(Arguments):
 
     def look_arguments(self) -> Dict[str, Any]:
         """
-        The values of the look arguments, which change only how the property is shown (e.g. ``show_legend``), by their
-        names. A kind of data source passes them to the property's data source.
+        The values of the look arguments which are set (not ``DEFAULT``), by their names. These change only how the
+        property is shown (e.g. ``show_legend``). A kind of data source passes them to the property's data source, which
+        uses its own defaults for the others.
         """
-        return {name: getattr(self, name) for name in sorted(self._look_arguments)}
+        return {
+            name: getattr(self, name)
+            for name in sorted(self._look_arguments)
+            if not isinstance(getattr(self, name), DefaultValue)
+        }
 
     def _written_arguments(self) -> Dict[str, Any]:
-        # A look argument which is ``None`` leaves the data source's default, so it isn't written.
+        # A look argument which is ``DEFAULT`` leaves the data source's default, so it isn't written.
         return {
             name: value
             for name, value in self.arguments().items()
-            if value is not None or name not in self._look_arguments
+            if not isinstance(value, DefaultValue) or name not in self._look_arguments
         }
 
     def has_same_content(self, other: Any) -> bool:
@@ -303,13 +311,16 @@ def boolean_property(
 
 
 # The constructor of a property whose only argument is ``show_legend``.
-def _init_with_show_legend(self: Property, *, show_legend: Optional[bool] = None) -> None:
+def _init_with_show_legend(self: Property, *, show_legend: Union[bool, DefaultValue] = DEFAULT) -> None:
     setattr(self, "show_legend", show_legend)
 
 
 # The constructor of a property whose only arguments are ``show_legend`` and ``log_base``.
 def _init_with_show_legend_and_log_base(
-    self: Property, *, show_legend: Optional[bool] = None, log_base: Optional[LogBase] = None
+    self: Property,
+    *,
+    show_legend: Union[bool, DefaultValue] = DEFAULT,
+    log_base: Union[LogBase, DefaultValue] = DEFAULT,
 ) -> None:
     setattr(self, "show_legend", show_legend)
     setattr(self, "log_base", log_base)
@@ -363,7 +374,13 @@ class GeneExpression(Property):
     data_source = staticmethod(mg.fill_gene_expression)
     _look_arguments = frozenset(["show_legend", "log_base"])
 
-    def __init__(self, gene: str, *, show_legend: Optional[bool] = None, log_base: Optional[LogBase] = None) -> None:
+    def __init__(
+        self,
+        gene: str,
+        *,
+        show_legend: Union[bool, DefaultValue] = DEFAULT,
+        log_base: Union[LogBase, DefaultValue] = DEFAULT,
+    ) -> None:
         self.gene = gene
         self.show_legend = show_legend
         self.log_base = log_base
@@ -443,7 +460,7 @@ class BooleanMask(Property):
     data_source = staticmethod(mg.fill_boolean)
     _look_arguments = frozenset(["show_legend"])
 
-    def __init__(self, name: str, *, show_legend: Optional[bool] = None) -> None:
+    def __init__(self, name: str, *, show_legend: Union[bool, DefaultValue] = DEFAULT) -> None:
         self.name = name
         self.show_legend = show_legend
 

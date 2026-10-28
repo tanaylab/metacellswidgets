@@ -14,11 +14,12 @@ from .test_daf_widgets import _full_daf
 
 def test_look_arguments() -> None:
     """
-    A property gives the values of its look arguments, and compares to another by its other arguments only.
+    A property gives the values of its look arguments which are set, and compares to another by its other arguments
+    only.
     """
     total_umis = mw.TotalUMIs(show_legend=False, log_base=mw.LogBase.Log2Base)
     assert total_umis.look_arguments() == {"log_base": mw.LogBase.Log2Base, "show_legend": False}
-    assert mw.Type().look_arguments() == {"show_legend": None}
+    assert not mw.Type().look_arguments()
     assert not mw.UMAP("x").look_arguments()
     assert total_umis.has_same_content(mw.TotalUMIs())
     assert total_umis != mw.TotalUMIs()

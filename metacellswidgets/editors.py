@@ -481,7 +481,7 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
     :py:class:`ClassPicker`), until that editor no longer shows it.
 
     In a colors or a sizes slot, the picker also edits the look arguments of the picked property: a "Show legend" toggle,
-    and for a property shown on a log scale, a choice of log2 or log10. While a look argument is ``None``, its widget
+    and for a property shown on a log scale, a choice of log2 or log10. While a look argument is ``DEFAULT``, its widget
     shows the default of the property's data source (see :py:meth:`Property.look_default`). Changing a widget sets the
     argument.
     """
@@ -532,8 +532,9 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
 
     def _look_value(self, choice: Type[Property], name: str) -> Any:
         # The value of the look argument with the ``name`` to show for the ``choice``: the picker's, or else the default.
-        value = self._look.get(name)
-        return choice.look_default(name) if value is None else value
+        if name in self._look:
+            return self._look[name]
+        return choice.look_default(name)
 
     def _on_look_change(self, name: str, change: Dict) -> None:
         _on_main_thread(lambda: self._set_look(name, change["new"]))

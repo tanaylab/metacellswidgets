@@ -79,7 +79,7 @@
 <span class="sd">a property, and how to fill a graph from it, is implemented separately for each kind of data source.</span>
 
 <span class="sd">Some arguments change only how a property is shown, not its data: ``show_legend``, and for a property shown on a log</span>
-<span class="sd">scale, ``log_base``. They mirror the keywords of the property's data source in ``metacellsgraphspy``, and ``None``</span>
+<span class="sd">scale, ``log_base``. They mirror the keywords of the property's data source in ``metacellsgraphspy``, and ``DEFAULT``</span>
 <span class="sd">leaves the data source's default. They are the property's look arguments.</span>
 <span class="sd">"""</span>
 
@@ -94,8 +94,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">metacellsgraphspy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mg</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dafpy.julia_import</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dafpy.julia_import</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultValue</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogBase</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">VectorDataSinks</span>
@@ -247,8 +250,8 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">look_default</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        The default of the look argument with the ``name``, which applies while the argument is ``None``. This is the</span>
-<span class="sd">        default of the keyword of the same name of the ``data_source``.</span>
+<span class="sd">        The default of the look argument with the ``name``, which applies while the argument is ``DEFAULT``. This is</span>
+<span class="sd">        the default of the keyword of the same name of the ``data_source``.</span>
 <span class="sd">        """</span>
         <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Property</span><span class="o">.</span><span class="n">_look_defaults</span><span class="p">:</span>
@@ -260,18 +263,23 @@
 <a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Property.look_arguments">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">look_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        The values of the look arguments, which change only how the property is shown (e.g. ``show_legend``), by their</span>
-<span class="sd">        names. A kind of data source passes them to the property's data source.</span>
+<span class="sd">        The values of the look arguments which are set (not ``DEFAULT``), by their names. These change only how the</span>
+<span class="sd">        property is shown (e.g. ``show_legend``). A kind of data source passes them to the property's data source, which</span>
+<span class="sd">        uses its own defaults for the others.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_look_arguments</span><span class="p">)}</span></div>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_look_arguments</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="n">DefaultValue</span><span class="p">)</span>
+        <span class="p">}</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_written_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="c1"># A look argument which is ``None`` leaves the data source's default, so it isn't written.</span>
+        <span class="c1"># A look argument which is ``DEFAULT`` leaves the data source's default, so it isn't written.</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="n">name</span><span class="p">:</span> <span class="n">value</span>
             <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_look_arguments</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">DefaultValue</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_look_arguments</span>
         <span class="p">}</span>
 
 <div class="viewcode-block" id="Property.has_same_content">
@@ -418,13 +426,16 @@
 
 
 <span class="c1"># The constructor of a property whose only argument is ``show_legend``.</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">_init_with_show_legend</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">Property</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_init_with_show_legend</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">Property</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">DefaultValue</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"show_legend"</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">)</span>
 
 
 <span class="c1"># The constructor of a property whose only arguments are ``show_legend`` and ``log_base``.</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">_init_with_show_legend_and_log_base</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">:</span> <span class="n">Property</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">log_base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LogBase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="p">:</span> <span class="n">Property</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">show_legend</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">DefaultValue</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">,</span>
+    <span class="n">log_base</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">LogBase</span><span class="p">,</span> <span class="n">DefaultValue</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"show_legend"</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">)</span>
     <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">,</span> <span class="n">log_base</span><span class="p">)</span>
@@ -480,7 +491,13 @@
     <span class="n">data_source</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">mg</span><span class="o">.</span><span class="n">fill_gene_expression</span><span class="p">)</span>
     <span class="n">_look_arguments</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">])</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gene</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">log_base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LogBase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">gene</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">show_legend</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">DefaultValue</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">,</span>
+        <span class="n">log_base</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">LogBase</span><span class="p">,</span> <span class="n">DefaultValue</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gene</span> <span class="o">=</span> <span class="n">gene</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">show_legend</span> <span class="o">=</span> <span class="n">show_legend</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_base</span> <span class="o">=</span> <span class="n">log_base</span></div>
@@ -572,7 +589,7 @@
     <span class="n">data_source</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">mg</span><span class="o">.</span><span class="n">fill_boolean</span><span class="p">)</span>
     <span class="n">_look_arguments</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s2">"show_legend"</span><span class="p">])</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">show_legend</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">DefaultValue</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">show_legend</span> <span class="o">=</span> <span class="n">show_legend</span></div>
 

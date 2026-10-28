@@ -607,7 +607,7 @@
 <span class="sd">    :py:class:`ClassPicker`), until that editor no longer shows it.</span>
 
 <span class="sd">    In a colors or a sizes slot, the picker also edits the look arguments of the picked property: a "Show legend" toggle,</span>
-<span class="sd">    and for a property shown on a log scale, a choice of log2 or log10. While a look argument is ``None``, its widget</span>
+<span class="sd">    and for a property shown on a log scale, a choice of log2 or log10. While a look argument is ``DEFAULT``, its widget</span>
 <span class="sd">    shows the default of the property's data source (see :py:meth:`Property.look_default`). Changing a widget sets the</span>
 <span class="sd">    argument.</span>
 <span class="sd">    """</span>
@@ -658,8 +658,9 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_look_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">choice</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">Property</span><span class="p">],</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="c1"># The value of the look argument with the ``name`` to show for the ``choice``: the picker's, or else the default.</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_look</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">choice</span><span class="o">.</span><span class="n">look_default</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_look</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_look</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">choice</span><span class="o">.</span><span class="n">look_default</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_on_look_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">_on_main_thread</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_look</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">]))</span>
