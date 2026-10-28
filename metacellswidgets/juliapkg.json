@@ -1,0 +1,5 @@
+{
+    "packages": {
+        "MetacellsWidgetsPy": { "uuid": "db79b8e8-9821-470a-9ec5-09b18d91194c", "url": "https://github.com/tanaylab/metacellswidgets.git", "subdir": "metacellswidgets/julia/MetacellsWidgetsPy" }
+    }
+}
