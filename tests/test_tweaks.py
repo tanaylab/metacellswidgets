@@ -184,8 +184,7 @@ def test_built_in_tweaks() -> None:
 
 def test_size() -> None:
     """
-    A size sets the dimensions it gives, and leaves the others as the graph has them. A dimension of ``None`` is left
-    for Plotly to choose.
+    A size sets the dimensions it gives, and leaves the others as the graph has them.
     """
     graph = _points_graph()
     mw.Size(width=640).apply(graph, mw.DafWidgets(_full_daf()))
@@ -194,11 +193,7 @@ def test_size() -> None:
     mw.Size(height=480).apply(graph, mw.DafWidgets(_full_daf()))
     assert graph.configuration.figure.width == 640
     assert graph.configuration.figure.height == 480
-    mw.Size(width=None).apply(graph, mw.DafWidgets(_full_daf()))
-    assert graph.configuration.figure.width is None
-    assert graph.configuration.figure.height == 480
     assert mw.Size(width=640).code("mw.Size") == "mw.Size(width=640)"
-    assert mw.Size(width=None).code("mw.Size") == "mw.Size(width=None)"
 
 
 def test_size_editor() -> None:

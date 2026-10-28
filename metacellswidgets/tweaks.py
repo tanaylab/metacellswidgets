@@ -246,10 +246,10 @@ _DEFAULT_HEIGHT = 450
 class Size(Tweak):
     """
     Set the ``width`` and the ``height`` of the figure, in pixels. A dimension which is ``DEFAULT`` is left as the graph
-    has it. A dimension which is ``None`` is left for Plotly to choose.
+    has it.
     """
 
-    def __init__(self, width: int | None | DefaultValue = DEFAULT, height: int | None | DefaultValue = DEFAULT) -> None:
+    def __init__(self, width: int | DefaultValue = DEFAULT, height: int | DefaultValue = DEFAULT) -> None:
         self.width = width
         self.height = height
 
@@ -275,7 +275,7 @@ class _Dimension:
     # The checkbox and the number of one dimension of a ``Size``. The dimension is given while the checkbox is checked,
     # and the number is disabled while it isn't. While it isn't, the number shows the ``start``.
 
-    def __init__(self, description: str, value: int | None | DefaultValue, start: int) -> None:
+    def __init__(self, description: str, value: int | DefaultValue, start: int) -> None:
         is_given = isinstance(value, int)
         self.checkbox = Checkbox(value=is_given, indent=False, layout=Layout(width="auto"))
         self.number = IntText(
