@@ -55,9 +55,7 @@ def test_gene_gene_tweaks() -> None:
     graph = form.graph()
     assert graph.configuration.figure.width == 640
     assert graph.data.figure_title == "Genes"
-    assert repr(form).endswith(
-        "tweaks=[Size(width=600, height=None), Size(width=640, height=None), Title(text='Genes')])"
-    )
+    assert repr(form).endswith("tweaks=[Size(width=600), Size(width=640), Title(text='Genes')])")
 
 
 def test_gene_gene_equality() -> None:

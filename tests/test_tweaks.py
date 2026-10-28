@@ -187,7 +187,8 @@ def test_built_in_tweaks() -> None:
 
 def test_size() -> None:
     """
-    A size sets the dimensions it gives, and leaves the others as the graph has them.
+    A size sets the dimensions it gives, and leaves the others as the graph has them. A dimension of ``None`` is left
+    for Plotly to choose.
     """
     graph = _points_graph()
     mw.Size(width=640).apply(graph, mw.DafWidgets(_full_daf()))
@@ -196,7 +197,11 @@ def test_size() -> None:
     mw.Size(height=480).apply(graph, mw.DafWidgets(_full_daf()))
     assert graph.configuration.figure.width == 640
     assert graph.configuration.figure.height == 480
-    assert mw.Size(width=640).code("mw.Size") == "mw.Size(width=640, height=None)"
+    mw.Size(width=None).apply(graph, mw.DafWidgets(_full_daf()))
+    assert graph.configuration.figure.width is None
+    assert graph.configuration.figure.height == 480
+    assert mw.Size(width=640).code("mw.Size") == "mw.Size(width=640)"
+    assert mw.Size(width=None).code("mw.Size") == "mw.Size(width=None)"
 
 
 def test_size_editor() -> None:
@@ -209,9 +214,9 @@ def test_size_editor() -> None:
     width_checkbox, width_number, _height_checkbox, height_number = editor.children
     width_checkbox.value = False
     assert width_number.disabled
-    assert editor.value == mw.Size(width=None, height=450)
+    assert editor.value == mw.Size(height=450)
     height_number.value = 300
-    assert editor.value == mw.Size(width=None, height=300)
+    assert editor.value == mw.Size(height=300)
     assert mw.Size.editor(source, _points_graph(), mw.Size(height=200)).value == mw.Size(height=200)
 
 

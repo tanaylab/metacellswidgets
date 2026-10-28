@@ -69,6 +69,8 @@ from typing import cast
 from typing import get_type_hints
 from typing import overload
 
+from dafpy.julia_import import DEFAULT
+from dafpy.julia_import import DefaultValue
 from ipywidgets import Checkbox  # type: ignore
 from ipywidgets import IntText  # type: ignore
 from ipywidgets import Layout  # type: ignore
@@ -245,19 +247,21 @@ _DEFAULT_HEIGHT = 450
 @tweak
 class Size(Tweak):
     """
-    Set the ``width`` and the ``height`` of the figure, in pixels. A dimension which is ``None`` is left as the graph
-    has it.
+    Set the ``width`` and the ``height`` of the figure, in pixels. A dimension which is ``DEFAULT`` is left as the graph
+    has it. A dimension which is ``None`` is left for Plotly to choose.
     """
 
-    def __init__(self, width: Optional[int] = None, height: Optional[int] = None) -> None:
+    def __init__(
+        self, width: Union[int, None, DefaultValue] = DEFAULT, height: Union[int, None, DefaultValue] = DEFAULT
+    ) -> None:
         self.width = width
         self.height = height
 
     def apply(self, graph: Graph, source: "SourceWidgets") -> None:  # pylint: disable=unused-argument
         figure = graph.configuration.figure
-        if self.width is not None:
+        if not isinstance(self.width, DefaultValue):
             figure.width = self.width
-        if self.height is not None:
+        if not isinstance(self.height, DefaultValue):
             figure.height = self.height
 
     @classmethod
@@ -275,12 +279,13 @@ class _Dimension:
     # The checkbox and the number of one dimension of a ``Size``. The dimension is given while the checkbox is checked,
     # and the number is disabled while it isn't. While it isn't, the number shows the ``start``.
 
-    def __init__(self, description: str, value: Optional[int], start: int) -> None:
-        self.checkbox = Checkbox(value=value is not None, indent=False, layout=Layout(width="auto"))
+    def __init__(self, description: str, value: Union[int, None, DefaultValue], start: int) -> None:
+        is_given = isinstance(value, int)
+        self.checkbox = Checkbox(value=is_given, indent=False, layout=Layout(width="auto"))
         self.number = IntText(
-            value=start if value is None else value,
+            value=value if is_given else start,
             description=description,
-            disabled=value is None,
+            disabled=not is_given,
             style={"description_width": "initial"},
             layout=Layout(width="10em"),
         )
@@ -295,9 +300,9 @@ class _Dimension:
             self.number.value = start
 
     @property
-    def value(self) -> Optional[int]:  # pylint: disable=missing-function-docstring
-        # The dimension, or ``None`` if it isn't given.
-        return int(self.number.value) if self.checkbox.value else None
+    def value(self) -> Union[int, DefaultValue]:  # pylint: disable=missing-function-docstring
+        # The dimension, or ``DEFAULT`` if it isn't given.
+        return int(self.number.value) if self.checkbox.value else DEFAULT
 
 
 # The width and the height of the figure of the ``graph`` (or Plotly's default size), from which a ``Size`` starts.
