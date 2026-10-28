@@ -586,21 +586,26 @@ incomplete), and the pickers’ is the chosen string (or
 <span class="pre">value
 </span>
 </code> is the property or the
-tweak, or 
+tweak, 
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
-</code> while its arguments are incomplete. It is 
+</code> while its arguments are incomplete, or 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code> while it shows its default. It is 
 <code class="docutils literal notranslate">
 <span class="pre">is_blank
 </span>
-</code> while nothing is picked at all (e.g., a
-class picked whose arguments are still missing is not blank). It isn’t 
+</code>
+while nothing is picked at all (e.g., a class picked whose arguments are still missing is not blank). It isn’t
+
 <code class="docutils literal notranslate">
 <span class="pre">is_valid
 </span>
-</code> while it keeps an object which
-isn’t valid in its context (e.g., a property the current axis doesn’t have); its 
+</code> while it keeps an object which isn’t valid in its context (e.g., a property the current axis doesn’t
+have); its 
 <code class="docutils literal notranslate">
 <span class="pre">value
 </span>
@@ -608,7 +613,11 @@ isn’t valid in its context (e.g., a property the current axis doesn’t have);
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
-</code>.
+</code>, or 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code> if it shows its default instead.
 </p>
 
 <dl class="py method">
@@ -645,7 +654,7 @@ isn’t valid in its context (e.g., a property the current axis doesn’t have);
 </code> is
 
 <code class="docutils literal notranslate">
-<span class="pre">None
+<span class="pre">DEFAULT
 </span>
 </code>).
 </p>
@@ -1001,27 +1010,31 @@ incomplete.
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
-</code> object. While nothing was given or changed, the picker shows the 
+</code> object. While it was given 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code> and wasn’t changed, the picker shows the
+
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
-</code> (picked,
-with its arguments), and its 
+</code> (picked, with its arguments), and its 
 <code class="docutils literal notranslate">
 <span class="pre">value
 </span>
-</code> stays 
+</code> is 
 <code class="docutils literal notranslate">
-<span class="pre">None
+<span class="pre">DEFAULT
 </span>
-</code> until the first change. A “Reset to default” button, shown
+</code>. A “Reset to default” button, shown
 while the 
 <code class="docutils literal notranslate">
 <span class="pre">value
 </span>
 </code> isn’t 
 <code class="docutils literal notranslate">
-<span class="pre">None
+<span class="pre">DEFAULT
 </span>
 </code>, goes back to showing the 
 <code class="docutils literal notranslate">
@@ -1040,16 +1053,24 @@ after the axis changed), or if its arguments aren’t valid. While the kept obje
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
-</code> (or nothing), and its 
+</code> (its 
 <code class="docutils literal notranslate">
 <span class="pre">value
 </span>
-</code> is 
+</code> is then 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code>), or nothing (its 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is then
+
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
-</code>. Any change replaces the kept
-object.
+</code>). Any change replaces the kept object.
 </p>
 
 <p>A picker may be for the entries of an 
@@ -1252,7 +1273,7 @@ removed from the front-end.
 </code> is
 
 <code class="docutils literal notranslate">
-<span class="pre">None
+<span class="pre">DEFAULT
 </span>
 </code>).
 </p>
@@ -1319,11 +1340,13 @@ removed from the front-end.
 </dt>
 
 <dd class="field-odd">
-<p>
+<p>None | 
 <a class="reference internal" href="common.html#metacellswidgets.common.Arguments" title="metacellswidgets.common.Arguments">
 <em>Arguments
 </em>
-</a> | None
+</a> | 
+<em>DefaultValue
+</em>
 </p>
 
 </dd>
@@ -1823,47 +1846,76 @@ row. The hidden rows after each of the two move with it. A removed row is closed
 <code class="docutils literal notranslate">
 <span class="pre">current
 </span>
-</code> list. If there is no 
-<code class="docutils literal notranslate">
-<span class="pre">current
-</span>
-</code> list, it shows the
-
+</code> list. A list with a 
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
-</code> list (if any), and its 
+</code> may be given 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code>
+instead. It then shows the 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> list, and its 
 <code class="docutils literal notranslate">
 <span class="pre">value
 </span>
-</code> stays 
+</code> is 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code> until the first change. A list
+without a 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> may be given 
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
-</code> until the first change. Otherwise, the 
+</code>, for an empty list whose 
 <code class="docutils literal notranslate">
 <span class="pre">value
 </span>
-</code> is the
-list of the values of the rows, leaving out the rows without one (so it may be empty). A “Reset to default” button,
-shown while the 
+</code> is 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> until the first change.
+A list with a 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> which is given 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> starts empty. Otherwise, the 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is the list of the values of the rows, leaving out the rows without one (so it may be
+empty). A “Reset to default” button, shown while the 
 <code class="docutils literal notranslate">
 <span class="pre">value
 </span>
 </code> isn’t 
 <code class="docutils literal notranslate">
-<span class="pre">None
+<span class="pre">DEFAULT
 </span>
 </code> (if there is a 
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
-</code>), sets it back to 
+</code>), sets
+it back to 
 <code class="docutils literal notranslate">
-<span class="pre">None
+<span class="pre">DEFAULT
 </span>
-</code> and shows the
-
+</code> and shows the 
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
@@ -1937,17 +1989,21 @@ shows the default of the new axis. A changed list keeps its rows, each following
 <p>
 <strong>current
 </strong> (
+<em>None
+</em>
+<em> | 
+</em>
+<em>DefaultValue
+</em>
+<em> | 
+</em>
 <em>Sequence
 </em>
 <em>[
 </em>
 <em>_Item
 </em>
-<em>] 
-</em>
-<em>| 
-</em>
-<em>None
+<em>]
 </em>)
 </p>
 </li>
@@ -2063,7 +2119,7 @@ shows the default of the new axis. A changed list keeps its rows, each following
 </code> is
 
 <code class="docutils literal notranslate">
-<span class="pre">None
+<span class="pre">DEFAULT
 </span>
 </code>).
 </p>
@@ -2130,11 +2186,13 @@ shows the default of the new axis. A changed list keeps its rows, each following
 </dt>
 
 <dd class="field-odd">
-<p>
+<p>None | 
+<em>DefaultValue
+</em> | 
 <em>List
 </em>[
 <em>_Item
-</em>] | None
+</em>]
 </p>
 
 </dd>
@@ -2882,13 +2940,17 @@ argument.
 <p>
 <strong>current
 </strong> (
+<em>None
+</em>
+<em> | 
+</em>
 <a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
 <em>Property
 </em>
 </a>
 <em> | 
 </em>
-<em>None
+<em>DefaultValue
 </em>)
 </p>
 </li>

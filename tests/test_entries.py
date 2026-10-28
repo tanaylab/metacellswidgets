@@ -8,6 +8,7 @@ import dafpy as dp
 import numpy as np
 import pandas as pd
 from anndata import AnnData  # type: ignore
+from dafpy.julia_import import DEFAULT
 
 import metacellswidgets as mw
 from metacellswidgets.editors import AxisPicker
@@ -34,7 +35,7 @@ def _daf() -> dp.DafWriter:
 def test_gene_selections() -> None:
     """
     Each selection of genes gives the genes its data source does, and the picker shows the default while its value
-    stays ``None``.
+    stays ``DEFAULT``.
     """
     source = mw.DafWidgets(_daf())
     assert list(mw.TopMarkers(count=2).genes(source)) == [1, 3]
@@ -43,7 +44,7 @@ def test_gene_selections() -> None:
     assert mw.TopMarkers().count == 100
 
     picker = mw.GeneSelectionPicker(source)
-    assert picker.value is None
+    assert picker.value is DEFAULT
     assert picker._dropdown.value is mw.TopMarkers
     assert [label for label, _choice in picker._dropdown.options] == ["", "GeneList", "SkeletonGenes", "TopMarkers"]
 

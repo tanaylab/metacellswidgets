@@ -184,14 +184,6 @@ class Property(Arguments):
             if not isinstance(getattr(self, name), DefaultValue)
         }
 
-    def _written_arguments(self) -> Dict[str, Any]:
-        # A look argument which is ``DEFAULT`` leaves the data source's default, so it isn't written.
-        return {
-            name: value
-            for name, value in self.arguments().items()
-            if not isinstance(value, DefaultValue) or name not in self._look_arguments
-        }
-
     def has_same_content(self, other: Any) -> bool:
         """
         Whether the ``other`` is a property of the same class, with the same values of the arguments other than the look

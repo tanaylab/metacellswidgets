@@ -16,6 +16,8 @@ from typing import Optional
 from typing import Sequence
 from typing import TypeVar
 
+from dafpy.julia_import import DefaultValue
+
 from .rewrite import _literal_text
 
 __all__: List[str] = [
@@ -55,17 +57,16 @@ class Arguments:
 
     def code(self, callee: str, namespace: Optional[Mapping[str, Any]] = None) -> str:
         """
-        The code which creates the object with its arguments, calling the ``callee`` (e.g., ``mw.GeneExpression``).
-        Arguments which are themselves such objects name their classes as the ``namespace`` (of the cell) does.
+        The code which creates the object with its arguments, calling the ``callee`` (e.g., ``mw.GeneExpression``),
+        leaving out those which are ``DEFAULT``. Arguments which are themselves such objects name their classes as the
+        ``namespace`` (of the cell) does.
         """
         arguments = [
-            f"{name}={_literal_text(name, value, namespace)}" for name, value in self._written_arguments().items()
+            f"{name}={_literal_text(name, value, namespace)}"
+            for name, value in self.arguments().items()
+            if not isinstance(value, DefaultValue)
         ]
         return f"{callee}({', '.join(arguments)})"
-
-    def _written_arguments(self) -> Dict[str, Any]:
-        # The arguments written by ``code``: all of them, unless a subclass leaves some out.
-        return self.arguments()
 
     def __repr__(self) -> str:
         return self.code(type(self).__name__)

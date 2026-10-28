@@ -274,14 +274,6 @@
         <span class="p">}</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_written_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="c1"># A look argument which is ``DEFAULT`` leaves the data source's default, so it isn't written.</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="n">name</span><span class="p">:</span> <span class="n">value</span>
-            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">DefaultValue</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_look_arguments</span>
-        <span class="p">}</span>
-
 <div class="viewcode-block" id="Property.has_same_content">
 <a class="viewcode-back" href="../../properties.html#metacellswidgets.properties.Property.has_same_content">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">has_same_content</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>

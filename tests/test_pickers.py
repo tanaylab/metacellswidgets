@@ -4,6 +4,8 @@ Test the pickers of axes and properties.
 
 from typing import Optional
 
+from dafpy.julia_import import DEFAULT
+
 import metacellswidgets as mw
 from metacellswidgets.editors import AxisPicker
 from metacellswidgets.editors import PropertyPicker
@@ -143,14 +145,15 @@ def test_property_picker_close() -> None:
 
 def test_property_picker_default() -> None:
     """
-    A picker shows its default while its value stays ``None``. A change makes the value explicit, and the reset button
-    returns to the default. A property which no longer fits the axis gives way to the default, until the axis changes
-    back. So does a given property which doesn't fit the axis.
+    Given ``DEFAULT``, a picker shows its default while its value stays ``DEFAULT``. A change makes the value explicit,
+    and the reset button returns to the default. A property which no longer fits the axis gives way to the default,
+    until the axis changes back. So does a given property which doesn't fit the axis. Given ``None``, a picker with a
+    default shows nothing.
     """
     source = mw.DafWidgets(_full_daf())
     axis = AxisPicker(source, ["metacell", "block"])
-    picker = PropertyPicker(source, Slot.COLORS, axis, default=mw.Type())
-    assert picker.value is None
+    picker = PropertyPicker(source, Slot.COLORS, axis, DEFAULT, default=mw.Type())
+    assert picker.value is DEFAULT
     assert picker._dropdown.value is mw.Type
     assert picker._reset.layout.display == "none"
 
@@ -159,18 +162,22 @@ def test_property_picker_default() -> None:
     assert picker._reset.layout.display is None
 
     picker._reset.click()
-    assert picker.value is None
+    assert picker.value is DEFAULT
     assert picker._dropdown.value is mw.Type
 
     picker._dropdown.value = mw.Block
     axis._dropdown.value = "block"
-    assert picker.value is None
+    assert picker.value is DEFAULT
     assert picker._dropdown.value is mw.Type
     axis._dropdown.value = "metacell"
     assert picker.value == mw.Block()
     assert picker._dropdown.value is mw.Block
 
     given = PropertyPicker(source, Slot.COLORS, "block", mw.Block(), default=mw.Type())
-    assert given.value is None
+    assert given.value is DEFAULT
     assert given._dropdown.value is mw.Type
     assert not given.is_valid
+
+    nothing = PropertyPicker(source, Slot.COLORS, "metacell", None, default=mw.Type())
+    assert nothing.value is None
+    assert nothing._dropdown.value is None

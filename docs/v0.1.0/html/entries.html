@@ -2215,14 +2215,31 @@ implements this for the selections it supports; for any other, this is an error.
 <code class="docutils literal notranslate">
 <span class="pre">current
 </span>
-</code> one (if any). The choices are the
-selections the source has. While none is given or picked, the default (
+</code> one. The choices are the selections
+the source has. While the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> one is 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code> and nothing is picked, the default
+(
 <a class="reference internal" href="#metacellswidgets.entries.TopMarkers" title="metacellswidgets.entries.TopMarkers">
 <code class="xref py py-class docutils literal notranslate">
 <span class="pre">TopMarkers
 </span>
 </code>
-</a>) is shown.
+</a>) is shown, and the 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code>.
 </p>
 
 <dl class="field-list simple">
@@ -2250,13 +2267,17 @@ selections the source has. While none is given or picked, the default (
 <p>
 <strong>current
 </strong> (
+<em>None
+</em>
+<em> | 
+</em>
 <a class="reference internal" href="#metacellswidgets.entries.GeneSelection" title="metacellswidgets.entries.GeneSelection">
 <em>GeneSelection
 </em>
 </a>
 <em> | 
 </em>
-<em>None
+<em>DefaultValue
 </em>)
 </p>
 </li>

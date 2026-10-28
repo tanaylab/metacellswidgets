@@ -7,6 +7,8 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
+from dafpy.julia_import import DEFAULT
+
 import metacellswidgets as mw
 from metacellswidgets.common import Arguments
 from metacellswidgets.editors import ArgumentsEditor
@@ -110,13 +112,14 @@ def test_list_editor_hidden_rows() -> None:
 
 def test_list_editor_default() -> None:
     """
-    Without a current list, a list editor shows the default, and its value stays ``None`` until the first change. The
-    reset button returns to the default.
+    Given ``DEFAULT``, a list editor shows the default, and its value stays ``DEFAULT`` until the first change. The reset
+    button returns to the default. Given ``None``, it starts empty.
     """
     first, second = mw.Title(text="A"), mw.Title(text="B")
-    editor = ListEditor(_Row, None, default=[first], title="Titles")
+    editor = ListEditor(_Row, DEFAULT, default=[first], title="Titles")
     reset, rows_box = _parts(editor)
-    assert editor.value is None
+    assert editor.value is DEFAULT
+    assert editor.intended() is DEFAULT
     assert reset.layout.display == "none"
     assert rows_box.children[0].children[0].value == first
 
@@ -126,8 +129,10 @@ def test_list_editor_default() -> None:
 
     reset.click()
     _reset, rows_box = _parts(editor)
-    assert editor.value is None
+    assert editor.value is DEFAULT
     assert rows_box.children[0].children[0].value == first
+
+    assert ListEditor(_Row, None, default=[first], title="Titles").value == []
 
 
 def test_list_editor_axis_default() -> None:
@@ -137,13 +142,13 @@ def test_list_editor_axis_default() -> None:
     """
     title_per_axis = {"metacell": mw.Title(text="M"), "block": mw.Title(text="B")}
     axis = AxisPicker(mw.DafWidgets(_full_daf()), ["metacell", "block"])
-    editor = ListEditor(_Row, None, axis=axis, default=lambda axis_name: [title_per_axis[axis_name]], title="Titles")
+    editor = ListEditor(_Row, DEFAULT, axis=axis, default=lambda axis_name: [title_per_axis[axis_name]], title="Titles")
     _reset, rows_box = _parts(editor)
     assert rows_box.children[0].children[0].value == title_per_axis["metacell"]
 
     axis.children[0].value = "block"
     reset, rows_box = _parts(editor)
-    assert editor.value is None
+    assert editor.value is DEFAULT
     assert rows_box.children[0].children[0].value == title_per_axis["block"]
 
     changed = mw.Title(text="X")
@@ -153,7 +158,7 @@ def test_list_editor_axis_default() -> None:
 
     reset.click()
     _reset, rows_box = _parts(editor)
-    assert editor.value is None
+    assert editor.value is DEFAULT
     assert rows_box.children[0].children[0].value == title_per_axis["metacell"]
 
 
@@ -166,9 +171,10 @@ def test_property_picker_axis_default() -> None:
         mw.DafWidgets(_full_daf()),
         Slot.COLORS,
         axis,
+        DEFAULT,
         default=lambda axis_name: mw.Type() if axis_name == "metacell" else None,
     )
-    assert picker.value is None
+    assert picker.value is DEFAULT
     assert picker.children[0].value is mw.Type
 
     axis.children[0].value = "block"

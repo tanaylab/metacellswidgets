@@ -23,6 +23,8 @@ from typing import cast
 
 import metacellsgraphspy as mg
 import numpy as np
+from dafpy.julia_import import DEFAULT
+from dafpy.julia_import import DefaultValue
 from ipywidgets import IntText  # type: ignore
 from ipywidgets import Layout  # type: ignore
 from ipywidgets import Widget  # type: ignore
@@ -317,11 +319,12 @@ _ENTRY_FILTERS: Sequence[Type[EntryFilter]] = (InEnvironment, InNeighborhood, Of
 
 class GeneSelectionPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstract-method
     """
-    Pick a selection of the genes of the ``source``, starting with the ``current`` one (if any). The choices are the
-    selections the source has. While none is given or picked, the default (:py:class:`TopMarkers`) is shown.
+    Pick a selection of the genes of the ``source``, starting with the ``current`` one. The choices are the selections
+    the source has. While the ``current`` one is ``DEFAULT`` and nothing is picked, the default
+    (:py:class:`TopMarkers`) is shown, and the ``value`` is ``DEFAULT``.
     """
 
-    def __init__(self, source: SourceWidgets, current: Optional[GeneSelection] = None) -> None:
+    def __init__(self, source: SourceWidgets, current: Union[None, GeneSelection, DefaultValue] = DEFAULT) -> None:
         super().__init__(default=TopMarkers())
         self._source = source
         self._show([choice for choice in _GENE_SELECTIONS if choice.exists(source)], current)

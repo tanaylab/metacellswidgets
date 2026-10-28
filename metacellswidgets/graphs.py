@@ -10,9 +10,12 @@ from typing import List
 from typing import Optional
 from typing import Sequence
 from typing import Tuple
+from typing import Union
 from typing import cast
 
 import numpy as np
+from dafpy.julia_import import DEFAULT
+from dafpy.julia_import import DefaultValue
 from ipywidgets import HBox  # type: ignore
 from ipywidgets import Label  # type: ignore
 from ipywidgets import VBox  # type: ignore
@@ -194,10 +197,10 @@ class GenesHeatmap(GraphForm):
         source: SourceWidgets,
         *,
         axis: str = "metacell",
-        genes: Optional[GeneSelection] = None,
+        genes: Union[GeneSelection, DefaultValue] = DEFAULT,
         entries: Optional[Sequence[EntryFilter]] = None,
-        row_annotations: Optional[Sequence[Property]] = None,
-        column_annotations: Optional[Sequence[Property]] = None,
+        row_annotations: Union[Sequence[Property], DefaultValue] = DEFAULT,
+        column_annotations: Union[Sequence[Property], DefaultValue] = DEFAULT,
         row_hovers: Optional[Sequence[Property]] = None,
         column_hovers: Optional[Sequence[Property]] = None,
         tweaks: Optional[Sequence[Tweak]] = None,
@@ -206,8 +209,10 @@ class GenesHeatmap(GraphForm):
         self.axis = axis
         self.genes = genes
         self.entries = None if entries is None else list(entries)
-        self.row_annotations = None if row_annotations is None else list(row_annotations)
-        self.column_annotations = None if column_annotations is None else list(column_annotations)
+        self.row_annotations = row_annotations if isinstance(row_annotations, DefaultValue) else list(row_annotations)
+        self.column_annotations = (
+            column_annotations if isinstance(column_annotations, DefaultValue) else list(column_annotations)
+        )
         self.row_hovers = None if row_hovers is None else list(row_hovers)
         self.column_hovers = None if column_hovers is None else list(column_hovers)
         _check_hovers(self.row_hovers, self._row_annotations(), "rows")
@@ -215,11 +220,15 @@ class GenesHeatmap(GraphForm):
 
     def _row_annotations(self) -> List[Property]:
         # The annotations of the rows: the given ones, or else the default ones.
-        return self.default_row_annotations() if self.row_annotations is None else self.row_annotations
+        if isinstance(self.row_annotations, DefaultValue):
+            return self.default_row_annotations()
+        return self.row_annotations
 
     def _column_annotations(self) -> List[Property]:
         # The annotations of the columns: the given ones, or else the default ones.
-        return self.default_column_annotations() if self.column_annotations is None else self.column_annotations
+        if isinstance(self.column_annotations, DefaultValue):
+            return self.default_column_annotations()
+        return self.column_annotations
 
     def default_row_annotations(self) -> List[Property]:
         """
@@ -228,19 +237,19 @@ class GenesHeatmap(GraphForm):
         """
         return [property_class() for property_class in (IsLateral,) if property_class.exists(self.source, "gene")]
 
-    def default_column_annotations(self, axis: Optional[str] = None) -> List[Property]:
+    def default_column_annotations(self, axis: Union[str, DefaultValue] = DEFAULT) -> List[Property]:
         """
         The annotations of the columns (the entries) when ``column_annotations`` is left out: the type of each entry,
         if the data has it. The entries are of the ``axis`` (by default, the form's).
         """
-        axis = self.axis if axis is None else axis
+        axis = self.axis if isinstance(axis, DefaultValue) else axis
         return [property_class() for property_class in (Type,) if property_class.exists(self.source, axis)]
 
     def selected_genes(self) -> Entries:
         """
         The genes the ``genes`` select (by default, the strongest markers).
         """
-        return (TopMarkers() if self.genes is None else self.genes).genes(self.source)
+        return (TopMarkers() if isinstance(self.genes, DefaultValue) else self.genes).genes(self.source)
 
     def selected_entries(self) -> Optional[np.ndarray]:
         """

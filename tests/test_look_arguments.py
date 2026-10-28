@@ -3,6 +3,7 @@ Test the look arguments of the properties, which change only how a property is s
 """
 
 import pytest
+from dafpy.julia_import import DEFAULT
 
 import metacellswidgets as mw
 from metacellswidgets.editors import PropertyPicker
@@ -95,8 +96,8 @@ def test_picker_look_of_a_default() -> None:
     """
     Changing the look of a shown default makes it the value.
     """
-    picker = PropertyPicker(mw.DafWidgets(_full_daf()), Slot.COLORS, "metacell", default=mw.Type())
-    assert picker.value is None
+    picker = PropertyPicker(mw.DafWidgets(_full_daf()), Slot.COLORS, "metacell", DEFAULT, default=mw.Type())
+    assert picker.value is DEFAULT
     picker._look_box.children[0].value = False
     assert picker.value == mw.Type(show_legend=False)
 

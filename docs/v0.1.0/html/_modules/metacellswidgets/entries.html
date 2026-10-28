@@ -96,6 +96,8 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">metacellsgraphspy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mg</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dafpy.julia_import</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dafpy.julia_import</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultValue</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntText</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>  <span class="c1"># type: ignore</span>
@@ -467,11 +469,12 @@
 <a class="viewcode-back" href="../../entries.html#metacellswidgets.entries.GeneSelectionPicker">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GeneSelectionPicker</span><span class="p">(</span><span class="n">ClassPicker</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Pick a selection of the genes of the ``source``, starting with the ``current`` one (if any). The choices are the</span>
-<span class="sd">    selections the source has. While none is given or picked, the default (:py:class:`TopMarkers`) is shown.</span>
+<span class="sd">    Pick a selection of the genes of the ``source``, starting with the ``current`` one. The choices are the selections</span>
+<span class="sd">    the source has. While the ``current`` one is ``DEFAULT`` and nothing is picked, the default</span>
+<span class="sd">    (:py:class:`TopMarkers`) is shown, and the ``value`` is ``DEFAULT``.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GeneSelection</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">GeneSelection</span><span class="p">,</span> <span class="n">DefaultValue</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">TopMarkers</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="o">=</span> <span class="n">source</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_show</span><span class="p">([</span><span class="n">choice</span> <span class="k">for</span> <span class="n">choice</span> <span class="ow">in</span> <span class="n">_GENE_SELECTIONS</span> <span class="k">if</span> <span class="n">choice</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">source</span><span class="p">)],</span> <span class="n">current</span><span class="p">)</span>

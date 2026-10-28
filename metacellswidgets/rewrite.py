@@ -23,6 +23,7 @@ from typing import Mapping
 from typing import Optional
 from typing import Tuple
 
+from dafpy.julia_import import DefaultValue
 from IPython import get_ipython
 
 __all__: List[str] = []
@@ -187,7 +188,7 @@ def _rewritten_cell(
     namespace: Optional[Mapping[str, Any]] = None,
 ) -> str:
     # The code of the cell with the form call's keyword arguments set to ``form_keywords`` (leaving out those which are
-    # ``None``), its method replaced by ``form_method`` on the same receiver (if given), and the display call's
+    # ``None`` or ``DEFAULT``), its method replaced by ``form_method`` on the same receiver (if given), and the display call's
     # ``interactive`` set to ``is_interactive``. The form call may be on another line than the display call, or chained
     # to it. Values with a ``code`` method (e.g. properties) name their classes as the cell's ``namespace`` does.
     tree = ast.parse(source)
@@ -233,7 +234,7 @@ def _rewritten_menu_cell(
     namespace: Optional[Mapping[str, Any]] = None,
 ) -> str:
     # The code of the cell with the menu call replaced by a call of the ``method`` on the same receiver, with the
-    # ``form_keywords`` (leaving out those which are ``None``), and displayed with ``interactive=False`` and the
+    # ``form_keywords`` (leaving out those which are ``None`` or ``DEFAULT``), and displayed with ``interactive=False`` and the
     # ``format`` (unless it is the default ``"plotly"``).
     tree = ast.parse(source)
     namespace = _cell_namespace(tree, namespace)
@@ -264,10 +265,12 @@ def _call_text(
     namespace: Optional[Mapping[str, Any]],
 ) -> str:
     # The code calling the ``callee`` with the positional arguments of the ``call`` (if any) as written, and the
-    # ``keywords`` (leaving out those which are ``None``).
+    # ``keywords`` (leaving out those which are ``None`` or ``DEFAULT``).
     arguments = [] if call is None else [_segment(source, argument) for argument in call.args]
     arguments += [
-        f"{name}={_literal_text(name, value, namespace)}" for name, value in keywords.items() if value is not None
+        f"{name}={_literal_text(name, value, namespace)}"
+        for name, value in keywords.items()
+        if value is not None and not isinstance(value, DefaultValue)
     ]
     return f"{callee}({', '.join(arguments)})"
 

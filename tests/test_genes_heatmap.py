@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData  # type: ignore
+from dafpy.julia_import import DEFAULT
 from somegraphspy import HeatmapGraph
 
 import metacellswidgets as mw
@@ -102,13 +103,13 @@ def test_hovers_are_new() -> None:
 
 def test_editor() -> None:
     """
-    The editor builds, and an untouched default leaves its argument ``None``.
+    The editor builds, and an untouched default leaves its argument ``DEFAULT``.
     """
     form = mw.DafWidgets(_daf()).genes_heatmap()
     assert form.editor() is not None
-    assert form.genes is None
-    assert form.row_annotations is None
-    assert form.column_annotations is None
+    assert form.genes is DEFAULT
+    assert form.row_annotations is DEFAULT
+    assert form.column_annotations is DEFAULT
     assert mw.GenesHeatmap in mw.DafWidgets.tree.leaves()
 
 
