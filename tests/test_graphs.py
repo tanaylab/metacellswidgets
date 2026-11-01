@@ -3,12 +3,18 @@ Test the graphs.
 """
 
 from pathlib import Path
+from typing import Any
+from typing import List
 
 import numpy as np
 import pytest
+from plotly.graph_objects import Figure  # type: ignore
+from somegraphspy import PngImage
 from somegraphspy import PointsGraph
+from somegraphspy import SvgImage
 
 import metacellswidgets as mw
+from metacellswidgets import forms
 
 from .test_anndata_widgets import _source
 from .test_daf_widgets import _full_daf
@@ -45,13 +51,26 @@ def test_gene_gene_repr() -> None:
     )
 
 
-def test_form_shows_nothing_as_the_value_of_a_cell(capsys: pytest.CaptureFixture[str]) -> None:
+def test_form_formats() -> None:
     """
-    A form left as the value of a cell (e.g. the one ``display`` returns) shows nothing, not its ``repr``.
+    A form gives its graph as the JSON text of a Plotly figure, as a Plotly figure, as an SVG image and as a PNG image.
     """
     form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B")
+    assert form.json.startswith("{")  # NOT F-STRING
+    assert isinstance(form.figure, Figure)
+    assert isinstance(form.svg, SvgImage) and form.svg.startswith("<svg")
+    assert isinstance(form.png, PngImage) and form.png[:8] == b"\x89PNG\r\n\x1a\n"
+
+
+def test_form_shows_its_figure_as_the_value_of_a_cell(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    A form left as the value of a cell shows its figure, not its ``repr``.
+    """
+    shown: List[Any] = []
+    monkeypatch.setattr(forms, "display_in_cell", shown.append)
+    form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B")
     form._ipython_display_()  # pylint: disable=protected-access
-    assert capsys.readouterr().out == ""
+    assert len(shown) == 1 and isinstance(shown[0], Figure)
 
 
 def test_gene_gene_tweaks() -> None:

@@ -50,6 +50,8 @@ from ipywidgets import Widget  # type: ignore
 from plotly.graph_objects import Figure  # type: ignore
 from plotly.graph_objects import FigureWidget  # type: ignore
 from somegraphspy import Graph
+from somegraphspy import PngImage
+from somegraphspy import SvgImage
 
 from .common import Arguments
 from .common import _give_own_dispatchers
@@ -151,6 +153,37 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
         for tweak in self.tweaks or []:
             tweak.apply(graph, self.source)
         return graph
+
+    @property
+    def json(self) -> str:
+        """
+        The graph (see :py:meth:`graph`) as the JSON text of its Plotly figure.
+        """
+        return self._shown_graph().json
+
+    @property
+    def figure(self) -> Figure:
+        """
+        The graph (see :py:meth:`graph`) as a Plotly figure. A notebook shows it as an interactive figure. A form left
+        as the value of a cell shows the same.
+        """
+        return self._shown_graph().figure
+
+    @property
+    def svg(self) -> SvgImage:
+        """
+        The graph (see :py:meth:`graph`) as a static SVG image, which obeys the graph's size. It is the SVG text, which a
+        notebook shows as the image.
+        """
+        return self._shown_graph().svg
+
+    @property
+    def png(self) -> PngImage:
+        """
+        The graph (see :py:meth:`graph`) as a static PNG image, which obeys the graph's size. It is the PNG bytes, which
+        a notebook shows as the image.
+        """
+        return self._shown_graph().png
 
     def _shown_graph(self) -> Graph:
         # The graph, to show. If its points differ from those the selection was made on, the selection is cleared (only
@@ -291,9 +324,8 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
         return form
 
     def _ipython_display_(self) -> None:
-        # A form left as the value of a cell (e.g. the one ``display`` returns) shows nothing. Its graph is shown only by
-        # ``display``.
-        pass
+        # A form left as the value of a cell shows its figure.
+        display_in_cell(self.figure)
 
     def _tweaks_editor(self) -> ListEditor[Tweak]:
         # The editor of the tweaks: a list of them, under a "Tweaks" header, collapsed. The choices of each row are the
