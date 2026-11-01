@@ -2,15 +2,50 @@
 Test editing a form, without a kernel: its widgets change its arguments, and the graph is redrawn once per poll.
 """
 
+import time
 from typing import Any
 from typing import List
 
 from plotly.graph_objects import FigureWidget  # type: ignore
 
 import metacellswidgets as mw
+from metacellswidgets.forms import _EditSession
 from metacellswidgets.forms import _replace_figure
 
 from .test_daf_widgets import _full_daf
+
+
+def test_figure_follows_its_width() -> None:
+    """
+    The editor starts without the form's editors and figure, which its first poll makes and draws (showing its spinner
+    first). A shown figure waits for its width watcher to report a width (the editor shows its spinner meanwhile). Each
+    width it reports makes the figure measure its box again. If none arrives in time, the editor reports that the
+    watcher failed and stops waiting.
+    """
+    form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B")
+    session = _EditSession(form.source, form)
+    assert session._spinner.layout.visibility is None
+    assert not session._body.children
+    assert not session._poll_width()
+    session._show_form()
+    assert session._body.children
+    assert form._is_redraw_due()
+    form._poll_redraw(session._redraw)
+    assert session._poll_width()
+    assert session._figure is not None
+    session._figure.layout.autosize = None
+    session._width_watcher.width = 1000
+    assert not session._poll_width()
+    assert session._figure.layout.autosize is True
+
+    session = _EditSession(form.source, form)
+    session._show_form()
+    form._poll_redraw(session._redraw)
+    assert session._poll_width()
+    session._unmeasured_since = time.monotonic() - 60
+    assert not session._poll_width()
+    assert session._has_width_failed
+    assert not session._poll_width()
 
 
 def test_redraw_keeps_the_full_width() -> None:

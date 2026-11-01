@@ -63,11 +63,12 @@ exclude = ["htmlcov"]
 # `juliapkg.json` says which Julia packages this needs. `juliapkg` looks for it inside an importable
 # package, so it lives beside the code rather than at the top of the repository, and is installed
 # along with it. The same holds for `julia/MetacellsWidgetsPy`, the Julia package which caches the code our calls
-# compile.
+# compile. `width_watcher.js` is the browser code of the editor's width watcher.
 [tool.setuptools.package-data]
 metacellswidgets = [
     "juliapkg.json",
     "py.typed",
+    "width_watcher.js",
     "julia/MetacellsWidgetsPy/Project.toml",
     "julia/MetacellsWidgetsPy/src/*.jl",
 ]

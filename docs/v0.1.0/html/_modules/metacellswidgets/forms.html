@@ -94,6 +94,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">typing</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
@@ -106,6 +107,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">overload</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">anywidget</span>  <span class="c1"># type: ignore</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">traitlets</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ipython</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span> <span class="k">as</span> <span class="n">display_in_cell</span>
@@ -461,11 +463,20 @@
 
 
 
-<span class="c1"># The interactive figure is drawn before its cell has a width, so it starts narrower than the cell. It measures the cell</span>
-<span class="c1"># again only when its layout changes. So this long after the editor is shown, its layout is changed by toggling</span>
-<span class="c1"># ``autosize``, and it measures the cell again. The delay is a guess at how long the browser takes to give the cell its</span>
-<span class="c1"># width. A slower browser may still show a narrow figure until its first relayout (e.g. picking the lasso tool).</span>
-<span class="n">_FIGURE_RESIZE_DELAY_SECONDS</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="c1"># How long the figure may be shown without a width from its ``_WidthWatcher`` before the editor reports that the watcher</span>
+<span class="c1"># failed (e.g. its JavaScript didn't load).</span>
+<span class="n">_WIDTH_TIMEOUT_SECONDS</span> <span class="o">=</span> <span class="mf">10.0</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_WidthWatcher</span><span class="p">(</span><span class="n">anywidget</span><span class="o">.</span><span class="n">AnyWidget</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+    <span class="c1"># An invisible element as wide as the figure's box, which reports its ``width`` (in pixels) whenever it changes, and</span>
+    <span class="c1"># 0 while it is hidden. The interactive figure is drawn before its cell has a width, so it starts narrower than the</span>
+    <span class="c1"># cell, and it measures the cell again only when its layout changes. So the editor changes the figure's layout each</span>
+    <span class="c1"># time this reports a new width: when the cell gets its width, and whenever it is resized.</span>
+
+    <span class="n">_esm</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"width_watcher.js"</span>
+
+    <span class="n">width</span> <span class="o">=</span> <span class="n">traitlets</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">tag</span><span class="p">(</span><span class="n">sync</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Branch">
@@ -777,22 +788,33 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_revert_button</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"Revert"</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_revert_button</span><span class="o">.</span><span class="n">on_click</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_revert</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cancel</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"Cancel"</span><span class="p">)</span>
-        <span class="c1"># Hidden (keeping its place) while the graph isn't being redrawn.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_busy</span> <span class="o">=</span> <span class="n">HTML</span><span class="p">(</span><span class="s1">'&lt;i class="fa fa-spinner fa-spin"&gt;&lt;/i&gt;'</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">visibility</span><span class="o">=</span><span class="s2">"hidden"</span><span class="p">))</span>
+        <span class="c1"># Shown while work which may take a while is in progress (see ``_showing_spinner``), and while the figure waits for</span>
+        <span class="c1"># its width. Hidden (keeping its place) otherwise. It shows at once if there is a form, whose editors the first</span>
+        <span class="c1"># poll makes.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spinner</span> <span class="o">=</span> <span class="n">HTML</span><span class="p">(</span>
+            <span class="s1">'&lt;i class="fa fa-spinner fa-spin"&gt;&lt;/i&gt;'</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">visibility</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">"hidden"</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_busy</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_waiting_for_width</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span> <span class="o">=</span> <span class="n">Output</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span><span class="p">:</span> <span class="n">ListEditor</span><span class="p">[</span><span class="n">Tweak</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="c1"># The editors are made before the graph is drawn, since binding them leaves out of the form's arguments what</span>
-        <span class="c1"># isn't valid.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_body</span> <span class="o">=</span> <span class="n">VBox</span><span class="p">([]</span> <span class="k">if</span> <span class="n">form</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form_widgets</span><span class="p">(</span><span class="n">form</span><span class="p">))</span>
-        <span class="n">graph</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">form</span><span class="o">.</span><span class="n">_shown_graph</span><span class="p">()</span> <span class="k">if</span> <span class="n">form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">form</span><span class="o">.</span><span class="n">is_complete</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>  <span class="c1"># pylint: disable=protected-access</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span> <span class="o">=</span> <span class="n">FigureWidget</span><span class="p">(</span><span class="n">Figure</span><span class="p">()</span> <span class="k">if</span> <span class="n">graph</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">graph</span><span class="o">.</span><span class="n">fig</span><span class="p">)</span>
+        <span class="c1"># The editors of the form, which may take a while to make, are made by the first poll (see ``_show_form``), so</span>
+        <span class="c1"># the editor shows at once, with its spinner.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_body</span> <span class="o">=</span> <span class="n">VBox</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_form_due</span> <span class="o">=</span> <span class="n">form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="c1"># Made when there is first a graph to show, after the editor is shown (see ``_draw``), since the browser takes a</span>
+        <span class="c1"># while to load the code of a figure widget, and shows nothing of the editor until it does.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="p">:</span> <span class="n">FigureWidget</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_width_watcher</span> <span class="o">=</span> <span class="n">_WidthWatcher</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_width_watcher</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_width_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"width"</span><span class="p">)</span>
+        <span class="c1"># Whether a new width was reported, so the figure should measure its box again.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_resize_due</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># Since when the figure is shown without a width from its watcher (while it is).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unmeasured_since</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_width_failed</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="c1"># A figure widget's ``layout`` is the figure's, so it is hidden through a box around it. The box is a column, which</span>
-        <span class="c1"># stretches the figure to its full width.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_figure_box</span> <span class="o">=</span> <span class="n">VBox</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="p">],</span> <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="s2">"none"</span> <span class="k">if</span> <span class="n">graph</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span><span class="o">.</span><span class="n">update_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="c1"># stretches the figure (and its width watcher) to its full width.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_figure_box</span> <span class="o">=</span> <span class="n">VBox</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_width_watcher</span><span class="p">],</span> <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="s2">"none"</span><span class="p">))</span>
         <span class="n">toolbar</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Widget</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">rows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Widget</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_menu</span><span class="p">:</span> <span class="n">GraphMenu</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -806,7 +828,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_graphs_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
             <span class="n">toolbar</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">)</span>
             <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_menu</span><span class="p">)</span>
-        <span class="n">toolbar</span> <span class="o">+=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_revert_button</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cancel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_done</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_busy</span><span class="p">]</span>
+        <span class="n">toolbar</span> <span class="o">+=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_revert_button</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cancel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_done</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spinner</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_editor</span> <span class="o">=</span> <span class="n">VBox</span><span class="p">([</span><span class="n">HBox</span><span class="p">(</span><span class="n">toolbar</span><span class="p">),</span> <span class="o">*</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_figure_box</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_watch_selection</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_buttons</span><span class="p">()</span>
@@ -835,27 +857,22 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_done</span><span class="o">.</span><span class="n">on_click</span><span class="p">(</span><span class="n">on_done</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cancel</span><span class="o">.</span><span class="n">on_click</span><span class="p">(</span><span class="n">on_cancel</span><span class="p">)</span>
-        <span class="n">shown_at</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
-        <span class="n">is_resized</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">on_poll</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">nonlocal</span> <span class="n">is_resized</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_resized</span> <span class="ow">and</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">shown_at</span> <span class="o">&gt;=</span> <span class="n">_FIGURE_RESIZE_DELAY_SECONDS</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">autosize</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">autosize</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="n">is_resized</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_is_waiting_for_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_poll_width</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_spinner</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_form_due</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_is_form_due</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_show_form</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_buttons</span><span class="p">()</span>
             <span class="n">form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span>
             <span class="k">if</span> <span class="n">form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">form</span><span class="o">.</span><span class="n">_is_redraw_due</span><span class="p">():</span>  <span class="c1"># pylint: disable=protected-access</span>
-                <span class="c1"># The spinner shows while the graph is built and drawn, which may take a while.</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_busy</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">visibility</span> <span class="o">=</span> <span class="kc">None</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">form</span><span class="o">.</span><span class="n">_poll_redraw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_redraw</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span>
-                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
-                    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">:</span>
-                        <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
-                <span class="k">finally</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_busy</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">visibility</span> <span class="o">=</span> <span class="s2">"hidden"</span>
+                <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_showing_spinner</span><span class="p">():</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">form</span><span class="o">.</span><span class="n">_poll_redraw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_redraw</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
+                        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">:</span>
+                            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
 
         <span class="k">with</span> <span class="n">_routing_new_widgets</span><span class="p">(</span><span class="n">_owned_subshell_id</span><span class="p">()),</span> <span class="n">_reporting_callback_errors</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">):</span>
             <span class="n">jobs</span><span class="o">.</span><span class="n">serve</span><span class="p">(</span><span class="n">is_done</span><span class="p">,</span> <span class="n">on_poll</span><span class="p">)</span>
@@ -870,6 +887,37 @@
         <span class="n">editor</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">editor</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">_tweaks_editor</span><span class="p">()</span>  <span class="c1"># pylint: disable=protected-access</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">editor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_width_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># The figure's box got a width (or a new one); the poll makes the figure measure it again.</span>
+        <span class="k">if</span> <span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_is_resize_due</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_poll_width</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="c1"># Make the figure measure its box again if it got a new width. If the figure is shown too long without any width,</span>
+        <span class="c1"># report that its width watcher failed. Returns whether the figure is shown and still waits for its width.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_resize_due</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_is_resize_due</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">autosize</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">autosize</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">is_waiting</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_figure_box</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">display</span> <span class="o">!=</span> <span class="s2">"none"</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_width_watcher</span><span class="o">.</span><span class="n">width</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_width_failed</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_waiting</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_unmeasured_since</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmeasured_since</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_unmeasured_since</span> <span class="o">=</span> <span class="n">now</span>
+        <span class="k">elif</span> <span class="n">now</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmeasured_since</span> <span class="o">&gt;</span> <span class="n">_WIDTH_TIMEOUT_SECONDS</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_has_width_failed</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">"The figure's width watcher reported no width, so its JavaScript didn't load in this frontend "</span>
+                    <span class="s2">"(metacellswidgets needs an update for it). The figure may be narrower than the cell."</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_redraw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Show the redrawn ``graph``, and let the editors of the tweaks follow it.</span>
@@ -955,23 +1003,47 @@
                 <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_show_form</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># Show the widgets of the edited form (if any), and no figure until its graph is drawn.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form_widgets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_form</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_draw</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_form</span><span class="o">.</span><span class="n">request_redraw</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_update_buttons</span><span class="p">()</span>
+        <span class="c1"># Show the widgets of the edited form (if any), and no figure until its graph is drawn. Making the widgets may</span>
+        <span class="c1"># take a while, so the spinner shows first, and the old figure is hidden.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_showing_spinner</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_draw</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form_widgets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_form</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_form</span><span class="o">.</span><span class="n">request_redraw</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_buttons</span><span class="p">()</span>
+
+    <span class="nd">@contextmanager</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_showing_spinner</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+        <span class="c1"># Show the spinner during the work in this context, which may take a while. The change reaches the browser at</span>
+        <span class="c1"># once, so the spinner shows before the work starts.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_busy</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_spinner</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_busy</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_spinner</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_spinner</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Show the spinner while some work is in progress, or while the figure waits for its width.</span>
+        <span class="n">is_shown</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_busy</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_waiting_for_width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spinner</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">visibility</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">is_shown</span> <span class="k">else</span> <span class="s2">"hidden"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">figure</span><span class="p">:</span> <span class="n">Figure</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># Show the ``figure`` (or hide the figure, if there is none), and report its selections to the edited form.</span>
-        <span class="n">_replace_figure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="p">,</span> <span class="n">Figure</span><span class="p">()</span> <span class="k">if</span> <span class="n">figure</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">figure</span><span class="p">)</span>
+        <span class="c1"># Show the ``figure`` (or hide the figure, if there is none), and report its selections to the edited form. The</span>
+        <span class="c1"># figure widget is made when there is first a figure to show.</span>
+        <span class="k">if</span> <span class="n">figure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span> <span class="o">=</span> <span class="n">FigureWidget</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_figure_box</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_width_watcher</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_replace_figure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="p">,</span> <span class="n">Figure</span><span class="p">()</span> <span class="k">if</span> <span class="n">figure</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">figure</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_figure_box</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">display</span> <span class="o">=</span> <span class="s2">"none"</span> <span class="k">if</span> <span class="n">figure</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_watch_selection</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_watch_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># Report the selections of the points of the shown figure to the edited form.</span>
-        <span class="k">for</span> <span class="n">trace</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+        <span class="c1"># Report the selections of the points of the shown figure (if any) to the edited form.</span>
+        <span class="k">for</span> <span class="n">trace</span> <span class="ow">in</span> <span class="p">[]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
             <span class="n">trace</span><span class="o">.</span><span class="n">on_selection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_selection</span><span class="p">)</span>
             <span class="n">trace</span><span class="o">.</span><span class="n">on_deselect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_deselect</span><span class="p">)</span>
 

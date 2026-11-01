@@ -121,12 +121,14 @@ def test_revert() -> None:
 
 def test_incomplete_form() -> None:
     """
-    The editor of an incomplete form is shown when the editing starts with it, when a switch picks it, and when Revert
-    goes back to it.
+    The editor of an incomplete form is shown when the editing starts with it (by the first poll), when a switch picks
+    it, and when Revert goes back to it.
     """
     # pylint: disable=protected-access
     source = mw.DafWidgets(_daf())
     session = _EditSession(source, _switched_form(mw.GeneGene, source, {}, None), mw.DafWidgets.tree)
+    assert session._tweaks is None
+    session._show_form()
     assert session._tweaks is not None
     session._switch(mw.GenesHeatmap)
     assert isinstance(session._form, mw.GenesHeatmap)
@@ -152,6 +154,7 @@ def test_intended_values() -> None:
     source = mw.DafWidgets(_daf())
     form = source.gene_gene(x_gene="A", y_gene="B", hovers=[mw.Type()], tweaks=[_Heatmaps()])
     session = _EditSession(source, form, mw.DafWidgets.tree)
+    session._show_form()
     assert form.tweaks == []
     form._bound["colors"]._dropdown.value = mw.Type
     assert form.hovers == []

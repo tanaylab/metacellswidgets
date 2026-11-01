@@ -21,6 +21,7 @@ import traceback
 import typing
 from contextlib import contextmanager
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 from typing import Callable
 from typing import ClassVar
@@ -33,6 +34,7 @@ from typing import Tuple
 from typing import Type
 from typing import overload
 
+import anywidget  # type: ignore
 import traitlets  # type: ignore
 from IPython import get_ipython
 from IPython.display import display as display_in_cell
@@ -355,11 +357,20 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
         return form
 
 
-# The interactive figure is drawn before its cell has a width, so it starts narrower than the cell. It measures the cell
-# again only when its layout changes. So this long after the editor is shown, its layout is changed by toggling
-# ``autosize``, and it measures the cell again. The delay is a guess at how long the browser takes to give the cell its
-# width. A slower browser may still show a narrow figure until its first relayout (e.g. picking the lasso tool).
-_FIGURE_RESIZE_DELAY_SECONDS = 0.5
+# How long the figure may be shown without a width from its ``_WidthWatcher`` before the editor reports that the watcher
+# failed (e.g. its JavaScript didn't load).
+_WIDTH_TIMEOUT_SECONDS = 10.0
+
+
+class _WidthWatcher(anywidget.AnyWidget):  # pylint: disable=too-many-ancestors,abstract-method
+    # An invisible element as wide as the figure's box, which reports its ``width`` (in pixels) whenever it changes, and
+    # 0 while it is hidden. The interactive figure is drawn before its cell has a width, so it starts narrower than the
+    # cell, and it measures the cell again only when its layout changes. So the editor changes the figure's layout each
+    # time this reports a new width: when the cell gets its width, and whenever it is resized.
+
+    _esm = Path(__file__).parent / "width_watcher.js"
+
+    width = traitlets.Int(0).tag(sync=True)
 
 
 @dataclass(frozen=True)
@@ -650,22 +661,33 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         self._revert_button = Button(description="Revert")
         self._revert_button.on_click(self._on_revert)
         self._cancel = Button(description="Cancel")
-        # Hidden (keeping its place) while the graph isn't being redrawn.
-        self._busy = HTML('<i class="fa fa-spinner fa-spin"></i>', layout=Layout(visibility="hidden"))
+        # Shown while work which may take a while is in progress (see ``_showing_spinner``), and while the figure waits for
+        # its width. Hidden (keeping its place) otherwise. It shows at once if there is a form, whose editors the first
+        # poll makes.
+        self._spinner = HTML(
+            '<i class="fa fa-spinner fa-spin"></i>', layout=Layout(visibility=None if form is not None else "hidden")
+        )
+        self._busy = 0
+        self._is_waiting_for_width = False
         self._errors = Output()
         self._tweaks: ListEditor[Tweak] | None = None
-        # The editors are made before the graph is drawn, since binding them leaves out of the form's arguments what
-        # isn't valid.
-        self._body = VBox([] if form is None else self._form_widgets(form))
-        graph = (
-            form._shown_graph() if form is not None and form.is_complete() else None  # pylint: disable=protected-access
-        )
-        self._figure = FigureWidget(Figure() if graph is None else graph.fig)
+        # The editors of the form, which may take a while to make, are made by the first poll (see ``_show_form``), so
+        # the editor shows at once, with its spinner.
+        self._body = VBox()
+        self._is_form_due = form is not None
+        # Made when there is first a graph to show, after the editor is shown (see ``_draw``), since the browser takes a
+        # while to load the code of a figure widget, and shows nothing of the editor until it does.
+        self._figure: FigureWidget | None = None
+        self._width_watcher = _WidthWatcher()
+        self._width_watcher.observe(self._on_width_change, names="width")
+        # Whether a new width was reported, so the figure should measure its box again.
+        self._is_resize_due = False
+        # Since when the figure is shown without a width from its watcher (while it is).
+        self._unmeasured_since: float | None = None
+        self._has_width_failed = False
         # A figure widget's ``layout`` is the figure's, so it is hidden through a box around it. The box is a column, which
-        # stretches the figure to its full width.
-        self._figure_box = VBox([self._figure], layout=Layout(display="none" if graph is None else None))
-        if graph is not None and self._tweaks is not None:
-            self._tweaks.update_graph(graph)
+        # stretches the figure (and its width watcher) to its full width.
+        self._figure_box = VBox([self._width_watcher], layout=Layout(display="none"))
         toolbar: List[Widget] = []
         rows: List[Widget] = []
         self._menu: GraphMenu | None = None
@@ -679,7 +701,7 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
             self._graphs.observe(self._on_graphs_change, names="value")
             toolbar.append(self._graphs)
             rows.append(self._menu)
-        toolbar += [self._revert_button, self._cancel, self._done, self._busy]
+        toolbar += [self._revert_button, self._cancel, self._done, self._spinner]
         self._editor = VBox([HBox(toolbar), *rows, self._body, self._figure_box, self._errors])
         self._watch_selection()
         self._update_buttons()
@@ -708,27 +730,22 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
 
         self._done.on_click(on_done)
         self._cancel.on_click(on_cancel)
-        shown_at = time.monotonic()
-        is_resized = False
 
         def on_poll() -> None:
-            nonlocal is_resized
-            if not is_resized and time.monotonic() - shown_at >= _FIGURE_RESIZE_DELAY_SECONDS:
-                self._figure.layout.autosize = False
-                self._figure.layout.autosize = True
-                is_resized = True
+            self._is_waiting_for_width = self._poll_width()
+            self._update_spinner()
+            if self._is_form_due:
+                self._is_form_due = False
+                self._show_form()
             self._update_buttons()
             form = self._form
             if form is not None and form._is_redraw_due():  # pylint: disable=protected-access
-                # The spinner shows while the graph is built and drawn, which may take a while.
-                self._busy.layout.visibility = None
-                try:
-                    form._poll_redraw(self._redraw)  # pylint: disable=protected-access
-                except Exception:  # pylint: disable=broad-except
-                    with self._errors:
-                        traceback.print_exc()
-                finally:
-                    self._busy.layout.visibility = "hidden"
+                with self._showing_spinner():
+                    try:
+                        form._poll_redraw(self._redraw)  # pylint: disable=protected-access
+                    except Exception:  # pylint: disable=broad-except
+                        with self._errors:
+                            traceback.print_exc()
 
         with _routing_new_widgets(_owned_subshell_id()), _reporting_callback_errors(self._errors):
             jobs.serve(is_done, on_poll)
@@ -743,6 +760,37 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         editor = form.editor()
         self._tweaks = form._tweaks_editor()  # pylint: disable=protected-access
         return [editor, self._tweaks]
+
+    def _on_width_change(self, change: Dict) -> None:
+        # The figure's box got a width (or a new one); the poll makes the figure measure it again.
+        if change["new"] > 0:
+            self._is_resize_due = True
+
+    def _poll_width(self) -> bool:
+        # Make the figure measure its box again if it got a new width. If the figure is shown too long without any width,
+        # report that its width watcher failed. Returns whether the figure is shown and still waits for its width.
+        if self._is_resize_due and self._figure is not None:
+            self._is_resize_due = False
+            self._figure.layout.autosize = False
+            self._figure.layout.autosize = True
+        is_waiting = (
+            self._figure_box.layout.display != "none" and self._width_watcher.width == 0 and not self._has_width_failed
+        )
+        if not is_waiting:
+            self._unmeasured_since = None
+            return False
+        now = time.monotonic()
+        if self._unmeasured_since is None:
+            self._unmeasured_since = now
+        elif now - self._unmeasured_since > _WIDTH_TIMEOUT_SECONDS:
+            self._has_width_failed = True
+            with self._errors:
+                print(
+                    "The figure's width watcher reported no width, so its JavaScript didn't load in this frontend "
+                    "(metacellswidgets needs an update for it). The figure may be narrower than the cell."
+                )
+            return False
+        return True
 
     def _redraw(self, graph: Graph) -> None:
         # Show the redrawn ``graph``, and let the editors of the tweaks follow it.
@@ -828,23 +876,47 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
                 traceback.print_exc()
 
     def _show_form(self) -> None:
-        # Show the widgets of the edited form (if any), and no figure until its graph is drawn.
-        self._tweaks = None
-        self._body.children = [] if self._form is None else self._form_widgets(self._form)
-        self._draw(None)
-        if self._form is not None:
-            self._form.request_redraw()
-        self._update_buttons()
+        # Show the widgets of the edited form (if any), and no figure until its graph is drawn. Making the widgets may
+        # take a while, so the spinner shows first, and the old figure is hidden.
+        with self._showing_spinner():
+            self._draw(None)
+            self._tweaks = None
+            self._body.children = [] if self._form is None else self._form_widgets(self._form)
+            if self._form is not None:
+                self._form.request_redraw()
+            self._update_buttons()
+
+    @contextmanager
+    def _showing_spinner(self) -> Iterator[None]:
+        # Show the spinner during the work in this context, which may take a while. The change reaches the browser at
+        # once, so the spinner shows before the work starts.
+        self._busy += 1
+        self._update_spinner()
+        try:
+            yield
+        finally:
+            self._busy -= 1
+            self._update_spinner()
+
+    def _update_spinner(self) -> None:
+        # Show the spinner while some work is in progress, or while the figure waits for its width.
+        is_shown = self._busy > 0 or self._is_waiting_for_width
+        self._spinner.layout.visibility = None if is_shown else "hidden"
 
     def _draw(self, figure: Figure | None) -> None:
-        # Show the ``figure`` (or hide the figure, if there is none), and report its selections to the edited form.
-        _replace_figure(self._figure, Figure() if figure is None else figure)
+        # Show the ``figure`` (or hide the figure, if there is none), and report its selections to the edited form. The
+        # figure widget is made when there is first a figure to show.
+        if figure is not None and self._figure is None:
+            self._figure = FigureWidget()
+            self._figure_box.children = [self._width_watcher, self._figure]
+        if self._figure is not None:
+            _replace_figure(self._figure, Figure() if figure is None else figure)
         self._figure_box.layout.display = "none" if figure is None else None
         self._watch_selection()
 
     def _watch_selection(self) -> None:
-        # Report the selections of the points of the shown figure to the edited form.
-        for trace in self._figure.data:
+        # Report the selections of the points of the shown figure (if any) to the edited form.
+        for trace in [] if self._figure is None else self._figure.data:
             trace.on_selection(self._on_selection)
             trace.on_deselect(self._on_deselect)
 
