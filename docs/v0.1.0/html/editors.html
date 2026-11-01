@@ -1269,37 +1269,37 @@ incomplete.
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
-</code> object. While it was given 
+</code> object. While it shows the 
 <code class="docutils literal notranslate">
-<span class="pre">DEFAULT
+<span class="pre">default
 </span>
-</code> and wasn’t changed, the picker shows the
+</code> (picked, with its arguments), its 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is
 
 <code class="docutils literal notranslate">
-<span class="pre">default
-</span>
-</code> (picked, with its arguments), and its 
-<code class="docutils literal notranslate">
-<span class="pre">value
-</span>
-</code> is 
-<code class="docutils literal notranslate">
 <span class="pre">DEFAULT
 </span>
-</code>. A “Reset to default” button, shown
-while the 
-<code class="docutils literal notranslate">
-<span class="pre">value
-</span>
-</code> isn’t 
-<code class="docutils literal notranslate">
-<span class="pre">DEFAULT
-</span>
-</code>, goes back to showing the 
+</code>. It shows the 
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
-</code>.
+</code> while it was given 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code> and wasn’t changed, and after any change which
+lands on the 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code>. So changing it back to the 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> is how to return to it.
 </p>
 
 <p>The picker keeps the object it was given or changed to. An object isn’t valid if it isn’t one of the choices (e.g.,
@@ -2126,12 +2126,12 @@ instead. It then shows the
 <code class="docutils literal notranslate">
 <span class="pre">DEFAULT
 </span>
-</code> until the first change. A list
-without a 
+</code>. A list without a 
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
-</code> may be given 
+</code> may be
+given 
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
@@ -2143,8 +2143,7 @@ without a
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
-</code> until the first change.
-A list with a 
+</code>. A list with a 
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
@@ -2152,33 +2151,34 @@ A list with a
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
-</code> starts empty. Otherwise, the 
+</code>
+starts empty. Otherwise, the 
 <code class="docutils literal notranslate">
 <span class="pre">value
 </span>
-</code> is the list of the values of the rows, leaving out the rows without one (so it may be
-empty). A “Reset to default” button, shown while the 
+</code> is the list of the values of the rows, leaving out the rows without one (so
+it may be empty). A change which lands on the 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> list (or, without a 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code>, on an empty list) makes the
+
 <code class="docutils literal notranslate">
 <span class="pre">value
 </span>
-</code> isn’t 
+</code> 
 <code class="docutils literal notranslate">
 <span class="pre">DEFAULT
 </span>
-</code> (if there is a 
+</code> (or 
 <code class="docutils literal notranslate">
-<span class="pre">default
+<span class="pre">None
 </span>
-</code>), sets
-it back to 
-<code class="docutils literal notranslate">
-<span class="pre">DEFAULT
-</span>
-</code> and shows the 
-<code class="docutils literal notranslate">
-<span class="pre">default
-</span>
-</code> again.
+</code>) again. So changing the list back is how to return to its default.
 </p>
 
 <p>The list may be of the entries of an 

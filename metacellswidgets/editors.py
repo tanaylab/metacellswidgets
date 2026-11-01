@@ -363,9 +363,9 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
     right of the choice. The ``value`` is the object, or ``None`` while nothing is picked or its arguments are
     incomplete.
 
-    A picker may have a ``default`` object. While it was given ``DEFAULT`` and wasn't changed, the picker shows the
-    ``default`` (picked, with its arguments), and its ``value`` is ``DEFAULT``. A "Reset to default" button, shown
-    while the ``value`` isn't ``DEFAULT``, goes back to showing the ``default``.
+    A picker may have a ``default`` object. While it shows the ``default`` (picked, with its arguments), its ``value`` is
+    ``DEFAULT``. It shows the ``default`` while it was given ``DEFAULT`` and wasn't changed, and after any change which
+    lands on the ``default``. So changing it back to the ``default`` is how to return to it.
 
     The picker keeps the object it was given or changed to. An object isn't valid if it isn't one of the choices (e.g.,
     after the axis changed), or if its arguments aren't valid. While the kept object isn't valid, the picker isn't
@@ -400,9 +400,7 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
         self._editor: ArgumentsEditor | None = None
         self._dropdown = Dropdown()
         self._editor_box = HBox(layout=Layout(flex="1 1 auto"))
-        self._reset = Button(description="Reset to default")
-        self._reset.on_click(self._on_reset)
-        self.children = [self._dropdown, self._editor_box, self._reset]
+        self.children = [self._dropdown, self._editor_box]
         self._dropdown.observe(self._on_dropdown_change, names="value")
         self._axis_picker = axis if isinstance(axis, AxisPicker) else None
         if self._axis_picker is not None:
@@ -524,8 +522,13 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
         shown = default if self._is_default else picked
         _mark_default(self._dropdown, self._dropdown.value is None if default is None else shown == default)
         self.value = DEFAULT if self._is_default else picked
-        is_reset_shown = self._given_default is not None and not isinstance(self.value, DefaultValue)
-        self._reset.layout.display = None if is_reset_shown else "none"
+
+    def _normalize(self) -> None:
+        # After a change, show the default if the change landed on it, so the ``value`` is ``DEFAULT``. An incomplete
+        # object (a ``value`` of ``None``) is never the default.
+        if not self._is_default and self.value is not None and self.value == self._default():
+            self._is_default = True
+            self._set_value(self.value)
 
     def _on_dropdown_change(self, change: Dict) -> None:
         if not self._is_updating:
@@ -533,6 +536,7 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
 
             def pick() -> None:
                 self._pick(change["new"], None)
+                self._normalize()
                 self._keep_value()
 
             _on_main_thread(pick)
@@ -540,10 +544,8 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
     def _on_editor_change(self, change: Dict) -> None:
         self._is_default = False
         self._set_value(change["new"])
+        self._normalize()
         self._keep_value()
-
-    def _on_reset(self, _button: Button) -> None:
-        _on_main_thread(lambda: self._show(self._shown_choices, DEFAULT))
 
     def _on_axis_picker_change(self, change: Dict) -> None:
         self._axis = change["new"]
@@ -619,12 +621,13 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
 
     def _set_look(self, name: str, value: Any) -> None:
         # Set the look argument with the ``name`` to the ``value``, in a copy of the shown property, which becomes the
-        # picker's value (so changing the look of a shown default makes it the value).
+        # picker's value (so changing the look of a shown default makes it the value, unless it lands on the default).
         self._look[name] = value
         shown = self.shown()
         if isinstance(shown, Property):
             self._is_default = False
             self._set_value(type(shown)(**shown.arguments()))
+            self._normalize()
             self._keep_value()
 
     def _set_value(self, picked: Arguments | None) -> None:
@@ -698,11 +701,11 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
     row. The hidden rows after each of the two move with it. A removed row is closed.
 
     The list starts with a row per object of the ``current`` list. A list with a ``default`` may be given ``DEFAULT``
-    instead. It then shows the ``default`` list, and its ``value`` is ``DEFAULT`` until the first change. A list
-    without a ``default`` may be given ``None``, for an empty list whose ``value`` is ``None`` until the first change.
-    A list with a ``default`` which is given ``None`` starts empty. Otherwise, the ``value`` is the list of the values of the rows, leaving out the rows without one (so it may be
-    empty). A "Reset to default" button, shown while the ``value`` isn't ``DEFAULT`` (if there is a ``default``), sets
-    it back to ``DEFAULT`` and shows the ``default`` again.
+    instead. It then shows the ``default`` list, and its ``value`` is ``DEFAULT``. A list without a ``default`` may be
+    given ``None``, for an empty list whose ``value`` is ``None``. A list with a ``default`` which is given ``None``
+    starts empty. Otherwise, the ``value`` is the list of the values of the rows, leaving out the rows without one (so
+    it may be empty). A change which lands on the ``default`` list (or, without a ``default``, on an empty list) makes the
+    ``value`` ``DEFAULT`` (or ``None``) again. So changing the list back is how to return to its default.
 
     The list may be of the entries of an ``axis``, which may be an :py:class:`AxisPicker` to follow. The ``default`` may
     then be a function giving the default list for an axis. When the followed axis changes, a list showing its default
@@ -728,11 +731,7 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
         self._row_boxes: List[HBox] = []
         self._blank_row: ArgumentsEditor | None = None
         self._rows_box = VBox()
-        self._reset = Button(description="Reset to default")
-        self._reset.on_click(self._on_reset)
-        self.children = [
-            Accordion(children=[VBox([self._reset, self._rows_box])], titles=(title,), selected_index=None)
-        ]
+        self.children = [Accordion(children=[self._rows_box], titles=(title,), selected_index=None)]
         # The list observes the axis before its rows do, so it replaces the rows of a shown default before they follow
         # the new axis (which would count as a change).
         if isinstance(axis, AxisPicker):
@@ -827,7 +826,7 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
             ]
             self._rows = [self._rows[index] for index in order]
             self._row_boxes = [self._row_boxes[index] for index in order]
-            self._is_default = False
+            self._normalize()
             self._update()
 
     def _remove(self, row: ArgumentsEditor) -> None:
@@ -835,7 +834,7 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
         self._unobserve_row(row)
         del self._rows[index]
         del self._row_boxes[index]
-        self._is_default = False
+        self._normalize()
         self._update()
         row.close()
 
@@ -850,22 +849,22 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
         row.unobserve(self._on_blank_row_change, names="is_blank")
         self._append(row)
         self._new_blank_row()
-        self._is_default = False
+        self._normalize()
         self._update()
 
     def _on_row_change(self, _change: Dict) -> None:
-        self._is_default = False
+        self._normalize()
         self._update()
 
     def _on_row_is_valid_change(self, _change: Dict) -> None:
         self._update()
 
-    def _on_reset(self, _button: Button) -> None:
-        def reset() -> None:
-            self._is_default = True
-            self._fill(self._default())
-
-        _on_main_thread(reset)
+    def _normalize(self) -> None:
+        # After a change, show the default if the change landed on it, so the ``value`` is ``DEFAULT`` (or, without a
+        # default, ``None`` for an empty list). The intended objects of the rows count, those of hidden rows included.
+        intended_items = [item for item in (row.intended() for row in self._rows) if item is not None]
+        default = self._default()
+        self._is_default = not intended_items if default is None else intended_items == list(default)
 
     def _on_axis_picker_change(self, change: Dict) -> None:
         self._axis = change["new"]
@@ -882,7 +881,6 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
             self.value = self._untouched_value()
         else:
             self.value = self._values()
-        self._reset.layout.display = "none" if self._is_default or self._given_default is None else None
 
 
 class ShownProperties(traitlets.HasTraits):

@@ -39,26 +39,25 @@ class _Row(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-meth
         self.is_blank = value is None
 
 
-def _parts(editor: ListEditor) -> Tuple[Any, Any]:
+def _rows_box(editor: ListEditor) -> Any:
     """
-    The reset button and the box of the rows of a list editor.
+    The box of the rows of a list editor.
     """
-    reset, rows_box = editor.children[0].children[0].children
-    return reset, rows_box
+    return editor.children[0].children[0]
 
 
 def test_list_editor() -> None:
     """
     A list editor starts with a row per object, and ends with a blank row. Picking in the blank row adds it to the list,
-    and adds a new blank row. Rows move up and down (but not past either end), and are removed; removing all of them
-    gives an empty list, not ``None``. Without a default, there is no reset button.
+    and adds a new blank row. Rows move up and down (but not past either end), and are removed. Without a default,
+    removing all of them lands on the default, an empty list, so the value is ``None``.
     """
     first, second, third = mw.Title(text="A"), mw.Title(text="B"), mw.Title(text="C")
     editor = ListEditor(_Row, [first, second], title="Titles")
     assert editor.value == [first, second]
     assert editor.children[0].titles == ("Titles",)
     assert editor.children[0].selected_index is None
-    reset, rows_box = _parts(editor)
+    rows_box = _rows_box(editor)
     assert len(rows_box.children) == 3
 
     rows_box.children[2].pick(third)
@@ -73,8 +72,7 @@ def test_list_editor() -> None:
 
     for _ in range(3):
         rows_box.children[0].children[3].click()
-    assert editor.value == []
-    assert reset.layout.display == "none"
+    assert editor.value is None
 
 
 def test_list_editor_hidden_rows() -> None:
@@ -93,7 +91,7 @@ def test_list_editor_hidden_rows() -> None:
     editor = ListEditor(make_row, [first, hidden, second], title="Titles")
     rows[1].value = None
     rows[1].is_valid = False
-    _reset, rows_box = _parts(editor)
+    rows_box = _rows_box(editor)
     assert editor.value == [first, second]
     assert len(rows_box.children) == 3
 
@@ -111,25 +109,22 @@ def test_list_editor_hidden_rows() -> None:
 
 def test_list_editor_default() -> None:
     """
-    Given ``DEFAULT``, a list editor shows the default, and its value stays ``DEFAULT`` until the first change. The reset
-    button returns to the default. Given ``None``, it starts empty.
+    Given ``DEFAULT``, a list editor shows the default, and its value is ``DEFAULT``. A change makes the value explicit,
+    and a change back to the default makes it ``DEFAULT`` again. Given ``None``, it starts empty.
     """
     first, second = mw.Title(text="A"), mw.Title(text="B")
     editor = ListEditor(_Row, DEFAULT, default=[first], title="Titles")
-    reset, rows_box = _parts(editor)
+    rows_box = _rows_box(editor)
     assert editor.value is DEFAULT
     assert editor.intended() is DEFAULT
-    assert reset.layout.display == "none"
     assert rows_box.children[0].children[0].value == first
 
     rows_box.children[0].children[0].pick(second)
     assert editor.value == [second]
-    assert reset.layout.display is None
 
-    reset.click()
-    _reset, rows_box = _parts(editor)
+    rows_box.children[0].children[0].pick(first)
     assert editor.value is DEFAULT
-    assert rows_box.children[0].children[0].value == first
+    assert editor.intended() is DEFAULT
 
     assert ListEditor(_Row, None, default=[first], title="Titles").value == []
 
@@ -137,16 +132,16 @@ def test_list_editor_default() -> None:
 def test_list_editor_axis_default() -> None:
     """
     A list editor following an axis shows the default of the new axis when the axis changes. A changed list keeps its
-    rows, and the reset button returns to the default of the current axis.
+    rows, and changing it back to the default of the current axis makes its value ``DEFAULT`` again.
     """
     title_per_axis = {"metacell": mw.Title(text="M"), "block": mw.Title(text="B")}
     axis = AxisPicker(mw.DafWidgets(_full_daf()), ["metacell", "block"])
     editor = ListEditor(_Row, DEFAULT, axis=axis, default=lambda axis_name: [title_per_axis[axis_name]], title="Titles")
-    _reset, rows_box = _parts(editor)
+    rows_box = _rows_box(editor)
     assert rows_box.children[0].children[0].value == title_per_axis["metacell"]
 
     axis.children[0].value = "block"
-    reset, rows_box = _parts(editor)
+    rows_box = _rows_box(editor)
     assert editor.value is DEFAULT
     assert rows_box.children[0].children[0].value == title_per_axis["block"]
 
@@ -155,10 +150,8 @@ def test_list_editor_axis_default() -> None:
     axis.children[0].value = "metacell"
     assert editor.value == [changed]
 
-    reset.click()
-    _reset, rows_box = _parts(editor)
+    rows_box.children[0].children[0].pick(title_per_axis["metacell"])
     assert editor.value is DEFAULT
-    assert rows_box.children[0].children[0].value == title_per_axis["metacell"]
 
 
 def test_property_picker_axis_default() -> None:

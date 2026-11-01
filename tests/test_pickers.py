@@ -144,24 +144,22 @@ def test_property_picker_close() -> None:
 def test_property_picker_default() -> None:
     """
     Given ``DEFAULT``, a picker shows its default while its value stays ``DEFAULT``. A change makes the value explicit,
-    and the reset button returns to the default. A property which no longer fits the axis gives way to the default,
-    until the axis changes back. So does a given property which doesn't fit the axis. Given ``None``, a picker with a
-    default shows nothing.
+    and a change back to the default makes it ``DEFAULT`` again. A property which no longer fits the axis gives way to
+    the default, until the axis changes back. So does a given property which doesn't fit the axis. Given ``None``, a
+    picker with a default shows nothing.
     """
     source = mw.DafWidgets(_full_daf())
     axis = AxisPicker(source, ["metacell", "block"])
     picker = PropertyPicker(source, Slot.COLORS, axis, DEFAULT, default=mw.Type())
     assert picker.value is DEFAULT
     assert picker._dropdown.value is mw.Type
-    assert picker._reset.layout.display == "none"
 
     picker._dropdown.value = mw.Block
     assert picker.value == mw.Block()
-    assert picker._reset.layout.display is None
 
-    picker._reset.click()
+    picker._dropdown.value = mw.Type
     assert picker.value is DEFAULT
-    assert picker._dropdown.value is mw.Type
+    assert picker.intended() is DEFAULT
 
     picker._dropdown.value = mw.Block
     axis._dropdown.value = "block"

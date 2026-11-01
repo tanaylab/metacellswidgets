@@ -164,7 +164,7 @@ def test_gene_gene_hovers_are_new() -> None:
     editor = form.editor()
     colors = editor.children[1].children[1]
     hovers = editor.children[3]
-    hover_rows = hovers.children[0].children[0].children[1].children
+    hover_rows = hovers.children[0].children[0].children
     blank_row = hover_rows[-1]
     assert mw.Type not in [choice for _label, choice in blank_row.children[0].options]
     assert mw.Type in [choice for _label, choice in hover_rows[0].children[0].children[0].options]
