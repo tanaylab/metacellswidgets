@@ -10,9 +10,14 @@ cell runs.
 Calls are found by their position, which Python reports for the running code of the cell. So the functions may be
 called under any name. Positions are (line, end line, column, end column), with 1-based lines and 0-based columns in
 UTF-8 bytes, as both ``ast`` and ``co_positions`` report them.
+
+The cell's magics are kept as written. A cell may start with the ``%%time`` or ``%%capture`` magic, which runs the rest
+of the cell once; the positions are then in the rest. Any other cell magic, or a line magic around a form's call, is an
+error which names the magic, since the cell's code can't be rewritten under it.
 """
 
 import ast
+import re
 from dataclasses import dataclass
 from enum import Enum
 from types import FrameType
@@ -24,6 +29,7 @@ from typing import Tuple
 
 from dafpy.julia_import import DefaultValue
 from IPython import get_ipython
+from IPython.core.inputtransformer2 import TransformerManager
 
 __all__: List[str] = []
 
@@ -33,8 +39,14 @@ _Position = Tuple[int, int, int, int]
 @dataclass(frozen=True)
 class _CallSite:
     # Where a call was made: which run of which cell (``_current_cell_token``), and its position in the cell's code.
+    # Whether the code was compiled by a magic (e.g. ``%%time``), rather than as the cell itself.
     cell_token: int
     position: _Position
+    is_in_magic: bool
+
+
+# The cell magics an interactive form may run under. Each runs the rest of the cell once, in the notebook's namespace.
+_SUPPORTED_CELL_MAGICS = frozenset(["capture", "time"])
 
 
 def _current_cell_token() -> int:
@@ -43,8 +55,48 @@ def _current_cell_token() -> int:
 
 
 def _current_cell_source() -> str:
-    # The code of the running cell.
-    return get_ipython().user_ns["In"][-1]
+    # The code of the running cell, as written, with its magics.
+    return get_ipython().history_manager.input_hist_raw[-1]
+
+
+def _split_cell_magic(source: str) -> Tuple[str, str]:
+    # The cell magic line of the code of a cell, with its line break (or "" if it has none), and the rest of the code.
+    # The positions of the calls are in the rest.
+    if source.startswith("%%"):
+        magic_line, _, code = source.partition("\n")
+        return magic_line + "\n", code
+    return "", source
+
+
+def _python_code(code: str) -> str:
+    # The code as Python runs it. IPython replaces each line magic by a call on the same line, so every other line is
+    # as written.
+    return TransformerManager().transform_cell(code)
+
+
+def _check_cell_rewrite(*call_sites: _CallSite | None) -> None:
+    # Raise an error naming the magic, if a magic prevents rewriting the running cell's code at the call sites. Outside
+    # IPython there is no cell, and so no magic.
+    if get_ipython() is None:
+        return
+    magic_line, code = _split_cell_magic(_current_cell_source())
+    if magic_line:
+        name = magic_line[2:].split(maxsplit=1)[0]
+        if name == "timeit":
+            raise RuntimeError(
+                "an interactive form can't be used in a cell run by the %%timeit magic, "
+                "because that magic runs the cell more than once"
+            )
+        if name not in _SUPPORTED_CELL_MAGICS:
+            raise RuntimeError(
+                f"an interactive form can't be used in a cell run by the %%{name} magic, which isn't supported"
+            )
+    elif any(call_site is not None and call_site.is_in_magic for call_site in call_sites):
+        names = " or ".join(f"%{name}" for name in sorted(set(re.findall(r"^\s*%(\w+)", code, re.MULTILINE))))
+        raise RuntimeError(
+            f"an interactive form can't be created inside the {names} line magic, "
+            "because the cell's code then can't be rewritten"
+        )
 
 
 def _call_position(frame: FrameType) -> _Position:
@@ -61,7 +113,11 @@ def _cell_site(frame: FrameType) -> _CallSite | None:
     shell = get_ipython()
     if shell is None or frame.f_code.co_name != "<module>" or frame.f_globals is not shell.user_ns:
         return None
-    return _CallSite(cell_token=_current_cell_token(), position=_call_position(frame))
+    return _CallSite(
+        cell_token=_current_cell_token(),
+        position=_call_position(frame),
+        is_in_magic=frame.f_code.co_filename.startswith("<"),
+    )
 
 
 _REWRITTEN_CELL_TOKEN: int | None = None
@@ -189,22 +245,25 @@ def _rewritten_cell(
     # The code of the cell with the form call's keyword arguments set to ``form_keywords`` (leaving out those which are
     # ``None`` or ``DEFAULT``), its method replaced by ``form_method`` on the same receiver (if given), and the display call's
     # ``interactive`` set to ``is_interactive``. The form call may be on another line than the display call, or chained
-    # to it. Values with a ``code`` method (e.g. properties) name their classes as the cell's ``namespace`` does.
-    tree = ast.parse(source)
+    # to it. Values with a ``code`` method (e.g. properties) name their classes as the cell's ``namespace`` does. The
+    # ``source`` is the cell as written, and its magics are kept as written.
+    magic_line, code = _split_cell_magic(source)
+    python = _python_code(code)
+    tree = ast.parse(python)
     namespace = _cell_namespace(tree, namespace)
     form_call = _top_level_call(tree, form_position, "form")
     display_call = _top_level_call(tree, display_position, "display")
 
     if form_method is None:
-        form_callee = _segment(source, form_call.func)
+        form_callee = _segment(python, form_call.func)
     else:
         assert isinstance(form_call.func, ast.Attribute)
-        form_callee = f"{_segment(source, form_call.func.value)}.{form_method}"
-    form_text = _call_text(source, form_call, form_callee, form_keywords, namespace)
+        form_callee = f"{_segment(python, form_call.func.value)}.{form_method}"
+    form_text = _call_text(python, form_call, form_callee, form_keywords, namespace)
 
-    display_arguments = [_segment(source, argument) for argument in display_call.args]
+    display_arguments = [_segment(python, argument) for argument in display_call.args]
     display_arguments += [
-        f"{keyword.arg}={_segment(source, keyword.value)}"
+        f"{keyword.arg}={_segment(python, keyword.value)}"
         for keyword in display_call.keywords
         if keyword.arg != "interactive"
     ]
@@ -214,8 +273,8 @@ def _rewritten_cell(
     # The display call's arguments come after the whole form call, even when the two are chained.
     _, display_end_line, _, display_end_column = _node_position(display_call)
     _, func_end_line, _, func_end_column = _node_position(display_call.func)
-    return _replaced(
-        source,
+    return magic_line + _replaced(
+        code,
         [
             ((func_end_line, func_end_column, display_end_line, display_end_column), display_arguments_text),
             (_span(form_call), form_text),
@@ -234,17 +293,20 @@ def _rewritten_menu_cell(
 ) -> str:
     # The code of the cell with the menu call replaced by a call of the ``method`` on the same receiver, with the
     # ``form_keywords`` (leaving out those which are ``None`` or ``DEFAULT``), and displayed with ``interactive=False`` and the
-    # ``format`` (unless it is the default ``"plotly"``).
-    tree = ast.parse(source)
+    # ``format`` (unless it is the default ``"plotly"``). The ``source`` is the cell as written, and its magics are kept
+    # as written.
+    magic_line, code = _split_cell_magic(source)
+    python = _python_code(code)
+    tree = ast.parse(python)
     namespace = _cell_namespace(tree, namespace)
     menu_call = _top_level_call(tree, menu_position, "menu")
     assert isinstance(menu_call.func, ast.Attribute)
-    form_callee = f"{_segment(source, menu_call.func.value)}.{method}"
+    form_callee = f"{_segment(python, menu_call.func.value)}.{method}"
     display_arguments = ["interactive=False"]
     if format != "plotly":
         display_arguments.append(f"format={format!r}")
-    form_text = _call_text(source, None, form_callee, form_keywords, namespace)
-    return _replaced(source, [(_span(menu_call), f"{form_text}.display({', '.join(display_arguments)})")])
+    form_text = _call_text(python, None, form_callee, form_keywords, namespace)
+    return magic_line + _replaced(code, [(_span(menu_call), f"{form_text}.display({', '.join(display_arguments)})")])
 
 
 def _cell_namespace(tree: ast.Module, namespace: Mapping[str, Any] | None) -> Mapping[str, Any] | None:

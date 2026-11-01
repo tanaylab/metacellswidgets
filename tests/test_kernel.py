@@ -7,6 +7,7 @@ so only the routing done by the package can deliver them to its subshell.
 """
 
 import os
+import re
 import sys
 import threading
 import time
@@ -316,6 +317,59 @@ def test_interactive_display_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
     )
 
 
+def test_cell_magic_is_kept_by_the_rewrite(kernel: Tuple[Any, Any]) -> None:
+    """
+    An interactive form in a cell run by the ``%%time`` magic rewrites the rest of the cell, and keeps the magic.
+    """
+    _, client = kernel
+    _execute(client, _DAF_SETUP)
+
+    cell = "%%time\nform = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.display(interactive=True)\n"
+    message_id = client.execute(cell)
+    done = _opened_widgets(client, _is_done_button, 1)[0]
+    time.sleep(1)
+    _click(client, done)
+    assert _rewritten_text(client, message_id) == (
+        "%%time\nform = mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='B')\n"
+        "form.display(interactive=False)"
+    )
+
+
+@pytest.mark.parametrize(
+    "cell, error",
+    [
+        (
+            "%%timeit -n1 -r1\nmw.DafWidgets(daf).menu()\n",
+            "can't be used in a cell run by the %%timeit magic, because that magic runs the cell more than once",
+        ),
+        (
+            "%%prun -q\nmw.DafWidgets(daf).menu()\n",
+            "can't be used in a cell run by the %%prun magic, which isn't supported",
+        ),
+        ("%time mw.DafWidgets(daf).menu()\n", "can't be created inside the %time line magic"),
+    ],
+)
+def test_unsupported_magics_are_named(kernel: Tuple[Any, Any], cell: str, error: str) -> None:
+    """
+    An interactive form or menu under a magic which prevents rewriting the cell is an error which names the magic.
+    """
+    _, client = kernel
+    _execute(client, _DAF_SETUP)
+    with pytest.raises(AssertionError, match=re.escape(error)):
+        _execute(client, cell)
+
+
+def test_non_interactive_display_works_under_any_magic(kernel: Tuple[Any, Any]) -> None:
+    """
+    A display which isn't interactive doesn't rewrite the cell, so it works under any magic.
+    """
+    _, client = kernel
+    _execute(client, _DAF_SETUP)
+    _execute(
+        client, "%%timeit -n1 -r1\nmw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B').display(interactive=False)\n"
+    )
+
+
 def _is_graph_menu(state: Dict[str, Any]) -> bool:
     # Whether the widget state is of the dropdown of the first level of the menu of the graphs.
     return state.get("_model_name") == "DropdownModel" and (state.get("_options_labels") or [None])[0] == "Choose..."
@@ -347,13 +401,13 @@ def test_menu_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
 
 
 def _is_graphs_button(state: Dict[str, Any]) -> bool:
-    # Whether the widget state is of the "Graphs" button.
-    return state.get("_model_name") == "ButtonModel" and state.get("description") == "Graphs"
+    # Whether the widget state is of the "Graphs" toggle.
+    return state.get("_model_name") == "ToggleButtonModel" and state.get("description") == "Graphs"
 
 
 def test_graphs_button_switches_the_graph(kernel: Tuple[Any, Any]) -> None:
     """
-    In an interactive form, the "Graphs" button shows the menu; choosing another graph there and clicking "Done"
+    In an interactive form, the "Graphs" toggle shows the menu; choosing another graph there and clicking "Done"
     rewrites the form call into the chosen graph's, on the same receiver, keeping the arguments they share.
     """
     _, client = kernel
@@ -369,7 +423,7 @@ def test_graphs_button_switches_the_graph(kernel: Tuple[Any, Any]) -> None:
     menu = next(widget for widget in widgets if _is_graph_menu(widget))
 
     time.sleep(1)
-    _click(client, graphs)
+    _send_state(client, graphs, {"value": True})
     _send_state(client, menu, {"index": menu["_options_labels"].index("GenesHeatmap")})
     time.sleep(2)
     _click(client, done)

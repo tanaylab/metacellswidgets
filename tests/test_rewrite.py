@@ -15,8 +15,10 @@ import pytest
 import metacellswidgets
 from metacellswidgets.rewrite import _call_position
 from metacellswidgets.rewrite import _Position
+from metacellswidgets.rewrite import _python_code
 from metacellswidgets.rewrite import _rewritten_cell
 from metacellswidgets.rewrite import _rewritten_menu_cell
+from metacellswidgets.rewrite import _split_cell_magic
 
 # Non-ASCII text for a cell: a Hebrew string, a Hebrew variable name, and an accented gene name.
 _GENE = "\N{HEBREW LETTER GIMEL}\N{HEBREW LETTER FINAL NUN}"  # NOT F-STRING
@@ -59,12 +61,32 @@ class _Recorder:
         return self
 
 
+class _Shell:
+    """
+    Stands for IPython, which the code of a line magic calls.
+    """
+
+    def run_line_magic(self, *_arguments: Any) -> None:
+        """
+        Do nothing, as the magics of the tests don't matter.
+        """
+
+
+def _run(source: str, recorder: _Recorder) -> None:
+    """
+    Run the cell's code as IPython does: a cell magic runs the rest of the cell, and line magics are calls.
+    """
+    python = _python_code(_split_cell_magic(source)[1])
+    globals_of_cell = {"mw": recorder, "daf": None, "get_ipython": _Shell}
+    exec(compile(python, "<cell>", "exec"), globals_of_cell)  # pylint: disable=exec-used
+
+
 def _rewrite(source: str, keywords: Dict[str, Any], *, is_interactive: bool = False, **options: Any) -> str:
     """
     Run the cell, then rewrite it with the recorded positions.
     """
     recorder = _Recorder()
-    exec(compile(source, "<cell>", "exec"), {"mw": recorder, "daf": None})  # pylint: disable=exec-used
+    _run(source, recorder)
     assert recorder.form_position is not None
     assert recorder.display_position is not None
     return _rewritten_cell(
@@ -140,6 +162,27 @@ def test_non_ascii() -> None:
     source = f"name = '{_GENE}'; form = mw.form(daf)\n{_CHECK} = form.display(interactive=True)\n"
     assert _rewrite(source, {"x_gene": _ACCENTED}) == (
         f"name = '{_GENE}'; form = mw.form(daf, x_gene='{_ACCENTED}')\n{_CHECK} = form.display(interactive=False)\n"
+    )
+
+
+def test_cell_magic_is_kept() -> None:
+    """
+    A cell magic which runs the rest of the cell is kept, and the calls are found in the rest of the cell.
+    """
+    source = "%%time\nform = mw.form(daf)\nform.display(interactive=True)\n"
+    assert (
+        _rewrite(source, {"x_gene": "C"})
+        == "%%time\nform = mw.form(daf, x_gene='C')\nform.display(interactive=False)\n"
+    )
+
+
+def test_line_magics_are_kept() -> None:
+    """
+    Line magics on other lines are kept as written, not as the calls IPython runs them as.
+    """
+    source = "%env SOME_VARIABLE=1\nform = mw.form(daf)\nform.display(interactive=True)\n"
+    assert _rewrite(source, {"x_gene": "C"}) == (
+        "%env SOME_VARIABLE=1\nform = mw.form(daf, x_gene='C')\nform.display(interactive=False)\n"
     )
 
 

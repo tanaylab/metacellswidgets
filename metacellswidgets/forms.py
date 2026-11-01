@@ -38,10 +38,13 @@ from IPython import get_ipython
 from IPython.display import SVG
 from IPython.display import Image
 from IPython.display import display as display_in_cell
+from ipywidgets import Box  # type: ignore
 from ipywidgets import Button  # type: ignore
 from ipywidgets import Dropdown  # type: ignore
 from ipywidgets import HBox  # type: ignore
+from ipywidgets import Layout  # type: ignore
 from ipywidgets import Output  # type: ignore
+from ipywidgets import ToggleButton  # type: ignore
 from ipywidgets import VBox  # type: ignore
 from ipywidgets import Widget  # type: ignore
 from plotly.graph_objects import Figure  # type: ignore
@@ -60,6 +63,7 @@ from .kernel import _route_to_subshell
 from .kernel import _routing_new_widgets
 from .rewrite import _CallSite
 from .rewrite import _cell_site
+from .rewrite import _check_cell_rewrite
 from .rewrite import _claim_cell_rewrite
 from .rewrite import _current_cell_source
 from .rewrite import _rewritten_cell
@@ -270,17 +274,26 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
 
         If ``interactive``, show an editor of the arguments and the graph instead, and block the cell until "Done" is
         clicked ("Done" is disabled while the arguments are incomplete). Then rewrite the code of the cell so that it
-        creates the form with the edited arguments, and displays it with ``interactive=False``, and show the graph. This
-        requires the form to be created in the same cell, at its top level, by a method of a kind of data source (e.g.
+        creates the form with the edited arguments, and displays it with ``interactive=False``, and show the graph.
+        Clicking "Cancel" instead leaves the cell as it is, shows nothing, and returns the form with its arguments as
+        they were. This requires the form to be created in the same cell, at its top level, by a method of a kind of data source (e.g.
         ``source.gene_gene(...)``). The editor always shows an interactive figure. The ``format`` applies to the graph
         shown after "Done".
         """
         _check_format(format)
         form: GraphForm = self
         if interactive:
-            form = self._edit(_cell_site(sys._getframe(1)))  # pylint: disable=protected-access
+            edited = self._edit(_cell_site(sys._getframe(1)))  # pylint: disable=protected-access
+            if edited is None:
+                return self
+            form = edited
         _show_graph(form._shown_graph(), format)  # pylint: disable=protected-access
         return form
+
+    def _ipython_display_(self) -> None:
+        # A form left as the value of a cell (e.g. the one ``display`` returns) shows nothing. Its graph is shown only by
+        # ``display``.
+        pass
 
     def _tweaks_editor(self) -> ListEditor[Tweak]:
         # The editor of the tweaks: a list of them, under a "Tweaks" header, collapsed. The choices of each row are the
@@ -292,16 +305,24 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
         self.bind(tweaks=tweaks)
         return tweaks
 
-    def _edit(self, display_site: _CallSite | None) -> "GraphForm":
-        # Show the editor until "Done" is clicked, then rewrite the cell. Returns the form the editor ended with.
+    def _edit(self, display_site: _CallSite | None) -> "GraphForm | None":
+        # Show the editor until "Done" is clicked, then rewrite the cell. Returns the form the editor ended with. If
+        # "Cancel" is clicked instead, leave the cell as it is, restore the arguments (the editor changes them in place),
+        # and return ``None``.
         call_site = self._call_site
+        _check_cell_rewrite(call_site, display_site)
         if call_site is None or display_site is None or display_site.cell_token != call_site.cell_token:
             raise RuntimeError(
                 "an interactive form must be created and displayed in the same cell, at its top level, "
                 "by a method of a kind of data source (e.g. source.gene_gene(...))"
             )
         _claim_cell_rewrite()
+        original_arguments = copy.deepcopy(self.arguments())
         form = _EditSession(self.source, self, _kind_tree(self.source)).run()
+        if form is None:
+            for name, value in original_arguments.items():
+                setattr(self, name, value)
+            return None
         shell = get_ipython()
         shell.set_next_input(
             _rewritten_cell(
@@ -405,7 +426,9 @@ class GraphMenu(HBox):  # pylint: disable=too-many-ancestors,abstract-method
         self._dropdowns = []
         for level, branch in enumerate(branches):
             options = [("Choose...", None)] + [(_node_name(child), child) for child in branch.children]
-            dropdown = Dropdown(options=options, value=path[level] if level < len(path) else None)
+            # A dropdown given a ``value`` of ``None`` shows nothing, so the placeholder is picked by its index.
+            index = 1 + branch.children.index(path[level]) if level < len(path) else 0
+            dropdown = Dropdown(options=options, index=index)
             dropdown.observe(functools.partial(self._on_dropdown_change, level), names="value")
             self._dropdowns.append(dropdown)
         self.children = self._dropdowns
@@ -444,20 +467,21 @@ class _GraphMenu:
     def __get__(self, source: None, owner: type) -> "_GraphMenu": ...
 
     @overload
-    def __get__(self, source: SourceWidgets, owner: type) -> Callable[..., GraphForm]: ...
+    def __get__(self, source: SourceWidgets, owner: type) -> Callable[..., GraphForm | None]: ...
 
-    def __get__(self, source: SourceWidgets | None, owner: type) -> "_GraphMenu | Callable[..., GraphForm]":
+    def __get__(self, source: SourceWidgets | None, owner: type) -> "_GraphMenu | Callable[..., GraphForm | None]":
         if source is None:
             return self
         tree = self.tree
 
-        def menu(*, format: _Format = "plotly") -> GraphForm:  # pylint: disable=redefined-builtin
+        def menu(*, format: _Format = "plotly") -> GraphForm | None:  # pylint: disable=redefined-builtin
             """
             Show a menu of the graphs, with an editor of the chosen graph's arguments and the graph, and block the cell
             until "Done" is clicked ("Done" is disabled until a graph is chosen and its arguments are complete). Then
             rewrite this call in the code of the cell so that it creates the chosen graph's form with the edited
             arguments, and displays it in the ``format`` with ``interactive=False``, and show the graph. Returns the
-            form. This must be called at the top level of the cell.
+            form. Clicking "Cancel" instead leaves the cell as it is, shows nothing, and returns ``None``. This must be
+            called at the top level of the cell.
             """
             return _show_menu(source, tree, _cell_site(sys._getframe(1)), format)  # pylint: disable=protected-access
 
@@ -478,14 +502,18 @@ def _show_menu(
     tree: Branch,
     call_site: _CallSite | None,
     format: _Format,  # pylint: disable=redefined-builtin
-) -> GraphForm:
+) -> GraphForm | None:
     # Show the menu of the graphs of the ``tree`` until "Done" is clicked, then rewrite the menu call (at the
-    # ``call_site``) into the chosen form's, and show its graph in the ``format``.
+    # ``call_site``) into the chosen form's, and show its graph in the ``format``. If "Cancel" is clicked instead, do
+    # nothing, and return ``None``.
     _check_format(format)
+    _check_cell_rewrite(call_site)
     if call_site is None:
         raise RuntimeError("a menu must be shown at the top level of a cell (e.g. source.menu())")
     _claim_cell_rewrite()
     form = _EditSession(source, None, tree).run()
+    if form is None:
+        return None
     shell = get_ipython()
     shell.set_next_input(
         _rewritten_menu_cell(
@@ -521,15 +549,21 @@ def _method_name(source: SourceWidgets, graph_class: Type[GraphForm]) -> str:
 _Pool = Dict[str, Tuple[Any, Any]]
 
 
-def _pooled(pool: _Pool, form: GraphForm) -> None:
-    # Put the arguments of the ``form`` into the ``pool``, replacing the earlier values of the same names. An argument
-    # edited by an ``ArgumentsEditor`` is pooled with what the editor intends, including what isn't valid for this form
-    # (e.g. a hidden tweak which applies to another graph type).
-    hints = typing.get_type_hints(type(form).__init__)
+def _intended_arguments(form: GraphForm) -> Dict[str, Any]:
+    # The arguments of the ``form``, where an argument edited by an ``ArgumentsEditor`` is what the editor intends,
+    # including what isn't valid for this form (e.g. a hidden tweak which applies to another graph type).
+    arguments: Dict[str, Any] = {}
     for name, value in form.arguments().items():
         widget = form._bound.get(name)  # pylint: disable=protected-access
-        if isinstance(widget, ArgumentsEditor):
-            value = widget.intended()
+        arguments[name] = widget.intended() if isinstance(widget, ArgumentsEditor) else value
+    return arguments
+
+
+def _pooled(pool: _Pool, form: GraphForm) -> None:
+    # Put the intended arguments of the ``form`` (see ``_intended_arguments``) into the ``pool``, replacing the earlier
+    # values of the same names.
+    hints = typing.get_type_hints(type(form).__init__)
+    for name, value in _intended_arguments(form).items():
         pool[name] = (value, hints.get(name))
 
 
@@ -558,10 +592,17 @@ def _switched_form(
     return form
 
 
+def _disclosure_icon(is_shown: bool) -> str:
+    # The icon of a toggle which shows or hides a panel: pointing down while it is shown, and right while it is hidden,
+    # as the triangles of the headers of collapsible sections do.
+    return "caret-down" if is_shown else "caret-right"
+
+
 class _EditSession:  # pylint: disable=too-many-instance-attributes
-    # The editor of a form (or, with no form, of a graph to choose), shown until "Done" is clicked. With a ``tree``, it
-    # also has a menu of its graphs, and a "Graphs" button which shows or hides it. The menu is shown at first only if
-    # there is no form. Choosing a graph in the menu replaces the edited form with one of the chosen graph (see
+    # The editor of a form (or, with no form, of a graph to choose), shown until "Done" is clicked, or "Cancel", which
+    # discards the editing. With a ``tree``, it
+    # also has a menu of its graphs, and a "Graphs" toggle which shows or hides it. The menu is shown at first only if
+    # there is no form. The figure is hidden while there is no graph to show. Choosing a graph in the menu replaces the edited form with one of the chosen graph (see
     # ``_switched_form``). The session pools the values of the arguments of the forms it leaves, so values set in one
     # graph reach any later graph which has them, and going back to a graph restores them. A "Revert" button goes back
     # to the graph and the arguments the session started with (or to no graph), and clears the pool.
@@ -573,9 +614,10 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         self._pool: _Pool = {}
         self._pooled_selection_points: Any | None = None
         self._is_reverting = False
-        self._done = Button(description="Done", button_style="primary")
-        revert = Button(description="Revert")
-        revert.on_click(self._on_revert)
+        self._done = Button(description="Done")
+        self._revert_button = Button(description="Revert")
+        self._revert_button.on_click(self._on_revert)
+        self._cancel = Button(description="Cancel")
         self._errors = Output()
         self._tweaks: ListEditor[Tweak] | None = None
         # The editors are made before the graph is drawn, since binding them leaves out of the form's arguments what
@@ -585,39 +627,52 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
             form._shown_graph() if form is not None and form.is_complete() else None  # pylint: disable=protected-access
         )
         self._figure = FigureWidget(Figure() if graph is None else graph.figure)
+        # A figure widget's ``layout`` is the figure's, so it is hidden through a box around it.
+        self._figure_box = Box([self._figure], layout=Layout(display="none" if graph is None else None))
         if graph is not None and self._tweaks is not None:
             self._tweaks.update_graph(graph)
-        toolbar: List[Widget] = [self._done, revert]
+        toolbar: List[Widget] = []
         rows: List[Widget] = []
         self._menu: GraphMenu | None = None
+        self._graphs: ToggleButton | None = None
         visible = None if tree is None else tree.visible(source)
         if tree is not None and visible is not None and (form is None or _path_to(visible, type(form))):
             self._menu = GraphMenu(source, tree, None if form is None else type(form))
             self._menu.observe(self._on_menu_change, names="value")
             self._menu.layout.display = None if form is None else "none"
-            graphs = Button(description="Graphs")
-            graphs.on_click(self._on_graphs)
-            toolbar.append(graphs)
+            self._graphs = ToggleButton(description="Graphs", value=form is None, icon=_disclosure_icon(form is None))
+            self._graphs.observe(self._on_graphs_change, names="value")
+            toolbar.append(self._graphs)
             rows.append(self._menu)
-        self._editor = VBox([HBox(toolbar), *rows, self._body, self._figure, self._errors])
+        toolbar += [self._revert_button, self._cancel, self._done]
+        self._editor = VBox([HBox(toolbar), *rows, self._body, self._figure_box, self._errors])
         self._watch_selection()
-        self._update_done()
+        self._update_buttons()
 
-    def run(self) -> GraphForm:
+    def run(self) -> GraphForm | None:
         """
-        Show the editor and block until "Done" is clicked, while serving its jobs. Returns the edited form.
+        Show the editor and block until "Done" or "Cancel" is clicked, while serving its jobs. Returns the edited form,
+        or ``None`` if "Cancel" was clicked.
         """
         _route_to_subshell(self._editor, _owned_subshell_id())
         display_in_cell(self._editor)
         jobs = _MainThreadJobs()
         is_done = threading.Event()
+        is_cancelled = False
 
         def on_done(_button: Button) -> None:
             if self._is_complete():
                 is_done.set()
                 jobs.wake()
 
+        def on_cancel(_button: Button) -> None:
+            nonlocal is_cancelled
+            is_cancelled = True
+            is_done.set()
+            jobs.wake()
+
         self._done.on_click(on_done)
+        self._cancel.on_click(on_cancel)
         shown_at = time.monotonic()
         is_resized = False
 
@@ -627,7 +682,7 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
                 self._figure.layout.autosize = False
                 self._figure.layout.autosize = True
                 is_resized = True
-            self._update_done()
+            self._update_buttons()
             try:
                 if self._form is not None:
                     self._form._poll_redraw(self._redraw)  # pylint: disable=protected-access
@@ -638,6 +693,8 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         with _routing_new_widgets(_owned_subshell_id()), _reporting_callback_errors(self._errors):
             jobs.serve(is_done, on_poll)
         self._editor.close()
+        if is_cancelled:
+            return None
         assert self._form is not None
         return self._form
 
@@ -657,12 +714,33 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         # Whether there is a form to rewrite the cell with: one is chosen, and its arguments are complete.
         return self._form is not None and self._form.is_complete()
 
-    def _update_done(self) -> None:
-        self._done.disabled = not self._is_complete()
+    def _is_original(self) -> bool:
+        # Whether the session is as it started: the same graph with the same intended arguments (or no graph), and
+        # nothing pooled.
+        if self._pool:
+            return False
+        if self._original is None or self._form is None:
+            return self._original is None and self._form is None
+        graph_class, arguments = self._original
+        return (
+            type(self._form) is graph_class  # pylint: disable=unidiomatic-typecheck
+            and _intended_arguments(self._form) == arguments
+        )
 
-    def _on_graphs(self, _button: Button) -> None:
-        assert self._menu is not None
-        self._menu.layout.display = "none" if self._menu.layout.display is None else None
+    def _update_buttons(self) -> None:
+        # "Done" needs a complete form, and "Revert" a change. Without a form, the menu is the only thing to use, so it
+        # is shown, and "Graphs" can't hide it.
+        self._done.disabled = not self._is_complete()
+        self._revert_button.disabled = self._is_original()
+        if self._graphs is not None:
+            if self._form is None:
+                self._graphs.value = True
+            self._graphs.disabled = self._form is None
+
+    def _on_graphs_change(self, change: Dict) -> None:
+        assert self._graphs is not None and self._menu is not None
+        self._graphs.icon = _disclosure_icon(change["new"])
+        self._menu.layout.display = None if change["new"] else "none"
 
     def _on_menu_change(self, change: Dict) -> None:
         if not self._is_reverting:
@@ -710,17 +788,18 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
                 traceback.print_exc()
 
     def _show_form(self) -> None:
-        # Show the widgets of the edited form (if any), and an empty figure until its graph is drawn.
+        # Show the widgets of the edited form (if any), and no figure until its graph is drawn.
         self._tweaks = None
         self._body.children = [] if self._form is None else self._form_widgets(self._form)
-        self._draw(Figure())
+        self._draw(None)
         if self._form is not None:
             self._form.request_redraw()
-        self._update_done()
+        self._update_buttons()
 
-    def _draw(self, figure: Figure) -> None:
-        # Show the ``figure``, and report its selections to the edited form.
-        _replace_figure(self._figure, figure)
+    def _draw(self, figure: Figure | None) -> None:
+        # Show the ``figure`` (or hide the figure, if there is none), and report its selections to the edited form.
+        _replace_figure(self._figure, Figure() if figure is None else figure)
+        self._figure_box.layout.display = "none" if figure is None else None
         self._watch_selection()
 
     def _watch_selection(self) -> None:

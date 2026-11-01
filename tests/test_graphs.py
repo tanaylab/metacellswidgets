@@ -45,6 +45,15 @@ def test_gene_gene_repr() -> None:
     )
 
 
+def test_form_shows_nothing_as_the_value_of_a_cell(capsys: pytest.CaptureFixture[str]) -> None:
+    """
+    A form left as the value of a cell (e.g. the one ``display`` returns) shows nothing, not its ``repr``.
+    """
+    form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B")
+    form._ipython_display_()  # pylint: disable=protected-access
+    assert capsys.readouterr().out == ""
+
+
 def test_gene_gene_tweaks() -> None:
     """
     The tweaks change the graph after it is built, in order, and are written into the code of the cell.
