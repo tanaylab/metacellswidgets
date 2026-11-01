@@ -50,6 +50,7 @@ from ipywidgets import Widget  # type: ignore
 from plotly.graph_objects import Figure  # type: ignore
 from plotly.graph_objects import FigureWidget  # type: ignore
 from somegraphspy import Graph
+from somegraphspy import HtmlText
 from somegraphspy import PngImage
 from somegraphspy import SvgImage
 
@@ -162,12 +163,19 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
         return self._shown_graph().json
 
     @property
-    def figure(self) -> Figure:
+    def fig(self) -> Figure:
         """
-        The graph (see :py:meth:`graph`) as a Plotly figure. A notebook shows it as an interactive figure. A form left
-        as the value of a cell shows the same.
+        The graph (see :py:meth:`graph`) as a Plotly figure. A notebook shows it as an interactive figure.
         """
-        return self._shown_graph().figure
+        return self._shown_graph().fig
+
+    @property
+    def html(self) -> HtmlText:
+        """
+        The graph (see :py:meth:`graph`) as a standalone HTML page, which shows the interactive Plotly figure. It is the
+        HTML text, which a notebook shows as the page.
+        """
+        return self._shown_graph().html
 
     @property
     def svg(self) -> SvgImage:
@@ -322,10 +330,6 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
             form = edited
         _show_graph(form._shown_graph(), format)  # pylint: disable=protected-access
         return form
-
-    def _ipython_display_(self) -> None:
-        # A form left as the value of a cell shows its figure.
-        display_in_cell(self.figure)
 
     def _tweaks_editor(self) -> ListEditor[Tweak]:
         # The editor of the tweaks: a list of them, under a "Tweaks" header, collapsed. The choices of each row are the
@@ -658,7 +662,7 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         graph = (
             form._shown_graph() if form is not None and form.is_complete() else None  # pylint: disable=protected-access
         )
-        self._figure = FigureWidget(Figure() if graph is None else graph.figure)
+        self._figure = FigureWidget(Figure() if graph is None else graph.fig)
         # A figure widget's ``layout`` is the figure's, so it is hidden through a box around it.
         self._figure_box = Box([self._figure], layout=Layout(display="none" if graph is None else None))
         if graph is not None and self._tweaks is not None:
@@ -738,7 +742,7 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
 
     def _redraw(self, graph: Graph) -> None:
         # Show the redrawn ``graph``, and let the editors of the tweaks follow it.
-        self._draw(graph.figure)
+        self._draw(graph.fig)
         if self._tweaks is not None:
             self._tweaks.update_graph(graph)
 
@@ -865,7 +869,7 @@ def _show_graph(graph: Graph, format: _Format) -> None:  # pylint: disable=redef
     elif format == "png":
         display_in_cell(Image(data=graph.png, format="png"))
     else:
-        display_in_cell(graph.figure)
+        display_in_cell(graph.fig)
 
 
 def _replace_figure(widget: FigureWidget, figure: Figure) -> None:

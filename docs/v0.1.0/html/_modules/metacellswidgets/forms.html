@@ -123,6 +123,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="kn">import</span> <span class="n">Figure</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="kn">import</span> <span class="n">FigureWidget</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">HtmlText</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">PngImage</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">SvgImage</span>
 
@@ -246,12 +247,19 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shown_graph</span><span class="p">()</span><span class="o">.</span><span class="n">json</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">figure</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Figure</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fig</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Figure</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        The graph (see :py:meth:`graph`) as a Plotly figure. A notebook shows it as an interactive figure. A form left</span>
-<span class="sd">        as the value of a cell shows the same.</span>
+<span class="sd">        The graph (see :py:meth:`graph`) as a Plotly figure. A notebook shows it as an interactive figure.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shown_graph</span><span class="p">()</span><span class="o">.</span><span class="n">figure</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shown_graph</span><span class="p">()</span><span class="o">.</span><span class="n">fig</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">html</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HtmlText</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The graph (see :py:meth:`graph`) as a standalone HTML page, which shows the interactive Plotly figure. It is the</span>
+<span class="sd">        HTML text, which a notebook shows as the page.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shown_graph</span><span class="p">()</span><span class="o">.</span><span class="n">html</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">svg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SvgImage</span><span class="p">:</span>
@@ -427,10 +435,6 @@
         <span class="n">_show_graph</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">_shown_graph</span><span class="p">(),</span> <span class="nb">format</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span>
         <span class="k">return</span> <span class="n">form</span></div>
 
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_ipython_display_</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># A form left as the value of a cell shows its figure.</span>
-        <span class="n">display_in_cell</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_tweaks_editor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ListEditor</span><span class="p">[</span><span class="n">Tweak</span><span class="p">]:</span>
         <span class="c1"># The editor of the tweaks: a list of them, under a "Tweaks" header, collapsed. The choices of each row are the</span>
@@ -782,7 +786,7 @@
         <span class="n">graph</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">form</span><span class="o">.</span><span class="n">_shown_graph</span><span class="p">()</span> <span class="k">if</span> <span class="n">form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">form</span><span class="o">.</span><span class="n">is_complete</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>  <span class="c1"># pylint: disable=protected-access</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span> <span class="o">=</span> <span class="n">FigureWidget</span><span class="p">(</span><span class="n">Figure</span><span class="p">()</span> <span class="k">if</span> <span class="n">graph</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">graph</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span> <span class="o">=</span> <span class="n">FigureWidget</span><span class="p">(</span><span class="n">Figure</span><span class="p">()</span> <span class="k">if</span> <span class="n">graph</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">graph</span><span class="o">.</span><span class="n">fig</span><span class="p">)</span>
         <span class="c1"># A figure widget's ``layout`` is the figure's, so it is hidden through a box around it.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_figure_box</span> <span class="o">=</span> <span class="n">Box</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="p">],</span> <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="s2">"none"</span> <span class="k">if</span> <span class="n">graph</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -862,7 +866,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_redraw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Show the redrawn ``graph``, and let the editors of the tweaks follow it.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_draw</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_draw</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">fig</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span><span class="o">.</span><span class="n">update_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
 
@@ -989,7 +993,7 @@
     <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">"png"</span><span class="p">:</span>
         <span class="n">display_in_cell</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">png</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"png"</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">display_in_cell</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span>
+        <span class="n">display_in_cell</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">fig</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_replace_figure</span><span class="p">(</span><span class="n">widget</span><span class="p">:</span> <span class="n">FigureWidget</span><span class="p">,</span> <span class="n">figure</span><span class="p">:</span> <span class="n">Figure</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>

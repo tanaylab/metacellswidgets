@@ -33,7 +33,7 @@ def run_workload() -> None:
 
 def _show(form: GraphForm) -> None:
     # What displaying a form does, and what displaying it interactively adds.
-    _ = form.graph().figure
+    _ = form.graph().fig
     form.editor()
 
 
