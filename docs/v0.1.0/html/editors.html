@@ -901,12 +901,48 @@ the graph (e.g. a tweak’s size) can follow it. A value the user set is kept. B
 <code class="docutils literal notranslate">
 <span class="pre">source
 </span>
-</code> has. The picker starts with the 
+</code> has, starting with the 
 <code class="docutils literal notranslate">
 <span class="pre">current
 </span>
-</code> axis if it is
-one of them, and with the first of them otherwise.
+</code> one, marking the
+
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> axis (see 
+<a class="reference internal" href="#metacellswidgets.editors.ChoicePicker" title="metacellswidgets.editors.ChoicePicker">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">ChoicePicker
+</span>
+</code>
+</a>). The 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code> while the picker shows the default.
+The 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code> is the name of the shown axis, which the editors of the entries of the axis follow. A 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> axis
+the source doesn’t have (or, for 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code>, a 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> it doesn’t have) gives way to the first axis it has.
 </p>
 
 <dl class="field-list simple">
@@ -948,6 +984,23 @@ one of them, and with the first of them otherwise.
 <li>
 <p>
 <strong>current
+</strong> (
+<em>str
+</em>
+<em> | 
+</em>
+<em>EllipsisType
+</em>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>default
 </strong> (
 <em>str
 </em>

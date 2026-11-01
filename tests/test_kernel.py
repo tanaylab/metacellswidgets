@@ -311,7 +311,7 @@ def test_edit_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
     _send_state(client, colors_gene, {"value": "D"})
     _click(client, done)
     assert _rewritten_text(client, message_id) == (
-        "mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='D', colors=mw.GeneExpression(gene='D')).fig"
+        "mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='D', colors=mw.GeneExpression(gene='D')).fig"
     )
 
 
@@ -328,7 +328,7 @@ def test_cell_magic_is_kept_by_the_rewrite(kernel: Tuple[Any, Any]) -> None:
     time.sleep(1)
     _click(client, done)
     assert _rewritten_text(client, message_id) == (
-        "%%time\nform = mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='B')\nform"
+        "%%time\nform = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform"
     )
 
 
@@ -390,9 +390,7 @@ def test_menu_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
     _send_state(client, x_gene, {"value": "A"})
     _send_state(client, y_gene, {"value": "D"})
     _click(client, done)
-    assert _rewritten_text(client, message_id) == (
-        "mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='D').fig"
-    )
+    assert _rewritten_text(client, message_id) == ("mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='D').fig")
 
 
 def _is_cancel_button(state: Dict[str, Any]) -> bool:
@@ -452,7 +450,7 @@ def test_graphs_button_switches_the_graph(kernel: Tuple[Any, Any]) -> None:
     _send_state(client, menu, {"index": menu["_options_labels"].index("GenesHeatmap")})
     time.sleep(2)
     _click(client, done)
-    assert _rewritten_text(client, message_id) == ("form = mw.DafWidgets(daf).genes_heatmap(axis='metacell')\nform")
+    assert _rewritten_text(client, message_id) == ("form = mw.DafWidgets(daf).genes_heatmap()\nform")
 
 
 def _is_show_legends(state: Dict[str, Any]) -> bool:
@@ -484,7 +482,5 @@ def test_edited_tweaks_rewrite_the_cell(kernel: Tuple[Any, Any]) -> None:
     _send_state(client, show_legends, {"index": 1})
     _click(client, done)
     assert _rewritten_text(client, message_id) == (
-        "form = mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='B', "
-        "tweaks=[mw.Legends(is_shown=False)])\n"
-        "form"
+        "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B', " "tweaks=[mw.Legends(is_shown=False)])\n" "form"
     )

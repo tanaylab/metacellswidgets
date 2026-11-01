@@ -8,6 +8,7 @@ from typing import List
 from typing import Tuple
 
 import pytest
+from dafpy.julia_import import DEFAULT
 
 import metacellswidgets as mw
 from metacellswidgets.forms import _EditSession
@@ -74,7 +75,7 @@ def test_switched_form() -> None:
     """
     source = mw.DafWidgets(_daf())
     blank = _switched_form(mw.GeneGene, source, {}, None).arguments()
-    assert (blank["axis"], blank["x_gene"], blank["y_gene"], blank["tweaks"]) == ("metacell", None, None, None)
+    assert (blank["axis"], blank["x_gene"], blank["y_gene"], blank["tweaks"]) == (DEFAULT, None, None, None)
 
     pool: Dict[str, Tuple[Any, Any]] = {}
     _pooled(pool, source.gene_gene(x_gene="A", y_gene="B", colors=mw.Type(), selected_box=(0.1, 0.2, 0.1, 0.2)))

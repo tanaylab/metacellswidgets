@@ -322,24 +322,33 @@ class PickerEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstr
         self.is_blank = change["new"] is None
 
 
-class AxisPicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
+class AxisPicker(ChoicePicker):  # pylint: disable=too-many-ancestors,abstract-method
     """
-    Pick one of the ``allowed`` axes which the ``source`` has. The picker starts with the ``current`` axis if it is
-    one of them, and with the first of them otherwise.
+    Pick one of the ``allowed`` axes which the ``source`` has, starting with the ``current`` one, marking the
+    ``default`` axis (see :py:class:`ChoicePicker`). The ``value`` is ``DEFAULT`` while the picker shows the default.
+    The ``axis`` is the name of the shown axis, which the editors of the entries of the axis follow. A ``current`` axis
+    the source doesn't have (or, for ``DEFAULT``, a ``default`` it doesn't have) gives way to the first axis it has.
     """
 
-    def __init__(self, source: SourceWidgets, allowed: Sequence[str], current: str | None = None) -> None:
-        super().__init__()
+    axis = traitlets.Unicode()
+
+    def __init__(
+        self,
+        source: SourceWidgets,
+        allowed: Sequence[str],
+        current: str | DefaultValue | None = None,
+        default: str | None = None,
+    ) -> None:
         axes = [axis for axis in allowed if source.has_axis(axis)]
-        value = current if current in axes else (axes[0] if axes else None)
-        self._dropdown = Dropdown(options=axes, value=value)
-        _mark_default(self._dropdown, False)
-        self.children = [self._dropdown]
-        self.value = value
-        self._dropdown.observe(self._on_dropdown_change, names="value")
+        shown = default if isinstance(current, DefaultValue) else current
+        if shown not in axes:
+            current = axes[0]
+        super().__init__([(axis, axis) for axis in axes], current, default)
+        self.axis = self.shown()
+        self.observe(self._on_value_change, names="value")
 
-    def _on_dropdown_change(self, change: Dict) -> None:
-        self.value = change["new"]
+    def _on_value_change(self, _change: Dict) -> None:
+        self.axis = self.shown()
 
 
 #: Decides which property a slot holds when the axis it follows changes, given the old axis, the new axis and the
@@ -390,7 +399,7 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
         default: None | Arguments | Callable[[str], Arguments | None] = None,
     ) -> None:
         super().__init__(layout=Layout(align_items="flex-start"))
-        self._axis: str | None = axis.value if isinstance(axis, AxisPicker) else axis
+        self._axis: str | None = axis.axis if isinstance(axis, AxisPicker) else axis
         self._given_default = default
         self._shown_choices: Sequence[Type[Arguments]] = ()
         self._kept: None | Arguments | DefaultValue = None
@@ -404,11 +413,11 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
         self._dropdown.observe(self._on_dropdown_change, names="value")
         self._axis_picker = axis if isinstance(axis, AxisPicker) else None
         if self._axis_picker is not None:
-            self._axis_picker.observe(self._on_axis_picker_change, names="value")
+            self._axis_picker.observe(self._on_axis_picker_change, names="axis")
 
     def close(self) -> None:
         if self._axis_picker is not None:
-            self._axis_picker.unobserve(self._on_axis_picker_change, names="value")
+            self._axis_picker.unobserve(self._on_axis_picker_change, names="axis")
         super().close()
 
     def _editor_of(self, choice: Type[Arguments], current: Arguments | None) -> ArgumentsEditor | None:
@@ -724,7 +733,7 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
     ) -> None:
         super().__init__()
         self._make_row = make_row
-        self._axis: str | None = axis.value if isinstance(axis, AxisPicker) else axis
+        self._axis: str | None = axis.axis if isinstance(axis, AxisPicker) else axis
         self._given_default = default
         self._is_default = isinstance(current, DefaultValue) or (current is None and default is None)
         self._rows: List[ArgumentsEditor] = []
@@ -735,7 +744,7 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
         # The list observes the axis before its rows do, so it replaces the rows of a shown default before they follow
         # the new axis (which would count as a change).
         if isinstance(axis, AxisPicker):
-            axis.observe(self._on_axis_picker_change, names="value")
+            axis.observe(self._on_axis_picker_change, names="axis")
         self._fill(self._default() if isinstance(current, DefaultValue) else current)
 
     def _default(self) -> Sequence[_Item] | None:
@@ -915,7 +924,7 @@ class ShownProperties(traitlets.HasTraits):
         for editor in [*self._editors, hovers]:
             editor.observe(self._on_change, names="value")
         if axis is not None:
-            axis.observe(self._on_change, names="value")
+            axis.observe(self._on_change, names="axis")
         self._on_change({})
 
     def properties(self) -> List[Property]:

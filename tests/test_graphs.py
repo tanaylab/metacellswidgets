@@ -28,7 +28,7 @@ def test_gene_gene_arguments() -> None:
     form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B", colors=mw.Type())
     assert isinstance(form, mw.GeneGene)
     assert form.arguments() == {
-        "axis": "metacell",
+        "axis": DEFAULT,
         "x_gene": "A",
         "y_gene": "B",
         "log_base": DEFAULT,
@@ -47,9 +47,10 @@ def test_gene_gene_repr() -> None:
     """
     form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B", sizes=mw.TotalUMIs())
     assert repr(form) == (
-        "GeneGene(axis='metacell', x_gene='A', y_gene='B', colors=None, sizes=TotalUMIs(), hovers=None, "
+        "GeneGene(x_gene='A', y_gene='B', colors=None, sizes=TotalUMIs(), hovers=None, "
         "selected_box=None, selected_lasso=None, tweaks=None)"
     )
+    assert form.shown_axis() == "metacell"
 
 
 def test_form_formats() -> None:

@@ -165,6 +165,15 @@
 </li>
 
 <li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.graphs.GeneGene.shown_axis">
+<code class="docutils literal notranslate">
+<span class="pre">GeneGene.shown_axis()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
 <a class="reference internal" href="#metacellswidgets.graphs.GeneGene.editor">
 <code class="docutils literal notranslate">
 <span class="pre">GeneGene.editor()
@@ -235,6 +244,15 @@
 <a class="reference internal" href="#metacellswidgets.graphs.GenesHeatmap.default_column_annotations">
 <code class="docutils literal notranslate">
 <span class="pre">GenesHeatmap.default_column_annotations()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.graphs.GenesHeatmap.shown_axis">
+<code class="docutils literal notranslate">
+<span class="pre">GenesHeatmap.shown_axis()
 </span>
 </code>
 </a>
@@ -450,7 +468,7 @@ which each kind implements in its own module (see
 </span>
 </span>
 <span class="default_value">
-<span class="pre">'metacell'
+<span class="pre">Ellipsis
 </span>
 </span>
 </em>, 
@@ -589,12 +607,8 @@ which each kind implements in its own module (see
 <code class="docutils literal notranslate">
 <span class="pre">axis
 </span>
-</code>, on log scale. Both axes use the
+</code> (left out, the default of
 
-<code class="docutils literal notranslate">
-<span class="pre">log_base
-</span>
-</code> (left out, the default of 
 <code class="docutils literal notranslate">
 <span class="pre">gene_gene_graph
 </span>
@@ -602,8 +616,16 @@ which each kind implements in its own module (see
 <code class="docutils literal notranslate">
 <span class="pre">metacellsgraphspy
 </span>
-</code>, which is 2), or are linear if
-it is 
+</code>, which is the metacells), on log scale. Both axes use the 
+<code class="docutils literal notranslate">
+<span class="pre">log_base
+</span>
+</code>
+(left out, the default of 
+<code class="docutils literal notranslate">
+<span class="pre">gene_gene_graph
+</span>
+</code>, which is 2), or are linear if it is 
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
@@ -668,6 +690,10 @@ given.
 <strong>axis
 </strong> (
 <em>str
+</em>
+<em> | 
+</em>
+<em>EllipsisType
 </em>)
 </p>
 </li>
@@ -918,6 +944,55 @@ argument other than the selection changed since, and then it builds the graph ag
 <p>
 <em>List
 </em>[str]
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.graphs.GeneGene.shown_axis">
+
+<span class="sig-name descname">
+<span class="pre">shown_axis
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/graphs.html#GeneGene.shown_axis">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.graphs.GeneGene.shown_axis" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code>, or the default axis if it is left out.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>str
 </p>
 
 </dd>
@@ -1335,7 +1410,7 @@ offers; for any other, the graph does not exist.
 </span>
 </span>
 <span class="default_value">
-<span class="pre">'metacell'
+<span class="pre">Ellipsis
 </span>
 </span>
 </em>, 
@@ -1468,6 +1543,19 @@ its median across the entries. The rows (the genes) and the columns (the entries
 
 <p>Left out, the 
 <code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code> is the default of 
+<code class="docutils literal notranslate">
+<span class="pre">genes_heatmap_graph
+</span>
+</code> of 
+<code class="docutils literal notranslate">
+<span class="pre">metacellsgraphspy
+</span>
+</code> (the metacells), the
+
+<code class="docutils literal notranslate">
 <span class="pre">genes
 </span>
 </code> are the strongest markers (
@@ -1536,6 +1624,10 @@ more lines, without annotating (left out, there are none).
 <strong>axis
 </strong> (
 <em>str
+</em>
+<em> | 
+</em>
+<em>EllipsisType
 </em>)
 </p>
 </li>
@@ -1850,6 +1942,55 @@ if the data has it. The entries are of the
 <em>Property
 </em>
 </a>]
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.graphs.GenesHeatmap.shown_axis">
+
+<span class="sig-name descname">
+<span class="pre">shown_axis
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/graphs.html#GenesHeatmap.shown_axis">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.graphs.GenesHeatmap.shown_axis" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code>, or the default axis if it is left out.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>str
 </p>
 
 </dd>

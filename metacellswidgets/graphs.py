@@ -6,6 +6,7 @@ which each kind implements in its own module (see :py:func:`~metacellswidgets.co
 """
 
 from typing import Any
+from typing import Callable
 from typing import List
 from typing import Sequence
 from typing import Tuple
@@ -67,11 +68,16 @@ def _check_hovers(hovers: Sequence[Property] | None, shown: Sequence[Property | 
         seen.append(hover)
 
 
+# The ``axis`` of a form, or else (if it is ``DEFAULT``) the default axis of its ``graph_function``.
+def _shown_axis(axis: str | DefaultValue, graph_function: Callable[..., Graph]) -> str:
+    return mg.function_default(graph_function, "axis") if isinstance(axis, DefaultValue) else axis
+
+
 class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
     """
-    The expression of ``x_gene`` against ``y_gene``, a point per entry of the ``axis``, on log scale. Both axes use the
-    ``log_base`` (left out, the default of ``gene_gene_graph`` of ``metacellsgraphspy``, which is 2), or are linear if
-    it is ``None``. The points may be colored by the ``colors`` property, and sized by the ``sizes`` property. The
+    The expression of ``x_gene`` against ``y_gene``, a point per entry of the ``axis`` (left out, the default of
+    ``gene_gene_graph`` of ``metacellsgraphspy``, which is the metacells), on log scale. Both axes use the ``log_base``
+    (left out, the default of ``gene_gene_graph``, which is 2), or are linear if it is ``None``. The points may be colored by the ``colors`` property, and sized by the ``sizes`` property. The
     ``hovers`` properties add lines to the hover of each point (left out, there are none).
 
     Some of the points may be selected, by the ``selected_box`` (the minimal X, maximal X, minimal Y and maximal Y) or
@@ -86,7 +92,7 @@ class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
         self,
         source: SourceWidgets,
         *,
-        axis: str = "metacell",
+        axis: str | DefaultValue = DEFAULT,
         x_gene: str,
         y_gene: str,
         log_base: LogBase | None | DefaultValue = DEFAULT,
@@ -141,10 +147,18 @@ class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
         self.selected_box = None
         self.selected_lasso = None
 
+    def shown_axis(self) -> str:
+        """
+        The ``axis``, or the default axis if it is left out.
+        """
+        return _shown_axis(self.axis, mg.gene_gene_graph)
+
     def editor(self) -> Widget:
         # Every kind of data source offering this graph has genes to pick from.
         genes = cast(GeneChoices, self.source)
-        axis = AxisPicker(self.source, ["metacell", "block"], self.axis)
+        axis = AxisPicker(
+            self.source, ["metacell", "block"], self.axis, mg.function_default(mg.gene_gene_graph, "axis")
+        )
         x_gene = GenePicker(genes, self.x_gene)
         y_gene = GenePicker(genes, self.y_gene)
         log_base = LogBasePicker(self.log_base, mg.function_default(mg.gene_gene_graph, "log_base"))
@@ -169,12 +183,13 @@ class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
 
     def fill_slots(self, graph: Graph) -> None:
         assert isinstance(graph, PointsGraph)
+        axis = self.shown_axis()
         if self.colors is not None:
-            self.colors.fill(self.source, graph.points_colors_vector_fields(), self.axis)
+            self.colors.fill(self.source, graph.points_colors_vector_fields(), axis)
         if self.sizes is not None:
-            self.sizes.fill(self.source, graph.points_sizes_vector_fields(), self.axis)
+            self.sizes.fill(self.source, graph.points_sizes_vector_fields(), axis)
         for hover_property in self.hovers or []:
-            hover_property.fill(self.source, graph.points_entities(), self.axis)
+            hover_property.fill(self.source, graph.points_entities(), axis)
         if self.selected_box is not None or self.selected_lasso is not None:
             graph.data.selection = _selection_data(self.selected_box, self.selected_lasso)
 
@@ -184,7 +199,8 @@ class GenesHeatmap(GraphForm):
     The expression of the ``genes`` in each of the ``entries`` of the ``axis``, as the fold factor of each gene from
     its median across the entries. The rows (the genes) and the columns (the entries) may be annotated by properties.
 
-    Left out, the ``genes`` are the strongest markers (:py:class:`~metacellswidgets.entries.TopMarkers`), the
+    Left out, the ``axis`` is the default of ``genes_heatmap_graph`` of ``metacellsgraphspy`` (the metacells), the
+    ``genes`` are the strongest markers (:py:class:`~metacellswidgets.entries.TopMarkers`), the
     ``entries`` are all of them, and each side's annotations are its defaults: whether each gene is lateral, and the
     type of each entry, each only if the data has it. These are what ``add_genes_heatmap_default_rows_annotations``
     and ``add_genes_heatmap_default_columns_annotations`` of ``metacellsgraphspy`` add.
@@ -199,7 +215,7 @@ class GenesHeatmap(GraphForm):
         self,
         source: SourceWidgets,
         *,
-        axis: str = "metacell",
+        axis: str | DefaultValue = DEFAULT,
         genes: GeneSelection | DefaultValue = DEFAULT,
         entries: Sequence[EntryFilter] | None = None,
         row_annotations: Sequence[Property] | DefaultValue = DEFAULT,
@@ -245,8 +261,14 @@ class GenesHeatmap(GraphForm):
         The annotations of the columns (the entries) when ``column_annotations`` is left out: the type of each entry,
         if the data has it. The entries are of the ``axis`` (by default, the form's).
         """
-        axis = self.axis if isinstance(axis, DefaultValue) else axis
+        axis = self.shown_axis() if isinstance(axis, DefaultValue) else axis
         return [property_class() for property_class in (Type,) if property_class.exists(self.source, axis)]
+
+    def shown_axis(self) -> str:
+        """
+        The ``axis``, or the default axis if it is left out.
+        """
+        return _shown_axis(self.axis, mg.genes_heatmap_graph)
 
     def selected_genes(self) -> Entries:
         """
@@ -260,12 +282,14 @@ class GenesHeatmap(GraphForm):
         """
         mask: np.ndarray | None = None
         for entry_filter in self.entries or []:
-            filter_mask = entry_filter.mask(self.source, self.axis)
+            filter_mask = entry_filter.mask(self.source, self.shown_axis())
             mask = filter_mask if mask is None else mask & filter_mask
         return mask
 
     def editor(self) -> Widget:
-        axis = AxisPicker(self.source, ["metacell", "block"], self.axis)
+        axis = AxisPicker(
+            self.source, ["metacell", "block"], self.axis, mg.function_default(mg.genes_heatmap_graph, "axis")
+        )
         genes = GeneSelectionPicker(self.source, self.genes)
         entries: ListEditor[EntryFilter] = ListEditor(
             lambda current: EntryFilterPicker(self.source, axis, current), self.entries, title="Filters"
@@ -323,11 +347,12 @@ class GenesHeatmap(GraphForm):
             row_property.fill(
                 self.source, graph.rows_annotations_colors_vector_fields(graph.add_rows_annotation()), "gene"
             )
+        axis = self.shown_axis()
         for column_property in self._column_annotations():
             column_property.fill(
-                self.source, graph.columns_annotations_colors_vector_fields(graph.add_columns_annotation()), self.axis
+                self.source, graph.columns_annotations_colors_vector_fields(graph.add_columns_annotation()), axis
             )
         for row_hover_property in self.row_hovers or []:
             row_hover_property.fill(self.source, graph.rows_entities(), "gene")
         for column_hover_property in self.column_hovers or []:
-            column_hover_property.fill(self.source, graph.columns_entities(), self.axis)
+            column_hover_property.fill(self.source, graph.columns_entities(), axis)
