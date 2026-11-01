@@ -855,8 +855,11 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
 
 
 def _replace_figure(widget: FigureWidget, figure: Figure) -> None:
-    # Show the ``figure`` in the interactive figure ``widget``, replacing its traces and its layout.
+    # Show the ``figure`` in the interactive figure ``widget``, replacing its traces and its layout. Replacing the layout
+    # drops its ``autosize``, without which the figure takes Plotly's fixed default width instead of the cell's, so it is
+    # set again. It only applies to a width or a height the figure doesn't set (e.g. by a ``Size`` tweak).
     with widget.batch_update():
         widget.data = []
         widget.add_traces(list(figure.data))
         widget.layout = figure.layout
+        widget.layout.autosize = True

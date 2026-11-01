@@ -5,9 +5,23 @@ Test editing a form, without a kernel: its widgets change its arguments, and the
 from typing import Any
 from typing import List
 
+from plotly.graph_objects import FigureWidget  # type: ignore
+
 import metacellswidgets as mw
+from metacellswidgets.forms import _replace_figure
 
 from .test_daf_widgets import _full_daf
+
+
+def test_redraw_keeps_the_full_width() -> None:
+    """
+    Redrawing the figure keeps it as wide as the cell: replacing its layout doesn't drop its ``autosize``.
+    """
+    widget = FigureWidget()
+    widget.layout.autosize = True
+    form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B")
+    _replace_figure(widget, form.fig)
+    assert widget.layout.autosize is True
 
 
 def _form_and_redraws() -> Any:
