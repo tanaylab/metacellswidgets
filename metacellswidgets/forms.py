@@ -145,7 +145,8 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
         The graph, built from the data source and the arguments: the base graph, with its slots filled, then changed by
         each of the ``tweaks``, in order.
         """
-        graph = self._untweaked_graph()
+        graph = self.base_graph(self.source)
+        self.fill_slots(graph)
         for tweak in self.tweaks or []:
             tweak.apply(graph, self.source)
         return graph
@@ -230,13 +231,6 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
         graph implements this, according to its slots.
         """
         raise NotImplementedError(f"{type(self).__name__}.fill_slots")
-
-    def _untweaked_graph(self) -> Graph:
-        # The base graph, with its slots filled, before the tweaks change it. This is what the editors of the tweaks start
-        # from.
-        graph = self.base_graph(self.source)
-        self.fill_slots(graph)
-        return graph
 
     def is_complete(self) -> bool:
         """

@@ -228,7 +228,8 @@
 <span class="sd">        The graph, built from the data source and the arguments: the base graph, with its slots filled, then changed by</span>
 <span class="sd">        each of the ``tweaks``, in order.</span>
 <span class="sd">        """</span>
-        <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_untweaked_graph</span><span class="p">()</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill_slots</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">tweak</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tweaks</span> <span class="ow">or</span> <span class="p">[]:</span>
             <span class="n">tweak</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">graph</span></div>
@@ -317,13 +318,6 @@
 <span class="sd">        """</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.fill_slots"</span><span class="p">)</span></div>
 
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_untweaked_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Graph</span><span class="p">:</span>
-        <span class="c1"># The base graph, with its slots filled, before the tweaks change it. This is what the editors of the tweaks start</span>
-        <span class="c1"># from.</span>
-        <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_graph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fill_slots</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">graph</span>
 
 <div class="viewcode-block" id="GraphForm.is_complete">
 <a class="viewcode-back" href="../../forms.html#metacellswidgets.forms.GraphForm.is_complete">[docs]</a>
