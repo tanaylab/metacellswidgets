@@ -78,12 +78,16 @@ def test_incomplete() -> None:
     form._bound["x_gene"]._combobox.value = ""
     assert form.x_gene is None
     assert not form.is_complete()
+    # A redraw isn't due while the form is incomplete, so the editor shows no busy spinner either.
+    assert not form._is_redraw_due()
     form._poll_redraw(redraws.append)
     assert not redraws
 
     form._bound["x_gene"]._combobox.value = "A M R"
+    assert form._is_redraw_due()
     form._poll_redraw(redraws.append)
     assert len(redraws) == 1
+    assert not form._is_redraw_due()
 
 
 def test_axis() -> None:

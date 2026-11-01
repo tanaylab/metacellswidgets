@@ -109,6 +109,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">traitlets</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ipython</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span> <span class="k">as</span> <span class="n">display_in_cell</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTML</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Button</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dropdown</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HBox</span>  <span class="c1"># type: ignore</span>
@@ -386,10 +387,14 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_held_redraws</span> <span class="o">-=</span> <span class="mi">1</span></div>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_redraw_due</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="c1"># Whether a redraw was requested, it isn't held, and the arguments are complete.</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_dirty</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_held_redraws</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_complete</span><span class="p">()</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_poll_redraw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redraw</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Graph</span><span class="p">],</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># If a redraw was requested, it isn't held, and the arguments are complete, give the graph to ``redraw``. This</span>
-        <span class="c1"># runs on the main thread (which runs Julia), polled by the editor.</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_dirty</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_held_redraws</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_complete</span><span class="p">():</span>
+        <span class="c1"># If a redraw is due, give the graph to ``redraw``. This runs on the main thread (which runs Julia), polled by</span>
+        <span class="c1"># the editor.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_redraw_due</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_is_dirty</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">redraw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shown_graph</span><span class="p">())</span>
 
@@ -772,6 +777,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_revert_button</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"Revert"</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_revert_button</span><span class="o">.</span><span class="n">on_click</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_revert</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cancel</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"Cancel"</span><span class="p">)</span>
+        <span class="c1"># Hidden (keeping its place) while the graph isn't being redrawn.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_busy</span> <span class="o">=</span> <span class="n">HTML</span><span class="p">(</span><span class="s1">'&lt;i class="fa fa-spinner fa-spin"&gt;&lt;/i&gt;'</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">visibility</span><span class="o">=</span><span class="s2">"hidden"</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span> <span class="o">=</span> <span class="n">Output</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tweaks</span><span class="p">:</span> <span class="n">ListEditor</span><span class="p">[</span><span class="n">Tweak</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="c1"># The editors are made before the graph is drawn, since binding them leaves out of the form's arguments what</span>
@@ -799,7 +806,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_graphs_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
             <span class="n">toolbar</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">)</span>
             <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_menu</span><span class="p">)</span>
-        <span class="n">toolbar</span> <span class="o">+=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_revert_button</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cancel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_done</span><span class="p">]</span>
+        <span class="n">toolbar</span> <span class="o">+=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_revert_button</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cancel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_done</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_busy</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_editor</span> <span class="o">=</span> <span class="n">VBox</span><span class="p">([</span><span class="n">HBox</span><span class="p">(</span><span class="n">toolbar</span><span class="p">),</span> <span class="o">*</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_figure_box</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_watch_selection</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_buttons</span><span class="p">()</span>
@@ -838,12 +845,17 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_figure</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">autosize</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="n">is_resized</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_buttons</span><span class="p">()</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_form</span><span class="o">.</span><span class="n">_poll_redraw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_redraw</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span>
-            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
-                <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">:</span>
-                    <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="n">form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span>
+            <span class="k">if</span> <span class="n">form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">form</span><span class="o">.</span><span class="n">_is_redraw_due</span><span class="p">():</span>  <span class="c1"># pylint: disable=protected-access</span>
+                <span class="c1"># The spinner shows while the graph is built and drawn, which may take a while.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_busy</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">visibility</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">form</span><span class="o">.</span><span class="n">_poll_redraw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_redraw</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
+                    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">:</span>
+                        <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+                <span class="k">finally</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_busy</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">visibility</span> <span class="o">=</span> <span class="s2">"hidden"</span>
 
         <span class="k">with</span> <span class="n">_routing_new_widgets</span><span class="p">(</span><span class="n">_owned_subshell_id</span><span class="p">()),</span> <span class="n">_reporting_callback_errors</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">):</span>
             <span class="n">jobs</span><span class="o">.</span><span class="n">serve</span><span class="p">(</span><span class="n">is_done</span><span class="p">,</span> <span class="n">on_poll</span><span class="p">)</span>

@@ -36,6 +36,7 @@ from typing import overload
 import traitlets  # type: ignore
 from IPython import get_ipython
 from IPython.display import display as display_in_cell
+from ipywidgets import HTML  # type: ignore
 from ipywidgets import Button  # type: ignore
 from ipywidgets import Dropdown  # type: ignore
 from ipywidgets import HBox  # type: ignore
@@ -284,10 +285,14 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
         finally:
             self._held_redraws -= 1
 
+    def _is_redraw_due(self) -> bool:
+        # Whether a redraw was requested, it isn't held, and the arguments are complete.
+        return self._is_dirty and self._held_redraws == 0 and self.is_complete()
+
     def _poll_redraw(self, redraw: Callable[[Graph], None]) -> None:
-        # If a redraw was requested, it isn't held, and the arguments are complete, give the graph to ``redraw``. This
-        # runs on the main thread (which runs Julia), polled by the editor.
-        if self._is_dirty and self._held_redraws == 0 and self.is_complete():
+        # If a redraw is due, give the graph to ``redraw``. This runs on the main thread (which runs Julia), polled by
+        # the editor.
+        if self._is_redraw_due():
             self._is_dirty = False
             redraw(self._shown_graph())
 
@@ -645,6 +650,8 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         self._revert_button = Button(description="Revert")
         self._revert_button.on_click(self._on_revert)
         self._cancel = Button(description="Cancel")
+        # Hidden (keeping its place) while the graph isn't being redrawn.
+        self._busy = HTML('<i class="fa fa-spinner fa-spin"></i>', layout=Layout(visibility="hidden"))
         self._errors = Output()
         self._tweaks: ListEditor[Tweak] | None = None
         # The editors are made before the graph is drawn, since binding them leaves out of the form's arguments what
@@ -672,7 +679,7 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
             self._graphs.observe(self._on_graphs_change, names="value")
             toolbar.append(self._graphs)
             rows.append(self._menu)
-        toolbar += [self._revert_button, self._cancel, self._done]
+        toolbar += [self._revert_button, self._cancel, self._done, self._busy]
         self._editor = VBox([HBox(toolbar), *rows, self._body, self._figure_box, self._errors])
         self._watch_selection()
         self._update_buttons()
@@ -711,12 +718,17 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
                 self._figure.layout.autosize = True
                 is_resized = True
             self._update_buttons()
-            try:
-                if self._form is not None:
-                    self._form._poll_redraw(self._redraw)  # pylint: disable=protected-access
-            except Exception:  # pylint: disable=broad-except
-                with self._errors:
-                    traceback.print_exc()
+            form = self._form
+            if form is not None and form._is_redraw_due():  # pylint: disable=protected-access
+                # The spinner shows while the graph is built and drawn, which may take a while.
+                self._busy.layout.visibility = None
+                try:
+                    form._poll_redraw(self._redraw)  # pylint: disable=protected-access
+                except Exception:  # pylint: disable=broad-except
+                    with self._errors:
+                        traceback.print_exc()
+                finally:
+                    self._busy.layout.visibility = "hidden"
 
         with _routing_new_widgets(_owned_subshell_id()), _reporting_callback_errors(self._errors):
             jobs.serve(is_done, on_poll)
