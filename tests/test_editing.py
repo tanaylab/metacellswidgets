@@ -30,7 +30,7 @@ def test_edit() -> None:
 
     form._bound["y_gene"]._combobox.value = "D M"
     # Gene B isn't a marker, so it is offered only once the choices aren't restricted to the markers.
-    form._bound["x_gene"]._markers_only.value = False
+    form._bound["x_gene"]._markers_only._dropdown.index = 1
     form._bound["x_gene"]._combobox.value = "B L"
     assert form.y_gene == "D"
     assert form.x_gene == "B"

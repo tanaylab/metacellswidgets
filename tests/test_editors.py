@@ -203,10 +203,11 @@ def test_gene_picker() -> None:
     """
     picker = GenePicker(_Genes())
     assert picker.value is None
-    assert picker._markers_only.value
+    assert picker._markers_only.shown()
+    assert picker._markers_only._dropdown.label == "Markers only (default)"
     assert list(picker._combobox.options) == ["A M", "C M T"]
 
-    picker._markers_only.value = False
+    picker._markers_only._dropdown.index = 1
     assert list(picker._combobox.options) == ["A M", "B", "C M T"]
 
     picker._combobox.value = "C M T"
@@ -231,14 +232,14 @@ def test_gene_picker_markers_only() -> None:
     Restricting to markers keeps the picked gene, marker or not, and drops the other genes which aren't markers.
     """
     picker = GenePicker(_Genes(), "C")
-    picker._markers_only.value = False
-    picker._markers_only.value = True
+    picker._markers_only._dropdown.index = 1
+    picker._markers_only._dropdown.index = 0
     assert list(picker._combobox.options) == ["A M", "C M T"]
     assert picker.value == "C"
 
     picker = GenePicker(_Genes(), "B")
-    picker._markers_only.value = False
-    picker._markers_only.value = True
+    picker._markers_only._dropdown.index = 1
+    picker._markers_only._dropdown.index = 0
     assert picker.value == "B"
     assert picker._combobox.value == "B"
 
@@ -260,7 +261,8 @@ def test_gene_picker_without_markers() -> None:
             return [] if markers_only else [("A", "A"), ("B", "B")]
 
     picker = GenePicker(NoMarkers())
-    assert not picker._markers_only.value
+    assert not picker._markers_only.shown()
+    assert picker._markers_only._dropdown.label == "All genes (default)"
     assert list(picker._combobox.options) == ["A", "B"]
 
 

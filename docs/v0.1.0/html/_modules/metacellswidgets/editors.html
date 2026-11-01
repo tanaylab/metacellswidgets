@@ -98,7 +98,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">dafpy.julia_import</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultValue</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Accordion</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Button</span>  <span class="c1"># type: ignore</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Checkbox</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Combobox</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dropdown</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HBox</span>  <span class="c1"># type: ignore</span>
@@ -116,6 +115,7 @@
 <span class="n">__all__</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"ArgumentsEditor"</span><span class="p">,</span>
     <span class="s2">"AxisPicker"</span><span class="p">,</span>
+    <span class="s2">"ChoicePicker"</span><span class="p">,</span>
     <span class="s2">"ClassPicker"</span><span class="p">,</span>
     <span class="s2">"ComboPicker"</span><span class="p">,</span>
     <span class="s2">"GeneChoices"</span><span class="p">,</span>
@@ -216,9 +216,9 @@
 <a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.GenePicker">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GenePicker</span><span class="p">(</span><span class="n">Picker</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Pick a gene of a ``source``, by typing (part of) its label, starting with the ``current`` gene (if any). A toggle</span>
-<span class="sd">    restricts the choices to the marker genes. It starts on if the source has any marker genes. The picked gene is always</span>
-<span class="sd">    one of the choices, so the toggle never drops it.</span>
+<span class="sd">    Pick a gene of a ``source``, by typing (part of) its label, starting with the ``current`` gene (if any). A dropdown</span>
+<span class="sd">    restricts the choices to the marker genes, or offers all the genes. It defaults to the marker genes if the source has</span>
+<span class="sd">    any. The picked gene is always one of the choices, so the dropdown never drops it.</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">GeneChoices</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -227,7 +227,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_name_per_label</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_combobox</span> <span class="o">=</span> <span class="n">Combobox</span><span class="p">(</span><span class="n">placeholder</span><span class="o">=</span><span class="s2">"Gene"</span><span class="p">,</span> <span class="n">ensure_option</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">has_markers</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">gene_choices</span><span class="p">(</span><span class="n">markers_only</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_markers_only</span> <span class="o">=</span> <span class="n">Checkbox</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">has_markers</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Markers only"</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_markers_only</span> <span class="o">=</span> <span class="n">ChoicePicker</span><span class="p">(</span><span class="n">_MARKERS_ONLY</span><span class="p">,</span> <span class="n">DEFAULT</span><span class="p">,</span> <span class="n">has_markers</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_combobox</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_markers_only</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">current</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_reset_choices</span><span class="p">()</span>
@@ -238,8 +238,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_markers_only</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_markers_only_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_reset_choices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># Fill the choices of the combobox, according to the markers only toggle, keeping the picked gene among them.</span>
-        <span class="n">choices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="o">.</span><span class="n">gene_choices</span><span class="p">(</span><span class="n">markers_only</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_markers_only</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="c1"># Fill the choices of the combobox, according to the markers only dropdown, keeping the picked gene among them.</span>
+        <span class="n">choices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="o">.</span><span class="n">gene_choices</span><span class="p">(</span><span class="n">markers_only</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_markers_only</span><span class="o">.</span><span class="n">shown</span><span class="p">())</span>
         <span class="n">picked</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
         <span class="k">if</span> <span class="n">picked</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">name</span> <span class="o">!=</span> <span class="n">picked</span> <span class="k">for</span> <span class="n">_label</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">choices</span><span class="p">):</span>
             <span class="n">names</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span> <span class="k">for</span> <span class="n">_label</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">choices</span><span class="p">}</span>
@@ -261,7 +261,7 @@
         <span class="n">_on_main_thread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reset_markers_only</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_reset_markers_only</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># Show the choices according to the markers only toggle, keeping the gene if it is one of them.</span>
+        <span class="c1"># Show the choices according to the markers only dropdown, keeping the gene if it is one of them.</span>
         <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_reset_choices</span><span class="p">()</span>
         <span class="n">label</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label_of</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
@@ -277,43 +277,70 @@
     <span class="p">(</span><span class="s2">"log10"</span><span class="p">,</span> <span class="n">LogBase</span><span class="o">.</span><span class="n">Log10Base</span><span class="p">),</span>
 <span class="p">)</span>
 
+<span class="c1"># The choices of showing a legend, with their labels.</span>
+<span class="n">_SHOW_LEGEND</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="s2">"Show legend"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="p">(</span><span class="s2">"Hide legend"</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+
+<span class="c1"># The choices of the genes a gene picker offers, with their labels: the marker genes only, or all the genes.</span>
+<span class="n">_MARKERS_ONLY</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="s2">"Markers only"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="p">(</span><span class="s2">"All genes"</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+
 <span class="c1"># The border of a field which holds its default, and of a field which holds an explicit value.</span>
 <span class="n">_DEFAULT_BORDER</span> <span class="o">=</span> <span class="s2">"1px dotted black"</span>
 <span class="n">_EXPLICIT_BORDER</span> <span class="o">=</span> <span class="s2">"1px solid black"</span>
 
 
-<div class="viewcode-block" id="LogBasePicker">
-<a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.LogBasePicker">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">LogBasePicker</span><span class="p">(</span><span class="n">HBox</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+<div class="viewcode-block" id="ChoicePicker">
+<a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.ChoicePicker">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ChoicePicker</span><span class="p">(</span><span class="n">HBox</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Pick a log base: linear (``None``), log2 or log10. The ``value`` starts as the ``current`` log base. While it is</span>
-<span class="sd">    ``DEFAULT``, the dropdown shows the ``default``, whose entry says so (e.g. "log10 (default)"). Picking that entry</span>
-<span class="sd">    sets ``DEFAULT``, and picking another sets its log base. The dropdown's border is dotted while it shows the</span>
-<span class="sd">    default (whether the ``value`` is ``DEFAULT`` or equal to the default), and solid otherwise.</span>
+<span class="sd">    Pick one of the ``choices``, each a (label, value), from a dropdown. The ``value`` starts as the ``current`` value.</span>
+<span class="sd">    The entry whose value is the ``default`` says so (e.g. "log10 (default)"). While the ``value`` is ``DEFAULT``, the</span>
+<span class="sd">    dropdown shows that entry. Picking it sets ``DEFAULT``, and picking another sets its value. A picker of a required</span>
+<span class="sd">    value has no ``default``, so no entry says so. The dropdown's border is dotted while it shows the default (whether</span>
+<span class="sd">    the ``value`` is ``DEFAULT`` or equal to the default), and solid otherwise.</span>
 <span class="sd">    """</span>
 
     <span class="n">value</span> <span class="o">=</span> <span class="n">traitlets</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span><span class="n">DEFAULT</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">LogBase</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">|</span> <span class="n">DefaultValue</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">LogBase</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">choices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">current</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span> <span class="k">for</span> <span class="n">_label</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">choices</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="o">=</span> <span class="n">default</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> (default)"</span> <span class="k">if</span> <span class="n">log_base</span> <span class="o">==</span> <span class="n">default</span> <span class="k">else</span> <span class="n">label</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">log_base</span> <span class="ow">in</span> <span class="n">_LOG_BASES</span><span class="p">]</span>
-        <span class="n">shown</span> <span class="o">=</span> <span class="n">default</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">DefaultValue</span><span class="p">)</span> <span class="k">else</span> <span class="n">current</span>
-        <span class="n">index</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="p">(</span><span class="n">_label</span><span class="p">,</span> <span class="n">log_base</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">_LOG_BASES</span><span class="p">)</span> <span class="k">if</span> <span class="n">log_base</span> <span class="o">==</span> <span class="n">shown</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_dropdown</span> <span class="o">=</span> <span class="n">Dropdown</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_dropdown</span><span class="p">]</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> (default)"</span> <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="n">default</span> <span class="k">else</span> <span class="n">label</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">choices</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">current</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dropdown</span> <span class="o">=</span> <span class="n">Dropdown</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shown</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_dropdown</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_border</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dropdown</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_dropdown_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"index"</span><span class="p">)</span>
 
+<div class="viewcode-block" id="ChoicePicker.shown">
+<a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.ChoicePicker.shown">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">shown</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The value the picker shows: its ``value``, or the ``default`` while the ``value`` is ``DEFAULT``.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">DefaultValue</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span></div>
+
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_on_dropdown_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">log_base</span> <span class="o">=</span> <span class="n">_LOG_BASES</span><span class="p">[</span><span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">]][</span><span class="mi">1</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">DEFAULT</span> <span class="k">if</span> <span class="n">log_base</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="k">else</span> <span class="n">log_base</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">[</span><span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">DEFAULT</span> <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="k">else</span> <span class="n">value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_border</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_update_border</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">shown</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">DefaultValue</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_dropdown</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">border</span> <span class="o">=</span> <span class="n">_DEFAULT_BORDER</span> <span class="k">if</span> <span class="n">shown</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="k">else</span> <span class="n">_EXPLICIT_BORDER</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dropdown</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">border</span> <span class="o">=</span> <span class="n">_DEFAULT_BORDER</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shown</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="k">else</span> <span class="n">_EXPLICIT_BORDER</span></div>
+
+
+
+<div class="viewcode-block" id="LogBasePicker">
+<a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.LogBasePicker">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LogBasePicker</span><span class="p">(</span><span class="n">ChoicePicker</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Pick a log base: linear (``None``), log2 or log10, starting with the ``current`` one, marking the ``default`` (see</span>
+<span class="sd">    :py:class:`ChoicePicker`).</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">LogBase</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">|</span> <span class="n">DefaultValue</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">LogBase</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">_LOG_BASES</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span></div>
 
 
 
@@ -658,8 +685,9 @@
 <span class="sd">    the ``shown`` properties as these change. A pick which another editor of the side comes to show isn't valid (see</span>
 <span class="sd">    :py:class:`ClassPicker`), until that editor no longer shows it.</span>
 
-<span class="sd">    In a colors or a sizes slot, the picker also edits the look arguments of the picked property: a "Show legend" toggle,</span>
-<span class="sd">    and for a property shown on a log scale, a choice of log2 or log10. While a look argument is ``DEFAULT``, its widget</span>
+<span class="sd">    In a colors or a sizes slot, the picker also edits the look arguments of the picked property: whether to show its</span>
+<span class="sd">    legend, and for a property shown on a log scale, its log base (see :py:class:`ChoicePicker`). While a look argument</span>
+<span class="sd">    is ``DEFAULT``, its widget</span>
 <span class="sd">    shows the default of the property's data source (see :py:meth:`Property.look_default`). Changing a widget sets the</span>
 <span class="sd">    argument.</span>
 <span class="sd">    """</span>
@@ -694,22 +722,16 @@
             <span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">choice</span><span class="p">,</span> <span class="n">Property</span><span class="p">)</span>
             <span class="n">look_arguments</span> <span class="o">=</span> <span class="n">choice</span><span class="o">.</span><span class="n">_look_arguments</span>  <span class="c1"># pylint: disable=protected-access</span>
             <span class="k">if</span> <span class="s2">"show_legend"</span> <span class="ow">in</span> <span class="n">look_arguments</span><span class="p">:</span>
-                <span class="n">checkbox</span> <span class="o">=</span> <span class="n">Checkbox</span><span class="p">(</span>
-                    <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_look_value</span><span class="p">(</span><span class="n">choice</span><span class="p">,</span> <span class="s2">"show_legend"</span><span class="p">),</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Show legend"</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="kc">False</span>
+                <span class="n">show_legend</span> <span class="o">=</span> <span class="n">ChoicePicker</span><span class="p">(</span>
+                    <span class="n">_SHOW_LEGEND</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_look</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"show_legend"</span><span class="p">,</span> <span class="n">DEFAULT</span><span class="p">),</span> <span class="n">choice</span><span class="o">.</span><span class="n">look_default</span><span class="p">(</span><span class="s2">"show_legend"</span><span class="p">)</span>
                 <span class="p">)</span>
-                <span class="n">checkbox</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_look_change</span><span class="p">,</span> <span class="s2">"show_legend"</span><span class="p">),</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
-                <span class="n">widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">checkbox</span><span class="p">)</span>
+                <span class="n">show_legend</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_look_change</span><span class="p">,</span> <span class="s2">"show_legend"</span><span class="p">),</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+                <span class="n">widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">show_legend</span><span class="p">)</span>
             <span class="k">if</span> <span class="s2">"log_base"</span> <span class="ow">in</span> <span class="n">look_arguments</span><span class="p">:</span>
                 <span class="n">log_base</span> <span class="o">=</span> <span class="n">LogBasePicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_look</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"log_base"</span><span class="p">,</span> <span class="n">DEFAULT</span><span class="p">),</span> <span class="n">choice</span><span class="o">.</span><span class="n">look_default</span><span class="p">(</span><span class="s2">"log_base"</span><span class="p">))</span>
                 <span class="n">log_base</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_look_change</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">),</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
                 <span class="n">widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">log_base</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_look_box</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">widgets</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_look_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">choice</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">Property</span><span class="p">],</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-        <span class="c1"># The value of the look argument with the ``name`` to show for the ``choice``: the picker's, or else the default.</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_look</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_look</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">choice</span><span class="o">.</span><span class="n">look_default</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_on_look_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">_on_main_thread</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_look</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">]))</span>

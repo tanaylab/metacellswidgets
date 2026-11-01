@@ -257,11 +257,14 @@ def test_legends() -> None:
 
 def test_legends_editor() -> None:
     """
-    A new legends tweak shows the legends, until its checkbox is unchecked.
+    A new legends tweak shows the legends (the default), until "Hide legends" is picked.
     """
     editor = mw.Legends.editor(mw.DafWidgets(_full_daf()), _points_graph(), None)
-    assert editor.value == mw.Legends(is_shown=True)
-    editor.children[0].value = False
+    assert editor.value == mw.Legends()
+    assert repr(editor.value) == "Legends()"
+    is_shown = editor.children[0]
+    assert is_shown._dropdown.options == ("Show legends (default)", "Hide legends")
+    is_shown._dropdown.index = 1
     assert editor.value == mw.Legends(is_shown=False)
 
 

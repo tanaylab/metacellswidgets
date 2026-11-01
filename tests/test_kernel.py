@@ -456,8 +456,9 @@ def test_graphs_button_switches_the_graph(kernel: Tuple[Any, Any]) -> None:
 
 
 def _is_show_legends(state: Dict[str, Any]) -> bool:
-    # Whether the widget state is of the "Show legends" checkbox of a legends tweak.
-    return state.get("_model_name") == "CheckboxModel" and state.get("description") == "Show legends"
+    # Whether the widget state is of the dropdown of a legends tweak ("Show legends" or "Hide legends").
+    labels = state.get("_options_labels") or [""]
+    return state.get("_model_name") == "DropdownModel" and labels[0].startswith("Show legends")
 
 
 def test_edited_tweaks_rewrite_the_cell(kernel: Tuple[Any, Any]) -> None:
@@ -480,7 +481,7 @@ def test_edited_tweaks_rewrite_the_cell(kernel: Tuple[Any, Any]) -> None:
     # The choices of the blank row are: "", Size, Title, Legends, ...
     _send_state(client, tweak_choice, {"index": 3})
     show_legends = _opened_widgets(client, _is_show_legends, 1)[0]
-    _send_state(client, show_legends, {"value": False})
+    _send_state(client, show_legends, {"index": 1})
     _click(client, done)
     assert _rewritten_text(client, message_id) == (
         "form = mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='B', "

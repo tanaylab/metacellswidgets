@@ -172,6 +172,28 @@
 </li>
 
 <li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.editors.ChoicePicker">
+<code class="docutils literal notranslate">
+<span class="pre">ChoicePicker
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.editors.ChoicePicker.shown">
+<code class="docutils literal notranslate">
+<span class="pre">ChoicePicker.shown()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l3">
 <a class="reference internal" href="#metacellswidgets.editors.ClassPicker">
 <code class="docutils literal notranslate">
 <span class="pre">ClassPicker
@@ -948,6 +970,234 @@ one of them, and with the first of them otherwise.
 
 <dl class="py class">
 
+<dt class="sig sig-object py" id="metacellswidgets.editors.ChoicePicker">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.editors.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">ChoicePicker
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">args
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="o">
+<span class="pre">**
+</span>
+</span>
+<span class="n">
+<span class="pre">kwargs
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/editors.html#ChoicePicker">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.editors.ChoicePicker" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Pick one of the 
+<code class="docutils literal notranslate">
+<span class="pre">choices
+</span>
+</code>, each a (label, value), from a dropdown. The 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> starts as the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> value.
+The entry whose value is the 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> says so (e.g. “log10 (default)”). While the 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code>, the
+dropdown shows that entry. Picking it sets 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code>, and picking another sets its value. A picker of a required
+value has no 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code>, so no entry says so. The dropdown’s border is dotted while it shows the default (whether
+the 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code> or equal to the default), and solid otherwise.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>choices
+</strong> (
+<em>Sequence
+</em>
+<em>[
+</em>
+<em>Tuple
+</em>
+<em>[
+</em>
+<em>str
+</em>
+<em>, 
+</em>
+<em>Any
+</em>
+<em>]
+</em>
+<em>]
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<em>Any
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>default
+</strong> (
+<em>Any
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.editors.ChoicePicker.shown">
+
+<span class="sig-name descname">
+<span class="pre">shown
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/editors.html#ChoicePicker.shown">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.editors.ChoicePicker.shown" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The value the picker shows: its 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code>, or the 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> while the 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code>.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<em>Any
+</em>
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
 <dt class="sig sig-object py" id="metacellswidgets.editors.ClassPicker">
 
 <span class="property">
@@ -1710,9 +1960,9 @@ is picked.
 <code class="docutils literal notranslate">
 <span class="pre">current
 </span>
-</code> gene (if any). A toggle
-restricts the choices to the marker genes. It starts on if the source has any marker genes. The picked gene is always
-one of the choices, so the toggle never drops it.
+</code> gene (if any). A dropdown
+restricts the choices to the marker genes, or offers all the genes. It defaults to the marker genes if the source has
+any. The picked gene is always one of the choices, so the dropdown never drops it.
 </p>
 
 <dl class="field-list simple">
@@ -2346,38 +2596,22 @@ the graph (e.g. a tweak’s size) can follow it. A value the user set is kept. B
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
-</code>), log2 or log10. The 
-<code class="docutils literal notranslate">
-<span class="pre">value
-</span>
-</code> starts as the 
+</code>), log2 or log10, starting with the 
 <code class="docutils literal notranslate">
 <span class="pre">current
 </span>
-</code> log base. While it is
-
-<code class="docutils literal notranslate">
-<span class="pre">DEFAULT
-</span>
-</code>, the dropdown shows the 
+</code> one, marking the 
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
-</code>, whose entry says so (e.g. “log10 (default)”). Picking that entry
-sets 
-<code class="docutils literal notranslate">
-<span class="pre">DEFAULT
+</code> (see
+
+<a class="reference internal" href="#metacellswidgets.editors.ChoicePicker" title="metacellswidgets.editors.ChoicePicker">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">ChoicePicker
 </span>
-</code>, and picking another sets its log base. The dropdown’s border is dotted while it shows the
-default (whether the 
-<code class="docutils literal notranslate">
-<span class="pre">value
-</span>
-</code> is 
-<code class="docutils literal notranslate">
-<span class="pre">DEFAULT
-</span>
-</code> or equal to the default), and solid otherwise.
+</code>
+</a>).
 </p>
 
 <dl class="field-list simple">
@@ -3031,8 +3265,15 @@ the
 </a>), until that editor no longer shows it.
 </p>
 
-<p>In a colors or a sizes slot, the picker also edits the look arguments of the picked property: a “Show legend” toggle,
-and for a property shown on a log scale, a choice of log2 or log10. While a look argument is 
+<p>In a colors or a sizes slot, the picker also edits the look arguments of the picked property: whether to show its
+legend, and for a property shown on a log scale, its log base (see 
+<a class="reference internal" href="#metacellswidgets.editors.ChoicePicker" title="metacellswidgets.editors.ChoicePicker">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">ChoicePicker
+</span>
+</code>
+</a>). While a look argument
+is 
 <code class="docutils literal notranslate">
 <span class="pre">DEFAULT
 </span>

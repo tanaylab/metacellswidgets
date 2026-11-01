@@ -81,6 +81,7 @@ from .common import Arguments
 from .common import _give_own_dispatchers
 from .common import implements
 from .editors import ArgumentsEditor
+from .editors import ChoicePicker
 from .editors import ClassPicker
 
 if TYPE_CHECKING:
@@ -377,14 +378,14 @@ class _TitleEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstr
 @tweak
 class Legends(Tweak):
     """
-    Show the legends of the graph as they are (if ``is_shown``), or hide them all.
+    Show the legends of the graph as they are (if ``is_shown``, the default), or hide them all.
     """
 
-    def __init__(self, is_shown: bool) -> None:
+    def __init__(self, is_shown: bool | DefaultValue = DEFAULT) -> None:
         self.is_shown = is_shown
 
     def apply(self, graph: Graph, source: "SourceWidgets") -> None:  # pylint: disable=unused-argument
-        if not self.is_shown:
+        if self.is_shown is False:
             visit_graph_parts(_hide_legend, graph)
 
     @classmethod
@@ -395,7 +396,7 @@ class Legends(Tweak):
         current: Tweak | None,
     ) -> ArgumentsEditor:
         assert current is None or isinstance(current, Legends)
-        return _LegendsEditor(True if current is None else current.is_shown)
+        return _LegendsEditor(DEFAULT if current is None else current.is_shown)
 
 
 def _hide_legend(part: Any) -> None:
@@ -405,14 +406,14 @@ def _hide_legend(part: Any) -> None:
 
 
 class _LegendsEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
-    # The editor of a ``Legends``: a "Show legends" checkbox.
+    # The editor of a ``Legends``: a choice of showing the legends (the default) or hiding them.
 
-    def __init__(self, is_shown: bool) -> None:
+    def __init__(self, is_shown: bool | DefaultValue) -> None:
         super().__init__()
-        self._checkbox = Checkbox(value=is_shown, description="Show legends", indent=False)
-        self.children = [self._checkbox]
+        self._is_shown = ChoicePicker((("Show legends", True), ("Hide legends", False)), is_shown, True)
+        self.children = [self._is_shown]
         self.value = Legends(is_shown=is_shown)
-        self._checkbox.observe(self._on_checkbox_change, names="value")
+        self._is_shown.observe(self._on_is_shown_change, names="value")
 
-    def _on_checkbox_change(self, change: Dict) -> None:
+    def _on_is_shown_change(self, change: Dict) -> None:
         self.value = Legends(is_shown=change["new"])

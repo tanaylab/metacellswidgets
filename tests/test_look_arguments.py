@@ -80,15 +80,16 @@ def test_picker_look_widgets() -> None:
     """
     source = mw.DafWidgets(_full_daf())
     picker = PropertyPicker(source, Slot.COLORS, "metacell", mw.TotalUMIs())
-    checkbox, log_base = picker._look_box.children
-    assert checkbox.value is True
+    show_legend, log_base = picker._look_box.children
+    assert show_legend.value is DEFAULT
+    assert show_legend._dropdown.options == ("Show legend (default)", "Hide legend")
     assert log_base.value is DEFAULT
     assert log_base._dropdown.label == "log10 (default)"
     assert picker.value == mw.TotalUMIs()
 
     log_base._dropdown.index = 1
     assert picker.value == mw.TotalUMIs(log_base=mw.LogBase.Log2Base)
-    checkbox.value = False
+    show_legend._dropdown.index = 1
     assert picker.value == mw.TotalUMIs(show_legend=False, log_base=mw.LogBase.Log2Base)
     log_base._dropdown.index = 0
     assert picker.value == mw.TotalUMIs(show_legend=False, log_base=None)
@@ -127,7 +128,7 @@ def test_picker_look_of_a_default() -> None:
     """
     picker = PropertyPicker(mw.DafWidgets(_full_daf()), Slot.COLORS, "metacell", DEFAULT, default=mw.Type())
     assert picker.value is DEFAULT
-    picker._look_box.children[0].value = False
+    picker._look_box.children[0]._dropdown.index = 1
     assert picker.value == mw.Type(show_legend=False)
 
 

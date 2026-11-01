@@ -25,7 +25,6 @@ from dafpy.julia_import import DEFAULT
 from dafpy.julia_import import DefaultValue
 from ipywidgets import Accordion  # type: ignore
 from ipywidgets import Button  # type: ignore
-from ipywidgets import Checkbox  # type: ignore
 from ipywidgets import Combobox  # type: ignore
 from ipywidgets import Dropdown  # type: ignore
 from ipywidgets import HBox  # type: ignore
@@ -43,6 +42,7 @@ from .sources import SourceWidgets
 __all__: List[str] = [
     "ArgumentsEditor",
     "AxisPicker",
+    "ChoicePicker",
     "ClassPicker",
     "ComboPicker",
     "GeneChoices",
@@ -120,9 +120,9 @@ class Picker(HBox):  # pylint: disable=too-many-ancestors,abstract-method
 
 class GenePicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
     """
-    Pick a gene of a ``source``, by typing (part of) its label, starting with the ``current`` gene (if any). A toggle
-    restricts the choices to the marker genes. It starts on if the source has any marker genes. The picked gene is always
-    one of the choices, so the toggle never drops it.
+    Pick a gene of a ``source``, by typing (part of) its label, starting with the ``current`` gene (if any). A dropdown
+    restricts the choices to the marker genes, or offers all the genes. It defaults to the marker genes if the source has
+    any. The picked gene is always one of the choices, so the dropdown never drops it.
     """
 
     def __init__(self, source: GeneChoices, current: str | None = None) -> None:
@@ -131,7 +131,7 @@ class GenePicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
         self._name_per_label: Dict[str, str] = {}
         self._combobox = Combobox(placeholder="Gene", ensure_option=True)
         has_markers = bool(source.gene_choices(markers_only=True))
-        self._markers_only = Checkbox(value=has_markers, description="Markers only", indent=False)
+        self._markers_only = ChoicePicker(_MARKERS_ONLY, DEFAULT, has_markers)
         self.children = [self._combobox, self._markers_only]
         self.value = current
         self._reset_choices()
@@ -142,8 +142,8 @@ class GenePicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
         self._markers_only.observe(self._on_markers_only_change, names="value")
 
     def _reset_choices(self) -> None:
-        # Fill the choices of the combobox, according to the markers only toggle, keeping the picked gene among them.
-        choices = self._source.gene_choices(markers_only=self._markers_only.value)
+        # Fill the choices of the combobox, according to the markers only dropdown, keeping the picked gene among them.
+        choices = self._source.gene_choices(markers_only=self._markers_only.shown())
         picked = self.value
         if picked is not None and all(name != picked for _label, name in choices):
             names = {name for _label, name in choices}
@@ -165,7 +165,7 @@ class GenePicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
         _on_main_thread(self._reset_markers_only)
 
     def _reset_markers_only(self) -> None:
-        # Show the choices according to the markers only toggle, keeping the gene if it is one of them.
+        # Show the choices according to the markers only dropdown, keeping the gene if it is one of them.
         current = self.value
         self._reset_choices()
         label = None if current is None else self._label_of(current)
@@ -180,41 +180,62 @@ _LOG_BASES: Tuple[Tuple[str, LogBase | None], ...] = (
     ("log10", LogBase.Log10Base),
 )
 
+# The choices of showing a legend, with their labels.
+_SHOW_LEGEND: Tuple[Tuple[str, bool], ...] = (("Show legend", True), ("Hide legend", False))
+
+# The choices of the genes a gene picker offers, with their labels: the marker genes only, or all the genes.
+_MARKERS_ONLY: Tuple[Tuple[str, bool], ...] = (("Markers only", True), ("All genes", False))
+
 # The border of a field which holds its default, and of a field which holds an explicit value.
 _DEFAULT_BORDER = "1px dotted black"
 _EXPLICIT_BORDER = "1px solid black"
 
 
-class LogBasePicker(HBox):  # pylint: disable=too-many-ancestors,abstract-method
+class ChoicePicker(HBox):  # pylint: disable=too-many-ancestors,abstract-method
     """
-    Pick a log base: linear (``None``), log2 or log10. The ``value`` starts as the ``current`` log base. While it is
-    ``DEFAULT``, the dropdown shows the ``default``, whose entry says so (e.g. "log10 (default)"). Picking that entry
-    sets ``DEFAULT``, and picking another sets its log base. The dropdown's border is dotted while it shows the
-    default (whether the ``value`` is ``DEFAULT`` or equal to the default), and solid otherwise.
+    Pick one of the ``choices``, each a (label, value), from a dropdown. The ``value`` starts as the ``current`` value.
+    The entry whose value is the ``default`` says so (e.g. "log10 (default)"). While the ``value`` is ``DEFAULT``, the
+    dropdown shows that entry. Picking it sets ``DEFAULT``, and picking another sets its value. A picker of a required
+    value has no ``default``, so no entry says so. The dropdown's border is dotted while it shows the default (whether
+    the ``value`` is ``DEFAULT`` or equal to the default), and solid otherwise.
     """
 
     value = traitlets.Any(DEFAULT, allow_none=True)
 
-    def __init__(self, current: LogBase | None | DefaultValue, default: LogBase | None) -> None:
+    def __init__(self, choices: Sequence[Tuple[str, Any]], current: Any, default: Any = None) -> None:
         super().__init__()
+        self._values = [value for _label, value in choices]
         self._default = default
-        labels = [f"{label} (default)" if log_base == default else label for label, log_base in _LOG_BASES]
-        shown = default if isinstance(current, DefaultValue) else current
-        index = next(index for index, (_label, log_base) in enumerate(_LOG_BASES) if log_base == shown)
-        self._dropdown = Dropdown(options=labels, index=index)
-        self.children = [self._dropdown]
+        labels = [f"{label} (default)" if value == default else label for label, value in choices]
         self.value = current
+        self._dropdown = Dropdown(options=labels, index=self._values.index(self.shown()))
+        self.children = [self._dropdown]
         self._update_border()
         self._dropdown.observe(self._on_dropdown_change, names="index")
 
+    def shown(self) -> Any:
+        """
+        The value the picker shows: its ``value``, or the ``default`` while the ``value`` is ``DEFAULT``.
+        """
+        return self._default if isinstance(self.value, DefaultValue) else self.value
+
     def _on_dropdown_change(self, change: Dict) -> None:
-        log_base = _LOG_BASES[change["new"]][1]
-        self.value = DEFAULT if log_base == self._default else log_base
+        value = self._values[change["new"]]
+        self.value = DEFAULT if value == self._default else value
         self._update_border()
 
     def _update_border(self) -> None:
-        shown = self._default if isinstance(self.value, DefaultValue) else self.value
-        self._dropdown.layout.border = _DEFAULT_BORDER if shown == self._default else _EXPLICIT_BORDER
+        self._dropdown.layout.border = _DEFAULT_BORDER if self.shown() == self._default else _EXPLICIT_BORDER
+
+
+class LogBasePicker(ChoicePicker):  # pylint: disable=too-many-ancestors,abstract-method
+    """
+    Pick a log base: linear (``None``), log2 or log10, starting with the ``current`` one, marking the ``default`` (see
+    :py:class:`ChoicePicker`).
+    """
+
+    def __init__(self, current: LogBase | None | DefaultValue, default: LogBase | None) -> None:
+        super().__init__(_LOG_BASES, current, default)
 
 
 class NamePicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
@@ -529,8 +550,9 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
     the ``shown`` properties as these change. A pick which another editor of the side comes to show isn't valid (see
     :py:class:`ClassPicker`), until that editor no longer shows it.
 
-    In a colors or a sizes slot, the picker also edits the look arguments of the picked property: a "Show legend" toggle,
-    and for a property shown on a log scale, a choice of log2 or log10. While a look argument is ``DEFAULT``, its widget
+    In a colors or a sizes slot, the picker also edits the look arguments of the picked property: whether to show its
+    legend, and for a property shown on a log scale, its log base (see :py:class:`ChoicePicker`). While a look argument
+    is ``DEFAULT``, its widget
     shows the default of the property's data source (see :py:meth:`Property.look_default`). Changing a widget sets the
     argument.
     """
@@ -565,22 +587,16 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
             assert issubclass(choice, Property)
             look_arguments = choice._look_arguments  # pylint: disable=protected-access
             if "show_legend" in look_arguments:
-                checkbox = Checkbox(
-                    value=self._look_value(choice, "show_legend"), description="Show legend", indent=False
+                show_legend = ChoicePicker(
+                    _SHOW_LEGEND, self._look.get("show_legend", DEFAULT), choice.look_default("show_legend")
                 )
-                checkbox.observe(functools.partial(self._on_look_change, "show_legend"), names="value")
-                widgets.append(checkbox)
+                show_legend.observe(functools.partial(self._on_look_change, "show_legend"), names="value")
+                widgets.append(show_legend)
             if "log_base" in look_arguments:
                 log_base = LogBasePicker(self._look.get("log_base", DEFAULT), choice.look_default("log_base"))
                 log_base.observe(functools.partial(self._on_look_change, "log_base"), names="value")
                 widgets.append(log_base)
         self._look_box.children = widgets
-
-    def _look_value(self, choice: Type[Property], name: str) -> Any:
-        # The value of the look argument with the ``name`` to show for the ``choice``: the picker's, or else the default.
-        if name in self._look:
-            return self._look[name]
-        return choice.look_default(name)
 
     def _on_look_change(self, name: str, change: Dict) -> None:
         _on_main_thread(lambda: self._set_look(name, change["new"]))
