@@ -96,6 +96,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dafpy.julia_import</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dafpy.julia_import</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultValue</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTML</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntText</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>  <span class="c1"># type: ignore</span>
@@ -111,6 +112,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ListEditor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">PickerEditor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">PickerRow</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">_mark_default</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceWidgets</span>
 
 <span class="n">__all__</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
@@ -291,17 +293,17 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_CountEditor</span><span class="p">(</span><span class="n">ArgumentsEditor</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
-    <span class="c1"># The editor of a ``TopMarkers``: the number of genes. A number below one is incomplete.</span>
+    <span class="c1"># The editor of a ``TopMarkers``: the number of genes. A number below one is incomplete. The tooltip gives the default.</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">TopMarkers</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">=</span> <span class="n">IntText</span><span class="p">(</span>
-            <span class="n">value</span><span class="o">=</span><span class="n">current</span><span class="o">.</span><span class="n">count</span><span class="p">,</span>
-            <span class="n">description</span><span class="o">=</span><span class="s2">"Count"</span><span class="p">,</span>
-            <span class="n">style</span><span class="o">=</span><span class="p">{</span><span class="s2">"description_width"</span><span class="p">:</span> <span class="s2">"initial"</span><span class="p">},</span>
-            <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s2">"10em"</span><span class="p">),</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_count</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_count</span> <span class="o">=</span> <span class="n">TopMarkers</span><span class="p">()</span><span class="o">.</span><span class="n">count</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">=</span> <span class="n">IntText</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">current</span><span class="o">.</span><span class="n">count</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s2">"6em"</span><span class="p">))</span>
+        <span class="c1"># The frontend shows no tooltip of a ``Label`` or of an ``IntText``, only an HTML ``title``, so the label has it.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s1">'&lt;span title="default: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_default_count</span><span class="si">}</span><span class="s1">"&gt;Count&lt;/span&gt;'</span><span class="p">),</span>  <span class="c1"># NOT F-STRING</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_count</span><span class="p">,</span>
+        <span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_value</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_count</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
 
@@ -309,7 +311,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_value</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_update_value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># The border changes before the value, whose observers may take a while.</span>
         <span class="n">count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_count</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">_mark_default</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_count</span><span class="p">,</span> <span class="n">count</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_count</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">TopMarkers</span><span class="p">(</span><span class="n">count</span><span class="p">)</span> <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_blank</span> <span class="o">=</span> <span class="kc">False</span>
 

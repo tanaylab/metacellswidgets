@@ -70,7 +70,9 @@ from typing import overload
 from dafpy.julia_import import DEFAULT
 from dafpy.julia_import import DefaultValue
 from ipywidgets import Checkbox  # type: ignore
+from ipywidgets import HBox  # type: ignore
 from ipywidgets import IntText  # type: ignore
+from ipywidgets import Label  # type: ignore
 from ipywidgets import Layout  # type: ignore
 from ipywidgets import Text  # type: ignore
 from ipywidgets import Widget  # type: ignore
@@ -83,6 +85,7 @@ from .common import implements
 from .editors import ArgumentsEditor
 from .editors import ChoicePicker
 from .editors import ClassPicker
+from .editors import _mark_default
 
 if TYPE_CHECKING:
     from .sources import SourceWidgets
@@ -273,26 +276,31 @@ class Size(Tweak):
 
 
 class _Dimension:
-    # The checkbox and the number of one dimension of a ``Size``. The dimension is given while the checkbox is checked,
-    # and the number is disabled while it isn't. While it isn't, the number shows the ``start``.
+    # The checkbox and the field of one dimension of a ``Size``. The dimension is given while the checkbox is checked,
+    # and the field is then its number. While it isn't, the field is a disabled text marked as the default, which says
+    # "auto", and the hidden number follows the ``start``, from which it starts when the checkbox is checked.
 
     def __init__(self, description: str, value: int | DefaultValue, start: int) -> None:
         is_given = isinstance(value, int)
         self.checkbox = Checkbox(value=is_given, indent=False, layout=Layout(width="auto"))
-        self.number = IntText(
-            value=value if is_given else start,
-            description=description,
-            disabled=not is_given,
-            style={"description_width": "initial"},
-            layout=Layout(width="10em"),
-        )
+        self.label = Label(description)
+        self.number = IntText(value=value if is_given else start, layout=Layout(width="6em"))
+        _mark_default(self.number, False)
+        self._auto = Text(placeholder="auto", disabled=True, layout=Layout(width="6em"))
+        _mark_default(self._auto, True)
+        self.field = HBox()
+        self._show_field()
         self.checkbox.observe(self._on_checkbox_change, names="value")
 
-    def _on_checkbox_change(self, change: Dict) -> None:
-        self.number.disabled = not change["new"]
+    def _on_checkbox_change(self, _change: Dict) -> None:
+        self._show_field()
+
+    def _show_field(self) -> None:
+        # Show the number while the dimension is given, and the "auto" text otherwise.
+        self.field.children = [self.number if self.checkbox.value else self._auto]
 
     def set_start(self, start: int) -> None:  # pylint: disable=missing-function-docstring
-        # Show the ``start`` in the number, unless the dimension is given.
+        # Follow the ``start`` in the number, unless the dimension is given.
         if not self.checkbox.value:
             self.number.value = start
 
@@ -319,10 +327,18 @@ class _SizeEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
         start_width, start_height = _start_size(graph)
         self._width = _Dimension("Width", start_width if current is None else current.width, start_width)
         self._height = _Dimension("Height", start_height if current is None else current.height, start_height)
-        self.children = [self._width.checkbox, self._width.number, self._height.checkbox, self._height.number]
+        self.children = [
+            self._width.checkbox,
+            self._width.label,
+            self._width.field,
+            self._height.checkbox,
+            self._height.label,
+            self._height.field,
+        ]
         self._update_value()
-        for widget in self.children:
-            widget.observe(self._on_change, names="value")
+        for dimension in (self._width, self._height):
+            dimension.checkbox.observe(self._on_change, names="value")
+            dimension.number.observe(self._on_change, names="value")
 
     def update_graph(self, graph: Any) -> None:
         start_width, start_height = _start_size(graph)
@@ -362,11 +378,13 @@ class Title(Tweak):
 
 
 class _TitleEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
-    # The editor of a ``Title``: a text box, which starts with the ``text``. An empty box removes the title.
+    # The editor of a ``Title``: a text box, which starts with the ``text``. An empty box removes the title. The text is
+    # required, so it has no default.
 
     def __init__(self, text: str | None) -> None:
         super().__init__()
         self._text = Text(value="" if text is None else text, placeholder="Title")
+        _mark_default(self._text, False)
         self.children = [self._text]
         self.value = Title(text=text or None)
         self._text.observe(self._on_text_change, names="value")

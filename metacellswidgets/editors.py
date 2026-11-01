@@ -130,6 +130,7 @@ class GenePicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
         self._source = source
         self._name_per_label: Dict[str, str] = {}
         self._combobox = Combobox(placeholder="Gene", ensure_option=True)
+        _mark_default(self._combobox, False)
         has_markers = bool(source.gene_choices(markers_only=True))
         self._markers_only = ChoicePicker(_MARKERS_ONLY, DEFAULT, has_markers)
         self.children = [self._combobox, self._markers_only]
@@ -186,9 +187,15 @@ _SHOW_LEGEND: Tuple[Tuple[str, bool], ...] = (("Show legend", True), ("Hide lege
 # The choices of the genes a gene picker offers, with their labels: the marker genes only, or all the genes.
 _MARKERS_ONLY: Tuple[Tuple[str, bool], ...] = (("Markers only", True), ("All genes", False))
 
-# The border of a field which holds its default, and of a field which holds an explicit value.
+# The border of a field which shows its default, and of a field which shows another value.
 _DEFAULT_BORDER = "1px dotted black"
 _EXPLICIT_BORDER = "1px solid black"
+
+
+def _mark_default(widget: Widget, is_default: bool) -> None:
+    # Mark a value field as showing its default (a dotted border) or another value (a solid one). A field of a required
+    # value, which has no default, is always marked as showing another value.
+    widget.layout.border = _DEFAULT_BORDER if is_default else _EXPLICIT_BORDER
 
 
 class ChoicePicker(HBox):  # pylint: disable=too-many-ancestors,abstract-method
@@ -220,12 +227,13 @@ class ChoicePicker(HBox):  # pylint: disable=too-many-ancestors,abstract-method
         return self._default if isinstance(self.value, DefaultValue) else self.value
 
     def _on_dropdown_change(self, change: Dict) -> None:
+        # The border changes before the value, whose observers may take a while.
         value = self._values[change["new"]]
+        _mark_default(self._dropdown, value == self._default)
         self.value = DEFAULT if value == self._default else value
-        self._update_border()
 
     def _update_border(self) -> None:
-        self._dropdown.layout.border = _DEFAULT_BORDER if self.shown() == self._default else _EXPLICIT_BORDER
+        _mark_default(self._dropdown, self.shown() == self._default)
 
 
 class LogBasePicker(ChoicePicker):  # pylint: disable=too-many-ancestors,abstract-method
@@ -247,6 +255,7 @@ class NamePicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
         super().__init__()
         is_current = current is not None and current in names
         self._dropdown = Dropdown(options=list(names), value=current if is_current else None)
+        _mark_default(self._dropdown, False)
         self.children = [self._dropdown]
         self.value = current if is_current else None
         self._dropdown.observe(self._on_dropdown_change, names="value")
@@ -268,6 +277,7 @@ class ComboPicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
         self._combobox = Combobox(
             options=list(names), value=current if is_current else "", placeholder=placeholder, ensure_option=True
         )
+        _mark_default(self._combobox, False)
         self.children = [self._combobox]
         self.value = current if is_current else None
         self._combobox.observe(self._on_combobox_change, names="value")
@@ -323,6 +333,7 @@ class AxisPicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
         axes = [axis for axis in allowed if source.has_axis(axis)]
         value = current if current in axes else (axes[0] if axes else None)
         self._dropdown = Dropdown(options=axes, value=value)
+        _mark_default(self._dropdown, False)
         self.children = [self._dropdown]
         self.value = value
         self._dropdown.observe(self._on_dropdown_change, names="value")
@@ -506,7 +517,12 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
             editor.observe(self._on_editor_change, names="value")
 
     def _set_value(self, picked: Arguments | None) -> None:
-        # The ``value`` is the ``picked`` object, unless the default is shown and wasn't changed.
+        # The ``value`` is the ``picked`` object, unless the default is shown and wasn't changed. The border changes before
+        # the value, whose observers may take a while. Without a given default, the default is to pick nothing (e.g. no
+        # colors).
+        default = self._default()
+        shown = default if self._is_default else picked
+        _mark_default(self._dropdown, self._dropdown.value is None if default is None else shown == default)
         self.value = DEFAULT if self._is_default else picked
         is_reset_shown = self._given_default is not None and not isinstance(self.value, DefaultValue)
         self._reset.layout.display = None if is_reset_shown else "none"

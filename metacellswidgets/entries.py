@@ -23,6 +23,7 @@ import metacellsgraphspy as mg
 import numpy as np
 from dafpy.julia_import import DEFAULT
 from dafpy.julia_import import DefaultValue
+from ipywidgets import HTML  # type: ignore
 from ipywidgets import IntText  # type: ignore
 from ipywidgets import Layout  # type: ignore
 from ipywidgets import Widget  # type: ignore
@@ -38,6 +39,7 @@ from .editors import GenePicker
 from .editors import ListEditor
 from .editors import PickerEditor
 from .editors import PickerRow
+from .editors import _mark_default
 from .sources import SourceWidgets
 
 __all__: List[str] = [
@@ -173,17 +175,17 @@ class TopMarkers(GeneSelection):
 
 
 class _CountEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
-    # The editor of a ``TopMarkers``: the number of genes. A number below one is incomplete.
+    # The editor of a ``TopMarkers``: the number of genes. A number below one is incomplete. The tooltip gives the default.
 
     def __init__(self, current: TopMarkers) -> None:
         super().__init__()
-        self._count = IntText(
-            value=current.count,
-            description="Count",
-            style={"description_width": "initial"},
-            layout=Layout(width="10em"),
-        )
-        self.children = [self._count]
+        self._default_count = TopMarkers().count
+        self._count = IntText(value=current.count, layout=Layout(width="6em"))
+        # The frontend shows no tooltip of a ``Label`` or of an ``IntText``, only an HTML ``title``, so the label has it.
+        self.children = [
+            HTML(f'<span title="default: {self._default_count}">Count</span>'),  # NOT F-STRING
+            self._count,
+        ]
         self._update_value()
         self._count.observe(self._on_change, names="value")
 
@@ -191,7 +193,9 @@ class _CountEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstr
         self._update_value()
 
     def _update_value(self) -> None:
+        # The border changes before the value, whose observers may take a while.
         count = int(self._count.value)
+        _mark_default(self._count, count == self._default_count)
         self.value = TopMarkers(count) if count > 0 else None
         self.is_blank = False
 

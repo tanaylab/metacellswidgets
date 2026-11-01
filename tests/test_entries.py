@@ -12,6 +12,8 @@ from dafpy.julia_import import DEFAULT
 
 import metacellswidgets as mw
 from metacellswidgets.editors import AxisPicker
+from metacellswidgets.editors import PropertyPicker
+from metacellswidgets.properties import Slot
 
 from .test_daf_widgets import _full_daf
 
@@ -47,6 +49,27 @@ def test_gene_selections() -> None:
     assert picker.value is DEFAULT
     assert picker._dropdown.value is mw.TopMarkers
     assert [label for label, _choice in picker._dropdown.options] == ["", "GeneList", "SkeletonGenes", "TopMarkers"]
+
+
+def test_fields_mark_their_defaults() -> None:
+    """
+    A picker showing its default, and a count equal to its default, have dotted borders; other values have solid ones.
+    The count's tooltip gives its default.
+    """
+    source = mw.DafWidgets(_daf())
+    picker = mw.GeneSelectionPicker(source)
+    assert picker._dropdown.layout.border == "1px dotted black"
+    count_label, count = picker._editor_box.children[0].children
+    assert count_label.value == '<span title="default: 100">Count</span>'
+    assert count.layout.border == "1px dotted black"
+    count.value = 50
+    assert count.layout.border == "1px solid black"
+    assert picker._dropdown.layout.border == "1px solid black"
+
+    colors = PropertyPicker(source, Slot.COLORS, "metacell")
+    assert colors._dropdown.layout.border == "1px dotted black"
+    colors._dropdown.value = mw.Type
+    assert colors._dropdown.layout.border == "1px solid black"
 
 
 def test_gene_selection_editors() -> None:

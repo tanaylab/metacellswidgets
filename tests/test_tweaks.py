@@ -10,6 +10,7 @@ import somegraphspy as sg
 from ipywidgets import Widget  # type: ignore
 
 import metacellswidgets as mw
+from metacellswidgets.tweaks import _SizeEditor
 
 from .test_daf_widgets import _full_daf
 
@@ -198,17 +199,24 @@ def test_size() -> None:
 
 def test_size_editor() -> None:
     """
-    A new size gives both dimensions, at Plotly's default size. Unchecking a dimension disables its number.
+    A new size gives both dimensions, at Plotly's default size. Unchecking a dimension shows a disabled "auto" text in
+    place of its number, marked as the default; checking it shows the number again.
     """
     source = mw.DafWidgets(_full_daf())
     editor = mw.Size.editor(source, _points_graph(), None)
     assert editor.value == mw.Size(width=700, height=450)
-    width_checkbox, width_number, _height_checkbox, height_number = editor.children
+    width_checkbox, width_label, width_field, _height_checkbox, height_label, height_field = editor.children
+    assert (width_label.value, height_label.value) == ("Width", "Height")
+    width_number = width_field.children[0]
+    assert width_number.layout.border == "1px solid black"
     width_checkbox.value = False
-    assert width_number.disabled
+    (auto,) = width_field.children
+    assert auto.disabled and auto.placeholder == "auto" and auto.layout.border == "1px dotted black"
     assert editor.value == mw.Size(height=450)
-    height_number.value = 300
+    height_field.children[0].value = 300
     assert editor.value == mw.Size(height=300)
+    width_checkbox.value = True
+    assert width_field.children == (width_number,)
     assert mw.Size.editor(source, _points_graph(), mw.Size(height=200)).value == mw.Size(height=200)
 
 
@@ -304,7 +312,8 @@ def test_size_follows_the_graph() -> None:
     graph.configuration.figure.height = 300
     picker.update_graph(graph)
     editor = picker._editor  # pylint: disable=protected-access
-    assert editor is not None
-    width_number, height_number = editor.children[1], editor.children[3]
+    assert isinstance(editor, _SizeEditor)
+    width_number = editor._width.number  # pylint: disable=protected-access
+    height_number = editor._height.number  # pylint: disable=protected-access
     assert (width_number.value, height_number.value) == (640, 300)
     assert picker.value == mw.Size(width=640)
