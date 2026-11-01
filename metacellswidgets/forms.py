@@ -36,7 +36,6 @@ from typing import overload
 import traitlets  # type: ignore
 from IPython import get_ipython
 from IPython.display import display as display_in_cell
-from ipywidgets import Box  # type: ignore
 from ipywidgets import Button  # type: ignore
 from ipywidgets import Dropdown  # type: ignore
 from ipywidgets import HBox  # type: ignore
@@ -650,8 +649,9 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
             form._shown_graph() if form is not None and form.is_complete() else None  # pylint: disable=protected-access
         )
         self._figure = FigureWidget(Figure() if graph is None else graph.fig)
-        # A figure widget's ``layout`` is the figure's, so it is hidden through a box around it.
-        self._figure_box = Box([self._figure], layout=Layout(display="none" if graph is None else None))
+        # A figure widget's ``layout`` is the figure's, so it is hidden through a box around it. The box is a column, which
+        # stretches the figure to its full width.
+        self._figure_box = VBox([self._figure], layout=Layout(display="none" if graph is None else None))
         if graph is not None and self._tweaks is not None:
             self._tweaks.update_graph(graph)
         toolbar: List[Widget] = []
