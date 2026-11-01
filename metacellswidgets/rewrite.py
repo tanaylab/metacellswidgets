@@ -1,9 +1,9 @@
 """
 Write the state of a form back into the code of the cell that runs it.
 
-A form records where in its cell it was created. When an interactive display is done, the cell's code is rewritten: the
-form call gets the form's state as keyword arguments, and the display call gets ``interactive=False``. A menu call is
-replaced by the call of the chosen form, displayed with ``interactive=False``. The rest of the cell is kept as written.
+A form records where in its cell it was created. When editing it is done, the cell's code is rewritten: the form call
+gets the form's state as keyword arguments, and the edit call is removed (``form.edit()`` becomes ``form``). A menu call
+is replaced by the call of the chosen form. The rest of the cell is kept as written.
 The new code reaches the notebook through IPython's ``set_next_input(..., replace=True)``, which only works while the
 cell runs.
 
@@ -129,7 +129,7 @@ def _claim_cell_rewrite() -> None:
     global _REWRITTEN_CELL_TOKEN  # pylint: disable=global-statement
     cell_token = _current_cell_token()
     if _REWRITTEN_CELL_TOKEN == cell_token:
-        raise RuntimeError("a cell can display only one form interactively each time it runs")
+        raise RuntimeError("a cell can edit only one form each time it runs")
     _REWRITTEN_CELL_TOKEN = cell_token
 
 
@@ -173,9 +173,14 @@ def _top_level_call(tree: ast.Module, position: _Position, what: str) -> ast.Cal
 
 
 def _path_to_call(node: ast.AST, position: _Position) -> List[ast.AST] | None:
-    # The nodes from ``node`` down to the call at the position.
-    if isinstance(node, ast.Call) and _node_position(node) == position:
-        return [node]
+    # The nodes from ``node`` down to the call at the position. Only the ends are compared. Python starts a method call
+    # spread over several lines at its method's name (e.g. ``.edit()`` after a multi-line form call), but ``ast`` starts
+    # it at its receiver. No two calls end at the same place, since a call ends after any call inside it.
+    if isinstance(node, ast.Call):
+        _, node_end_line, _, node_end_column = _node_position(node)
+        _, end_line, _, end_column = position
+        if (node_end_line, node_end_column) == (end_line, end_column):
+            return [node]
     for child in ast.iter_child_nodes(node):
         path = _path_to_call(child, position)
         if path is not None:
@@ -237,14 +242,13 @@ def _rewritten_cell(
     *,
     form_position: _Position,
     form_keywords: Mapping[str, Any],
-    display_position: _Position,
-    is_interactive: bool,
+    edit_position: _Position,
     form_method: str | None = None,
     namespace: Mapping[str, Any] | None = None,
 ) -> str:
     # The code of the cell with the form call's keyword arguments set to ``form_keywords`` (leaving out those which are
-    # ``None`` or ``DEFAULT``), its method replaced by ``form_method`` on the same receiver (if given), and the display call's
-    # ``interactive`` set to ``is_interactive``. The form call may be on another line than the display call, or chained
+    # ``None`` or ``DEFAULT``), its method replaced by ``form_method`` on the same receiver (if given), and the edit call
+    # removed (``form.edit()`` becomes ``form``). The form call may be on another line than the edit call, or chained
     # to it. Values with a ``code`` method (e.g. properties) name their classes as the cell's ``namespace`` does. The
     # ``source`` is the cell as written, and its magics are kept as written.
     magic_line, code = _split_cell_magic(source)
@@ -252,7 +256,8 @@ def _rewritten_cell(
     tree = ast.parse(python)
     namespace = _cell_namespace(tree, namespace)
     form_call = _top_level_call(tree, form_position, "form")
-    display_call = _top_level_call(tree, display_position, "display")
+    edit_call = _top_level_call(tree, edit_position, "edit")
+    assert isinstance(edit_call.func, ast.Attribute)
 
     if form_method is None:
         form_callee = _segment(python, form_call.func)
@@ -261,22 +266,14 @@ def _rewritten_cell(
         form_callee = f"{_segment(python, form_call.func.value)}.{form_method}"
     form_text = _call_text(python, form_call, form_callee, form_keywords, namespace)
 
-    display_arguments = [_segment(python, argument) for argument in display_call.args]
-    display_arguments += [
-        f"{keyword.arg}={_segment(python, keyword.value)}"
-        for keyword in display_call.keywords
-        if keyword.arg != "interactive"
-    ]
-    display_arguments.append(f"interactive={is_interactive}")
-    display_arguments_text = f"({', '.join(display_arguments)})"
-
-    # The display call's arguments come after the whole form call, even when the two are chained.
-    _, display_end_line, _, display_end_column = _node_position(display_call)
-    _, func_end_line, _, func_end_column = _node_position(display_call.func)
+    # The edit call is removed from the end of the form it is called on, which is after the whole form call even when
+    # the two are chained.
+    _, receiver_end_line, _, receiver_end_column = _node_position(edit_call.func.value)
+    _, edit_end_line, _, edit_end_column = _node_position(edit_call)
     return magic_line + _replaced(
         code,
         [
-            ((func_end_line, func_end_column, display_end_line, display_end_column), display_arguments_text),
+            ((receiver_end_line, receiver_end_column, edit_end_line, edit_end_column), ""),
             (_span(form_call), form_text),
         ],
     )
@@ -288,13 +285,11 @@ def _rewritten_menu_cell(
     menu_position: _Position,
     method: str,
     form_keywords: Mapping[str, Any],
-    format: str,  # pylint: disable=redefined-builtin
     namespace: Mapping[str, Any] | None = None,
 ) -> str:
     # The code of the cell with the menu call replaced by a call of the ``method`` on the same receiver, with the
-    # ``form_keywords`` (leaving out those which are ``None`` or ``DEFAULT``), and displayed with ``interactive=False`` and the
-    # ``format`` (unless it is the default ``"plotly"``). The ``source`` is the cell as written, and its magics are kept
-    # as written.
+    # ``form_keywords`` (leaving out those which are ``None`` or ``DEFAULT``). The ``source`` is the cell as written, and
+    # its magics are kept as written.
     magic_line, code = _split_cell_magic(source)
     python = _python_code(code)
     tree = ast.parse(python)
@@ -302,11 +297,8 @@ def _rewritten_menu_cell(
     menu_call = _top_level_call(tree, menu_position, "menu")
     assert isinstance(menu_call.func, ast.Attribute)
     form_callee = f"{_segment(python, menu_call.func.value)}.{method}"
-    display_arguments = ["interactive=False"]
-    if format != "plotly":
-        display_arguments.append(f"format={format!r}")
     form_text = _call_text(python, None, form_callee, form_keywords, namespace)
-    return magic_line + _replaced(code, [(_span(menu_call), f"{form_text}.display({', '.join(display_arguments)})")])
+    return magic_line + _replaced(code, [(_span(menu_call), form_text)])
 
 
 def _cell_namespace(tree: ast.Module, namespace: Mapping[str, Any] | None) -> Mapping[str, Any] | None:

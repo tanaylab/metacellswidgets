@@ -228,10 +228,39 @@
 <code class="docutils literal notranslate">
 <span class="pre">metacellsgraphspy
 </span>
-</code>, and the points selected in it. Displaying
-it shows the figure. Displaying it interactively shows an editor instead: controls for the parameters, the figure, and
-a “Done” button. When you click “Done”, the form writes its parameters and selection back into the code of the cell,
-so running the notebook again gives the same figure and the same selection.
+</code>, and the points selected in it. Its figure is
+shown by naming a format: 
+<code class="docutils literal notranslate">
+<span class="pre">.fig
+</span>
+</code>, 
+<code class="docutils literal notranslate">
+<span class="pre">.html
+</span>
+</code>, 
+<code class="docutils literal notranslate">
+<span class="pre">.svg
+</span>
+</code>, 
+<code class="docutils literal notranslate">
+<span class="pre">.png
+</span>
+</code> or 
+<code class="docutils literal notranslate">
+<span class="pre">.json
+</span>
+</code>. Its 
+<code class="docutils literal notranslate">
+<span class="pre">edit()
+</span>
+</code> method shows an editor:
+controls for the parameters, the figure, and a “Done” button. When you click “Done”, the form writes its parameters and
+selection back into the code of the cell, and the 
+<code class="docutils literal notranslate">
+<span class="pre">edit()
+</span>
+</code> call is removed. So running the notebook again gives the
+same figure and the same selection.
 </p>
 
 <div class="toctree-wrapper compound">
@@ -2439,6 +2468,15 @@ so running the notebook again gives the same figure and the same selection.
 </li>
 
 <li class="toctree-l2">
+<a class="reference internal" href="forms.html#metacellswidgets.forms.Cancelled">
+<code class="docutils literal notranslate">
+<span class="pre">Cancelled
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l2">
 <a class="reference internal" href="forms.html#metacellswidgets.forms.GraphForm">
 <code class="docutils literal notranslate">
 <span class="pre">GraphForm
@@ -2583,9 +2621,9 @@ so running the notebook again gives the same figure and the same selection.
 </li>
 
 <li class="toctree-l3">
-<a class="reference internal" href="forms.html#metacellswidgets.forms.GraphForm.display">
+<a class="reference internal" href="forms.html#metacellswidgets.forms.GraphForm.edit">
 <code class="docutils literal notranslate">
-<span class="pre">GraphForm.display()
+<span class="pre">GraphForm.edit()
 </span>
 </code>
 </a>

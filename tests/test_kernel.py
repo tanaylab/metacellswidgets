@@ -285,16 +285,16 @@ def _rewritten_text(client: Any, message_id: str) -> str:
     return payloads[-1]["text"]
 
 
-def test_interactive_display_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
+def test_edit_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
     """
-    An interactive form blocks its cell; after editing a gene, coloring by the expression of another gene (whose picker
-    is created while the cell blocks), and clicking "Done", the cell is rewritten with the edited arguments, keeping
-    the receiver of the form's call.
+    Editing a form blocks its cell; after editing a gene, coloring by the expression of another gene (whose picker is
+    created while the cell blocks), and clicking "Done", the cell is rewritten with the edited arguments, keeping the
+    receiver of the form's call and the format after the edit call.
     """
     _, client = kernel
     _execute(client, _DAF_SETUP)
 
-    cell = "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.display(interactive=True)\n"
+    cell = "mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B').edit().fig\n"
     message_id = client.execute(cell)
     widgets = _opened_widgets(
         client, lambda state: _is_done_button(state) or _is_gene_picker(state) or _is_class_choice(state), 5
@@ -311,27 +311,24 @@ def test_interactive_display_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
     _send_state(client, colors_gene, {"value": "D"})
     _click(client, done)
     assert _rewritten_text(client, message_id) == (
-        "form = mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='D', "
-        "colors=mw.GeneExpression(gene='D'))\n"
-        "form.display(interactive=False)"
+        "mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='D', colors=mw.GeneExpression(gene='D')).fig"
     )
 
 
 def test_cell_magic_is_kept_by_the_rewrite(kernel: Tuple[Any, Any]) -> None:
     """
-    An interactive form in a cell run by the ``%%time`` magic rewrites the rest of the cell, and keeps the magic.
+    Editing a form in a cell run by the ``%%time`` magic rewrites the rest of the cell, and keeps the magic.
     """
     _, client = kernel
     _execute(client, _DAF_SETUP)
 
-    cell = "%%time\nform = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.display(interactive=True)\n"
+    cell = "%%time\nform = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.edit()\n"
     message_id = client.execute(cell)
     done = _opened_widgets(client, _is_done_button, 1)[0]
     time.sleep(1)
     _click(client, done)
     assert _rewritten_text(client, message_id) == (
-        "%%time\nform = mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='B')\n"
-        "form.display(interactive=False)"
+        "%%time\nform = mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='B')\nform"
     )
 
 
@@ -351,7 +348,7 @@ def test_cell_magic_is_kept_by_the_rewrite(kernel: Tuple[Any, Any]) -> None:
 )
 def test_unsupported_magics_are_named(kernel: Tuple[Any, Any], cell: str, error: str) -> None:
     """
-    An interactive form or menu under a magic which prevents rewriting the cell is an error which names the magic.
+    Editing a form, or a menu, under a magic which prevents rewriting the cell is an error which names the magic.
     """
     _, client = kernel
     _execute(client, _DAF_SETUP)
@@ -359,15 +356,13 @@ def test_unsupported_magics_are_named(kernel: Tuple[Any, Any], cell: str, error:
         _execute(client, cell)
 
 
-def test_non_interactive_display_works_under_any_magic(kernel: Tuple[Any, Any]) -> None:
+def test_showing_a_graph_works_under_any_magic(kernel: Tuple[Any, Any]) -> None:
     """
-    A display which isn't interactive doesn't rewrite the cell, so it works under any magic.
+    Showing a form's graph doesn't rewrite the cell, so it works under any magic.
     """
     _, client = kernel
     _execute(client, _DAF_SETUP)
-    _execute(
-        client, "%%timeit -n1 -r1\nmw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B').display(interactive=False)\n"
-    )
+    _execute(client, "%%timeit -n1 -r1\nmw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B').fig\n")
 
 
 def _is_graph_menu(state: Dict[str, Any]) -> bool:
@@ -378,12 +373,12 @@ def _is_graph_menu(state: Dict[str, Any]) -> bool:
 def test_menu_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
     """
     A menu blocks its cell; after choosing a graph (whose editor is created while the cell blocks), picking its genes,
-    and clicking "Done", the menu call is rewritten into the chosen graph's call, displayed with ``interactive=False``.
+    and clicking "Done", the menu call is rewritten into the chosen graph's call, keeping the format after it.
     """
     _, client = kernel
     _execute(client, _DAF_SETUP)
 
-    message_id = client.execute("form = mw.DafWidgets(daf).menu()\n")
+    message_id = client.execute("mw.DafWidgets(daf).menu().fig\n")
     widgets = _opened_widgets(client, lambda state: _is_done_button(state) or _is_graph_menu(state), 2)
     done = next(widget for widget in widgets if _is_done_button(widget))
     menu = next(widget for widget in widgets if _is_graph_menu(widget))
@@ -396,8 +391,38 @@ def test_menu_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
     _send_state(client, y_gene, {"value": "D"})
     _click(client, done)
     assert _rewritten_text(client, message_id) == (
-        "form = mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='D').display(interactive=False)"
+        "mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='D').fig"
     )
+
+
+def _is_cancel_button(state: Dict[str, Any]) -> bool:
+    # Whether the widget state is of the "Cancel" button.
+    return state.get("_model_name") == "ButtonModel" and state.get("description") == "Cancel"
+
+
+def _error(client: Any, message_id: str) -> Dict[str, Any]:
+    # The content of the error the execution ended with.
+    deadline = time.time() + 120
+    while True:
+        message = client.get_iopub_msg(timeout=max(deadline - time.time(), 0.1))
+        if message["msg_type"] == "error" and message["parent_header"].get("msg_id") == message_id:
+            return message["content"]
+
+
+def test_menu_cancel_shows_only_a_message(kernel: Tuple[Any, Any]) -> None:
+    """
+    Clicking "Cancel" in a menu leaves no form to show, so it ends the cell with an error which shows only its message.
+    """
+    _, client = kernel
+    _execute(client, _DAF_SETUP)
+
+    message_id = client.execute("mw.DafWidgets(daf).menu().fig\n")
+    cancel = _opened_widgets(client, _is_cancel_button, 1)[0]
+    time.sleep(1)
+    _click(client, cancel)
+    error = _error(client, message_id)
+    assert error["ename"] == "Cancelled"
+    assert error["traceback"] == ["The menu was cancelled."]
 
 
 def _is_graphs_button(state: Dict[str, Any]) -> bool:
@@ -407,13 +432,13 @@ def _is_graphs_button(state: Dict[str, Any]) -> bool:
 
 def test_graphs_button_switches_the_graph(kernel: Tuple[Any, Any]) -> None:
     """
-    In an interactive form, the "Graphs" toggle shows the menu; choosing another graph there and clicking "Done"
-    rewrites the form call into the chosen graph's, on the same receiver, keeping the arguments they share.
+    In a form's editor, the "Graphs" toggle shows the menu; choosing another graph there and clicking "Done" rewrites
+    the form call into the chosen graph's, on the same receiver, keeping the arguments they share.
     """
     _, client = kernel
     _execute(client, _DAF_SETUP)
 
-    cell = "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.display(interactive=True)\n"
+    cell = "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.edit()\n"
     message_id = client.execute(cell)
     widgets = _opened_widgets(
         client, lambda state: _is_done_button(state) or _is_graphs_button(state) or _is_graph_menu(state), 3
@@ -427,9 +452,7 @@ def test_graphs_button_switches_the_graph(kernel: Tuple[Any, Any]) -> None:
     _send_state(client, menu, {"index": menu["_options_labels"].index("GenesHeatmap")})
     time.sleep(2)
     _click(client, done)
-    assert _rewritten_text(client, message_id) == (
-        "form = mw.DafWidgets(daf).genes_heatmap(axis='metacell')\nform.display(interactive=False)"
-    )
+    assert _rewritten_text(client, message_id) == ("form = mw.DafWidgets(daf).genes_heatmap(axis='metacell')\nform")
 
 
 def _is_show_legends(state: Dict[str, Any]) -> bool:
@@ -437,7 +460,7 @@ def _is_show_legends(state: Dict[str, Any]) -> bool:
     return state.get("_model_name") == "CheckboxModel" and state.get("description") == "Show legends"
 
 
-def test_interactive_tweaks_rewrite_the_cell(kernel: Tuple[Any, Any]) -> None:
+def test_edited_tweaks_rewrite_the_cell(kernel: Tuple[Any, Any]) -> None:
     """
     Picking a tweak in the blank row of the tweaks while editing (whose editor is created while the cell blocks), and
     clicking "Done", writes the tweak into the cell.
@@ -445,7 +468,7 @@ def test_interactive_tweaks_rewrite_the_cell(kernel: Tuple[Any, Any]) -> None:
     _, client = kernel
     _execute(client, _DAF_SETUP)
 
-    cell = "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.display(interactive=True)\n"
+    cell = "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.edit()\n"
     message_id = client.execute(cell)
     # The class choices are those of the colors, the sizes, the blank row of the hovers, and the blank row of the
     # tweaks, in this order.
@@ -462,5 +485,5 @@ def test_interactive_tweaks_rewrite_the_cell(kernel: Tuple[Any, Any]) -> None:
     assert _rewritten_text(client, message_id) == (
         "form = mw.DafWidgets(daf).gene_gene(axis='metacell', x_gene='A', y_gene='B', "
         "tweaks=[mw.Legends(is_shown=False)])\n"
-        "form.display(interactive=False)"
+        "form"
     )

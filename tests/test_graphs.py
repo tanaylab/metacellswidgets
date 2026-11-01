@@ -180,20 +180,10 @@ def test_gene_gene_exists(tmp_path: Path) -> None:
     assert mw.GeneGene.exists(_source(tmp_path))
 
 
-def test_display() -> None:
+def test_edit_needs_a_cell() -> None:
     """
-    Displaying the form returns it, so it can be chained to its creation.
-    """
-    form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B")
-    assert form.display() is form
-
-
-def test_display_formats() -> None:
-    """
-    The graph may be shown as a static image, and any other format is an error.
+    Editing a form rewrites the cell which created it, so outside a notebook cell it is an error.
     """
     form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B")
-    assert form.display(format="svg") is form
-    assert form.display(format="png") is form
-    with pytest.raises(ValueError, match="unknown format: jpeg"):
-        form.display(format="jpeg")  # type: ignore
+    with pytest.raises(RuntimeError, match="created and edited in the same cell"):
+        form.edit()

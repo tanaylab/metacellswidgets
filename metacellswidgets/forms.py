@@ -2,12 +2,13 @@
 Forms: the graphs a notebook cell shows, holding the arguments they were created with.
 
 A form is created by a method of a kind of data source, e.g. ``mw.DafWidgets(daf).gene_gene(x_gene="Foxa1", ...)``.
-Displaying it shows its graph. A kind's ``menu`` method (e.g. ``mw.DafWidgets(daf).menu()``) shows a menu of its graphs,
-and an editor of the chosen one.
+Its graph is shown by naming a format, e.g. ``.fig`` or ``.svg``. Its ``edit`` method shows an editor of its arguments.
+A kind's ``menu`` method (e.g. ``mw.DafWidgets(daf).menu()``) shows a menu of its graphs, and an editor of the chosen
+one.
 
 A form's editor is made of widgets, each tied to one of its arguments (see :py:meth:`GraphForm.bind`). Changing a
 widget changes the argument and asks for the graph to be redrawn. Requests only mark the form; the graph is redrawn
-once for all the requests pending, when the interactive display polls the form.
+once for all the requests pending, when the editor polls the form.
 """
 
 import copy
@@ -27,7 +28,6 @@ from typing import Dict
 from typing import FrozenSet
 from typing import Iterator
 from typing import List
-from typing import Literal
 from typing import Sequence
 from typing import Tuple
 from typing import Type
@@ -35,8 +35,6 @@ from typing import overload
 
 import traitlets  # type: ignore
 from IPython import get_ipython
-from IPython.display import SVG
-from IPython.display import Image
 from IPython.display import display as display_in_cell
 from ipywidgets import Box  # type: ignore
 from ipywidgets import Button  # type: ignore
@@ -79,13 +77,11 @@ from .tweaks import TweakPicker
 
 __all__: List[str] = [
     "Branch",
+    "Cancelled",
     "GraphForm",
     "GraphMenu",
     "graph_menu",
 ]
-
-# The formats of showing a graph: an interactive figure, or a static image.
-_Format = Literal["plotly", "svg", "png"]
 
 
 class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
@@ -297,39 +293,26 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
 
     def _poll_redraw(self, redraw: Callable[[Graph], None]) -> None:
         # If a redraw was requested, it isn't held, and the arguments are complete, give the graph to ``redraw``. This
-        # runs on the main thread (which runs Julia), polled by the interactive display.
+        # runs on the main thread (which runs Julia), polled by the editor.
         if self._is_dirty and self._held_redraws == 0 and self.is_complete():
             self._is_dirty = False
             redraw(self._shown_graph())
 
-    def display(
-        self,
-        *,
-        interactive: bool = False,
-        format: _Format = "plotly",  # pylint: disable=redefined-builtin
-    ) -> "GraphForm":
+    def edit(self) -> "GraphForm":
         """
-        Show the graph in the notebook cell. Returns the form, so it can be chained to its creation. The ``format`` is
-        ``"plotly"`` for an interactive figure, or ``"svg"`` or ``"png"`` for a static image, which obeys the size of the
-        graph.
+        Show an editor of the arguments and the graph, and block the cell until "Done" is clicked ("Done" is disabled
+        while the arguments are incomplete). Then rewrite the code of the cell so that it creates the form with the
+        edited arguments, without this call (e.g. ``source.gene_gene(...).edit().svg`` becomes
+        ``source.gene_gene(...).svg``). Returns the edited form, which is a form of another graph if the graph was
+        switched in the editor. Clicking "Cancel" instead leaves the cell as it is, and returns the form with its
+        arguments as they were.
 
-        If ``interactive``, show an editor of the arguments and the graph instead, and block the cell until "Done" is
-        clicked ("Done" is disabled while the arguments are incomplete). Then rewrite the code of the cell so that it
-        creates the form with the edited arguments, and displays it with ``interactive=False``, and show the graph.
-        Clicking "Cancel" instead leaves the cell as it is, shows nothing, and returns the form with its arguments as
-        they were. This requires the form to be created in the same cell, at its top level, by a method of a kind of data source (e.g.
-        ``source.gene_gene(...)``). The editor always shows an interactive figure. The ``format`` applies to the graph
-        shown after "Done".
+        This shows nothing after the editor closes. Follow it by a format to show the graph (e.g. ``.edit().fig``). It
+        requires the form to be created in the same cell, at its top level, by a method of a kind of data source (e.g.
+        ``source.gene_gene(...)``).
         """
-        _check_format(format)
-        form: GraphForm = self
-        if interactive:
-            edited = self._edit(_cell_site(sys._getframe(1)))  # pylint: disable=protected-access
-            if edited is None:
-                return self
-            form = edited
-        _show_graph(form._shown_graph(), format)  # pylint: disable=protected-access
-        return form
+        edited = self._edit(_cell_site(sys._getframe(1)))  # pylint: disable=protected-access
+        return self if edited is None else edited
 
     def _tweaks_editor(self) -> ListEditor[Tweak]:
         # The editor of the tweaks: a list of them, under a "Tweaks" header, collapsed. The choices of each row are the
@@ -341,15 +324,15 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
         self.bind(tweaks=tweaks)
         return tweaks
 
-    def _edit(self, display_site: _CallSite | None) -> "GraphForm | None":
+    def _edit(self, edit_site: _CallSite | None) -> "GraphForm | None":
         # Show the editor until "Done" is clicked, then rewrite the cell. Returns the form the editor ended with. If
         # "Cancel" is clicked instead, leave the cell as it is, restore the arguments (the editor changes them in place),
         # and return ``None``.
         call_site = self._call_site
-        _check_cell_rewrite(call_site, display_site)
-        if call_site is None or display_site is None or display_site.cell_token != call_site.cell_token:
+        _check_cell_rewrite(call_site, edit_site)
+        if call_site is None or edit_site is None or edit_site.cell_token != call_site.cell_token:
             raise RuntimeError(
-                "an interactive form must be created and displayed in the same cell, at its top level, "
+                "an edited form must be created and edited in the same cell, at its top level, "
                 "by a method of a kind of data source (e.g. source.gene_gene(...))"
             )
         _claim_cell_rewrite()
@@ -365,8 +348,7 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
                 _current_cell_source(),
                 form_position=call_site.position,
                 form_keywords=form.arguments(),
-                display_position=display_site.position,
-                is_interactive=False,
+                edit_position=edit_site.position,
                 form_method=None if type(form) is type(self) else _method_name(self.source, type(form)),
                 namespace=shell.user_ns,
             ),
@@ -503,23 +485,25 @@ class _GraphMenu:
     def __get__(self, source: None, owner: type) -> "_GraphMenu": ...
 
     @overload
-    def __get__(self, source: SourceWidgets, owner: type) -> Callable[..., GraphForm | None]: ...
+    def __get__(self, source: SourceWidgets, owner: type) -> Callable[[], GraphForm]: ...
 
-    def __get__(self, source: SourceWidgets | None, owner: type) -> "_GraphMenu | Callable[..., GraphForm | None]":
+    def __get__(self, source: SourceWidgets | None, owner: type) -> "_GraphMenu | Callable[[], GraphForm]":
         if source is None:
             return self
         tree = self.tree
 
-        def menu(*, format: _Format = "plotly") -> GraphForm | None:  # pylint: disable=redefined-builtin
+        def menu() -> GraphForm:
             """
             Show a menu of the graphs, with an editor of the chosen graph's arguments and the graph, and block the cell
             until "Done" is clicked ("Done" is disabled until a graph is chosen and its arguments are complete). Then
             rewrite this call in the code of the cell so that it creates the chosen graph's form with the edited
-            arguments, and displays it in the ``format`` with ``interactive=False``, and show the graph. Returns the
-            form. Clicking "Cancel" instead leaves the cell as it is, shows nothing, and returns ``None``. This must be
-            called at the top level of the cell.
+            arguments (e.g. ``source.menu().svg`` becomes ``source.gene_gene(...).svg``). Returns the form. Clicking
+            "Cancel" instead leaves the cell as it is, and raises :py:class:`Cancelled`.
+
+            This shows nothing after the menu closes. Follow it by a format to show the graph (e.g. ``.menu().fig``). It
+            must be called at the top level of the cell.
             """
-            return _show_menu(source, tree, _cell_site(sys._getframe(1)), format)  # pylint: disable=protected-access
+            return _show_menu(source, tree, _cell_site(sys._getframe(1)))  # pylint: disable=protected-access
 
         return menu
 
@@ -533,23 +517,28 @@ def graph_menu(tree: Branch) -> _GraphMenu:
     return _GraphMenu(tree)
 
 
-def _show_menu(
-    source: SourceWidgets,
-    tree: Branch,
-    call_site: _CallSite | None,
-    format: _Format,  # pylint: disable=redefined-builtin
-) -> GraphForm | None:
+class Cancelled(Exception):
+    """
+    Raised by a kind's ``menu`` method when "Cancel" is clicked, since there is no form to return. A notebook shows only
+    its message, without a traceback.
+    """
+
+    def _render_traceback_(self) -> List[str]:
+        # IPython shows the lines this returns instead of the traceback.
+        return [str(self)]
+
+
+def _show_menu(source: SourceWidgets, tree: Branch, call_site: _CallSite | None) -> GraphForm:
     # Show the menu of the graphs of the ``tree`` until "Done" is clicked, then rewrite the menu call (at the
-    # ``call_site``) into the chosen form's, and show its graph in the ``format``. If "Cancel" is clicked instead, do
-    # nothing, and return ``None``.
-    _check_format(format)
+    # ``call_site``) into the chosen form's. If "Cancel" is clicked instead, leave the cell as it is, and raise
+    # ``Cancelled``.
     _check_cell_rewrite(call_site)
     if call_site is None:
         raise RuntimeError("a menu must be shown at the top level of a cell (e.g. source.menu())")
     _claim_cell_rewrite()
     form = _EditSession(source, None, tree).run()
     if form is None:
-        return None
+        raise Cancelled("The menu was cancelled.")
     shell = get_ipython()
     shell.set_next_input(
         _rewritten_menu_cell(
@@ -557,12 +546,10 @@ def _show_menu(
             menu_position=call_site.position,
             method=_method_name(source, type(form)),
             form_keywords=form.arguments(),
-            format=format,
             namespace=shell.user_ns,
         ),
         replace=True,
     )
-    _show_graph(form._shown_graph(), format)  # pylint: disable=protected-access
     return form
 
 
@@ -854,22 +841,6 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         form = self._form
         if form is not None:
             form._on_deselect()  # pylint: disable=protected-access
-
-
-def _check_format(format: str) -> None:  # pylint: disable=redefined-builtin
-    # Fail unless the ``format`` is one of the formats of showing a graph.
-    if format not in ("plotly", "svg", "png"):
-        raise ValueError(f"unknown format: {format} (expected plotly, svg or png)")
-
-
-def _show_graph(graph: Graph, format: _Format) -> None:  # pylint: disable=redefined-builtin
-    # Show the ``graph`` in the notebook cell, in the ``format``.
-    if format == "svg":
-        display_in_cell(SVG(graph.svg))
-    elif format == "png":
-        display_in_cell(Image(data=graph.png, format="png"))
-    else:
-        display_in_cell(graph.fig)
 
 
 def _replace_figure(widget: FigureWidget, figure: Figure) -> None:

@@ -61,7 +61,7 @@ class _GraphConstructor(Generic[_Parameters, _Graph]):
         graph_class = self.graph_class
 
         def construct(*args: _Parameters.args, **kwargs: _Parameters.kwargs) -> _Graph:
-            # Where in the running cell this was called, so that an interactive display can rewrite this call.
+            # Where in the running cell this was called, so that editing the form can rewrite this call.
             call_site = _cell_site(sys._getframe(1))  # pylint: disable=protected-access
             graph = graph_class(source, *args, **kwargs)
             setattr(graph, "_call_site", call_site)

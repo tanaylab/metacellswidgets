@@ -1,7 +1,7 @@
 """
 Let an editor block its cell while its widgets keep working.
 
-An interactive form blocks the cell that displays it until the user clicks "Done". Four things make that work:
+A form's editor blocks the cell that edits it until the user clicks "Done". Four things make that work:
 
 * The editor's widgets are routed to a kernel subshell this module owns. The subshell's thread handles their messages
   while the cell blocks the main thread. ``ipykernel`` would otherwise send them to the main shell, where they would
@@ -203,8 +203,8 @@ _SERVING_JOBS: _MainThreadJobs | None = None
 
 def _on_main_thread(function: Callable[[], T]) -> T:
     # Run the function on the main thread and return its result. A widget callback which may call Julia (e.g. through a
-    # data source) runs its work through this, since widget callbacks run on the subshell thread while an interactive
-    # display serves its jobs. When no display is serving (e.g. in tests), run it directly.
+    # data source) runs its work through this, since widget callbacks run on the subshell thread while an editor serves
+    # its jobs. When no editor is serving (e.g. in tests), run it directly.
     jobs = _SERVING_JOBS
     if jobs is None:
         return function()

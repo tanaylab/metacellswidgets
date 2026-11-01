@@ -164,6 +164,15 @@
 </li>
 
 <li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.forms.Cancelled">
+<code class="docutils literal notranslate">
+<span class="pre">Cancelled
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l3">
 <a class="reference internal" href="#metacellswidgets.forms.GraphForm">
 <code class="docutils literal notranslate">
 <span class="pre">GraphForm
@@ -308,9 +317,9 @@
 </li>
 
 <li class="toctree-l4">
-<a class="reference internal" href="#metacellswidgets.forms.GraphForm.display">
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.edit">
 <code class="docutils literal notranslate">
-<span class="pre">GraphForm.display()
+<span class="pre">GraphForm.edit()
 </span>
 </code>
 </a>
@@ -459,7 +468,20 @@
 <span class="pre">...)
 </span>
 </code>.
-Displaying it shows its graph. A kind’s 
+Its graph is shown by naming a format, e.g. 
+<code class="docutils literal notranslate">
+<span class="pre">.fig
+</span>
+</code> or 
+<code class="docutils literal notranslate">
+<span class="pre">.svg
+</span>
+</code>. Its 
+<code class="docutils literal notranslate">
+<span class="pre">edit
+</span>
+</code> method shows an editor of its arguments.
+A kind’s 
 <code class="docutils literal notranslate">
 <span class="pre">menu
 </span>
@@ -467,8 +489,8 @@ Displaying it shows its graph. A kind’s
 <code class="docutils literal notranslate">
 <span class="pre">mw.DafWidgets(daf).menu()
 </span>
-</code>) shows a menu of its graphs,
-and an editor of the chosen one.
+</code>) shows a menu of its graphs, and an editor of the chosen
+one.
 </p>
 
 <p>A form’s editor is made of widgets, each tied to one of its arguments (see 
@@ -479,7 +501,7 @@ and an editor of the chosen one.
 </code>
 </a>). Changing a
 widget changes the argument and asks for the graph to be redrawn. Requests only mark the form; the graph is redrawn
-once for all the requests pending, when the interactive display polls the form.
+once for all the requests pending, when the editor polls the form.
 </p>
 
 <dl class="py class">
@@ -729,6 +751,49 @@ If nothing is left,
 </dd>
 </dl>
 
+
+</dd>
+</dl>
+
+
+<dl class="py exception">
+
+<dt class="sig sig-object py" id="metacellswidgets.forms.Cancelled">
+
+<span class="property">
+<span class="k">
+<span class="pre">exception
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.forms.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">Cancelled
+</span>
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/forms.html#Cancelled">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.forms.Cancelled" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Raised by a kind’s 
+<code class="docutils literal notranslate">
+<span class="pre">menu
+</span>
+</code> method when “Cancel” is clicked, since there is no form to return. A notebook shows only
+its message, without a traceback.
+</p>
 
 </dd>
 </dl>
@@ -1714,161 +1779,64 @@ once, which leaves out what isn’t valid in the editor’s context (e.g. a prop
 
 <dl class="py method">
 
-<dt class="sig sig-object py" id="metacellswidgets.forms.GraphForm.display">
+<dt class="sig sig-object py" id="metacellswidgets.forms.GraphForm.edit">
 
 <span class="sig-name descname">
-<span class="pre">display
+<span class="pre">edit
 </span>
 </span>
 <span class="sig-paren">(
 </span>
-<em class="sig-param">
-<span class="keyword-only-separator o">
-<abbr title="Keyword-only parameters separator (PEP 3102)">
-<span class="pre">*
-</span>
-</abbr>
-</span>
-</em>, 
-<em class="sig-param">
-<span class="n">
-<span class="pre">interactive
-</span>
-</span>
-<span class="o">
-<span class="pre">=
-</span>
-</span>
-<span class="default_value">
-<span class="pre">False
-</span>
-</span>
-</em>, 
-<em class="sig-param">
-<span class="n">
-<span class="pre">format
-</span>
-</span>
-<span class="o">
-<span class="pre">=
-</span>
-</span>
-<span class="default_value">
-<span class="pre">'plotly'
-</span>
-</span>
-</em>
 <span class="sig-paren">)
 </span>
-<a class="reference internal" href="_modules/metacellswidgets/forms.html#GraphForm.display">
+<a class="reference internal" href="_modules/metacellswidgets/forms.html#GraphForm.edit">
 <span class="viewcode-link">
 <span class="pre">[source]
 </span>
 </span>
 </a>
-<a class="headerlink" href="#metacellswidgets.forms.GraphForm.display" title="Link to this definition">
+<a class="headerlink" href="#metacellswidgets.forms.GraphForm.edit" title="Link to this definition">
 </a>
 </dt>
 
 <dd>
-<p>Show the graph in the notebook cell. Returns the form, so it can be chained to its creation. The 
+<p>Show an editor of the arguments and the graph, and block the cell until “Done” is clicked (“Done” is disabled
+while the arguments are incomplete). Then rewrite the code of the cell so that it creates the form with the
+edited arguments, without this call (e.g. 
 <code class="docutils literal notranslate">
-<span class="pre">format
+<span class="pre">source.gene_gene(...).edit().svg
 </span>
-</code> is
+</code> becomes
 
 <code class="docutils literal notranslate">
-<span class="pre">&quot;plotly&quot;
+<span class="pre">source.gene_gene(...).svg
 </span>
-</code> for an interactive figure, or 
-<code class="docutils literal notranslate">
-<span class="pre">&quot;svg&quot;
-</span>
-</code> or 
-<code class="docutils literal notranslate">
-<span class="pre">&quot;png&quot;
-</span>
-</code> for a static image, which obeys the size of the
-graph.
+</code>). Returns the edited form, which is a form of another graph if the graph was
+switched in the editor. Clicking “Cancel” instead leaves the cell as it is, and returns the form with its
+arguments as they were.
 </p>
 
-<p>If 
+<p>This shows nothing after the editor closes. Follow it by a format to show the graph (e.g. 
 <code class="docutils literal notranslate">
-<span class="pre">interactive
+<span class="pre">.edit().fig
 </span>
-</code>, show an editor of the arguments and the graph instead, and block the cell until “Done” is
-clicked (“Done” is disabled while the arguments are incomplete). Then rewrite the code of the cell so that it
-creates the form with the edited arguments, and displays it with 
-<code class="docutils literal notranslate">
-<span class="pre">interactive=False
-</span>
-</code>, and show the graph.
-Clicking “Cancel” instead leaves the cell as it is, shows nothing, and returns the form with its arguments as
-they were. This requires the form to be created in the same cell, at its top level, by a method of a kind of data source (e.g.
+</code>). It
+requires the form to be created in the same cell, at its top level, by a method of a kind of data source (e.g.
 
 <code class="docutils literal notranslate">
 <span class="pre">source.gene_gene(...)
 </span>
-</code>). The editor always shows an interactive figure. The 
-<code class="docutils literal notranslate">
-<span class="pre">format
-</span>
-</code> applies to the graph
-shown after “Done”.
+</code>).
 </p>
 
 <dl class="field-list simple">
 
-<dt class="field-odd">Parameters
+<dt class="field-odd">Return type
 <span class="colon">:
 </span>
 </dt>
 
 <dd class="field-odd">
-<ul class="simple">
-
-<li>
-<p>
-<strong>interactive
-</strong> (
-<em>bool
-</em>)
-</p>
-</li>
-
-<li>
-<p>
-<strong>format
-</strong> (
-<em>Literal
-</em>
-<em>[
-</em>
-<em>'plotly'
-</em>
-<em>, 
-</em>
-<em>'svg'
-</em>
-<em>, 
-</em>
-<em>'png'
-</em>
-<em>]
-</em>)
-</p>
-</li>
-
-</ul>
-
-</dd>
-
-<dt class="field-even">Return type
-<span class="colon">:
-</span>
-</dt>
-
-<dd class="field-even">
 <p>
 <a class="reference internal" href="#metacellswidgets.forms.GraphForm" title="metacellswidgets.forms.GraphForm">
 <em>GraphForm
