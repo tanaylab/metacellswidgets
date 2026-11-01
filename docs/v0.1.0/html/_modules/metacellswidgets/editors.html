@@ -121,6 +121,7 @@
     <span class="s2">"GeneChoices"</span><span class="p">,</span>
     <span class="s2">"GenePicker"</span><span class="p">,</span>
     <span class="s2">"ListEditor"</span><span class="p">,</span>
+    <span class="s2">"LogBasePicker"</span><span class="p">,</span>
     <span class="s2">"NamePicker"</span><span class="p">,</span>
     <span class="s2">"OnAxisChange"</span><span class="p">,</span>
     <span class="s2">"Picker"</span><span class="p">,</span>
@@ -266,6 +267,53 @@
         <span class="n">label</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label_of</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_combobox</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">label</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span></div>
+
+
+
+<span class="c1"># The log bases a picker offers, with their labels: none (a linear scale), 2 and 10.</span>
+<span class="n">_LOG_BASES</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LogBase</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="s2">"linear"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"log2"</span><span class="p">,</span> <span class="n">LogBase</span><span class="o">.</span><span class="n">Log2Base</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"log10"</span><span class="p">,</span> <span class="n">LogBase</span><span class="o">.</span><span class="n">Log10Base</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># The border of a field which holds its default, and of a field which holds an explicit value.</span>
+<span class="n">_DEFAULT_BORDER</span> <span class="o">=</span> <span class="s2">"1px dotted black"</span>
+<span class="n">_EXPLICIT_BORDER</span> <span class="o">=</span> <span class="s2">"1px solid black"</span>
+
+
+<div class="viewcode-block" id="LogBasePicker">
+<a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.LogBasePicker">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LogBasePicker</span><span class="p">(</span><span class="n">HBox</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Pick a log base: linear (``None``), log2 or log10. The ``value`` starts as the ``current`` log base. While it is</span>
+<span class="sd">    ``DEFAULT``, the dropdown shows the ``default``, whose entry says so (e.g. "log10 (default)"). Picking that entry</span>
+<span class="sd">    sets ``DEFAULT``, and picking another sets its log base. The dropdown's border is dotted while it shows the</span>
+<span class="sd">    default (whether the ``value`` is ``DEFAULT`` or equal to the default), and solid otherwise.</span>
+<span class="sd">    """</span>
+
+    <span class="n">value</span> <span class="o">=</span> <span class="n">traitlets</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span><span class="n">DEFAULT</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">LogBase</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">|</span> <span class="n">DefaultValue</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">LogBase</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="o">=</span> <span class="n">default</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> (default)"</span> <span class="k">if</span> <span class="n">log_base</span> <span class="o">==</span> <span class="n">default</span> <span class="k">else</span> <span class="n">label</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">log_base</span> <span class="ow">in</span> <span class="n">_LOG_BASES</span><span class="p">]</span>
+        <span class="n">shown</span> <span class="o">=</span> <span class="n">default</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">DefaultValue</span><span class="p">)</span> <span class="k">else</span> <span class="n">current</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="p">(</span><span class="n">_label</span><span class="p">,</span> <span class="n">log_base</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">_LOG_BASES</span><span class="p">)</span> <span class="k">if</span> <span class="n">log_base</span> <span class="o">==</span> <span class="n">shown</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dropdown</span> <span class="o">=</span> <span class="n">Dropdown</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_dropdown</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">current</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_border</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dropdown</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_dropdown_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"index"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_dropdown_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">log_base</span> <span class="o">=</span> <span class="n">_LOG_BASES</span><span class="p">[</span><span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">]][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">DEFAULT</span> <span class="k">if</span> <span class="n">log_base</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="k">else</span> <span class="n">log_base</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_border</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_border</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">shown</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">DefaultValue</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dropdown</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">border</span> <span class="o">=</span> <span class="n">_DEFAULT_BORDER</span> <span class="k">if</span> <span class="n">shown</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span> <span class="k">else</span> <span class="n">_EXPLICIT_BORDER</span></div>
 
 
 
@@ -652,12 +700,9 @@
                 <span class="n">checkbox</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_look_change</span><span class="p">,</span> <span class="s2">"show_legend"</span><span class="p">),</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
                 <span class="n">widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">checkbox</span><span class="p">)</span>
             <span class="k">if</span> <span class="s2">"log_base"</span> <span class="ow">in</span> <span class="n">look_arguments</span><span class="p">:</span>
-                <span class="n">dropdown</span> <span class="o">=</span> <span class="n">Dropdown</span><span class="p">(</span>
-                    <span class="n">options</span><span class="o">=</span><span class="p">[(</span><span class="s2">"log2"</span><span class="p">,</span> <span class="n">LogBase</span><span class="o">.</span><span class="n">Log2Base</span><span class="p">),</span> <span class="p">(</span><span class="s2">"log10"</span><span class="p">,</span> <span class="n">LogBase</span><span class="o">.</span><span class="n">Log10Base</span><span class="p">)],</span>
-                    <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_look_value</span><span class="p">(</span><span class="n">choice</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">),</span>
-                <span class="p">)</span>
-                <span class="n">dropdown</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_look_change</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">),</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
-                <span class="n">widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dropdown</span><span class="p">)</span>
+                <span class="n">log_base</span> <span class="o">=</span> <span class="n">LogBasePicker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_look</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"log_base"</span><span class="p">,</span> <span class="n">DEFAULT</span><span class="p">),</span> <span class="n">choice</span><span class="o">.</span><span class="n">look_default</span><span class="p">(</span><span class="s2">"log_base"</span><span class="p">))</span>
+                <span class="n">log_base</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_look_change</span><span class="p">,</span> <span class="s2">"log_base"</span><span class="p">),</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+                <span class="n">widgets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">log_base</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_look_box</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">widgets</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_look_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">choice</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">Property</span><span class="p">],</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>

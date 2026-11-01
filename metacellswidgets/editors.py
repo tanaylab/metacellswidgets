@@ -48,6 +48,7 @@ __all__: List[str] = [
     "GeneChoices",
     "GenePicker",
     "ListEditor",
+    "LogBasePicker",
     "NamePicker",
     "OnAxisChange",
     "Picker",
@@ -170,6 +171,50 @@ class GenePicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
         label = None if current is None else self._label_of(current)
         self._combobox.value = "" if label is None else label
         self.value = None if label is None else current
+
+
+# The log bases a picker offers, with their labels: none (a linear scale), 2 and 10.
+_LOG_BASES: Tuple[Tuple[str, LogBase | None], ...] = (
+    ("linear", None),
+    ("log2", LogBase.Log2Base),
+    ("log10", LogBase.Log10Base),
+)
+
+# The border of a field which holds its default, and of a field which holds an explicit value.
+_DEFAULT_BORDER = "1px dotted black"
+_EXPLICIT_BORDER = "1px solid black"
+
+
+class LogBasePicker(HBox):  # pylint: disable=too-many-ancestors,abstract-method
+    """
+    Pick a log base: linear (``None``), log2 or log10. The ``value`` starts as the ``current`` log base. While it is
+    ``DEFAULT``, the dropdown shows the ``default``, whose entry says so (e.g. "log10 (default)"). Picking that entry
+    sets ``DEFAULT``, and picking another sets its log base. The dropdown's border is dotted while it shows the
+    default (whether the ``value`` is ``DEFAULT`` or equal to the default), and solid otherwise.
+    """
+
+    value = traitlets.Any(DEFAULT, allow_none=True)
+
+    def __init__(self, current: LogBase | None | DefaultValue, default: LogBase | None) -> None:
+        super().__init__()
+        self._default = default
+        labels = [f"{label} (default)" if log_base == default else label for label, log_base in _LOG_BASES]
+        shown = default if isinstance(current, DefaultValue) else current
+        index = next(index for index, (_label, log_base) in enumerate(_LOG_BASES) if log_base == shown)
+        self._dropdown = Dropdown(options=labels, index=index)
+        self.children = [self._dropdown]
+        self.value = current
+        self._update_border()
+        self._dropdown.observe(self._on_dropdown_change, names="index")
+
+    def _on_dropdown_change(self, change: Dict) -> None:
+        log_base = _LOG_BASES[change["new"]][1]
+        self.value = DEFAULT if log_base == self._default else log_base
+        self._update_border()
+
+    def _update_border(self) -> None:
+        shown = self._default if isinstance(self.value, DefaultValue) else self.value
+        self._dropdown.layout.border = _DEFAULT_BORDER if shown == self._default else _EXPLICIT_BORDER
 
 
 class NamePicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
@@ -526,12 +571,9 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
                 checkbox.observe(functools.partial(self._on_look_change, "show_legend"), names="value")
                 widgets.append(checkbox)
             if "log_base" in look_arguments:
-                dropdown = Dropdown(
-                    options=[("log2", LogBase.Log2Base), ("log10", LogBase.Log10Base)],
-                    value=self._look_value(choice, "log_base"),
-                )
-                dropdown.observe(functools.partial(self._on_look_change, "log_base"), names="value")
-                widgets.append(dropdown)
+                log_base = LogBasePicker(self._look.get("log_base", DEFAULT), choice.look_default("log_base"))
+                log_base.observe(functools.partial(self._on_look_change, "log_base"), names="value")
+                widgets.append(log_base)
         self._look_box.children = widgets
 
     def _look_value(self, choice: Type[Property], name: str) -> Any:

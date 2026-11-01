@@ -468,6 +468,20 @@ which each kind implements in its own module (see
 </em>, 
 <em class="sig-param">
 <span class="n">
+<span class="pre">log_base
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">Ellipsis
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
 <span class="pre">colors
 </span>
 </span>
@@ -575,8 +589,25 @@ which each kind implements in its own module (see
 <code class="docutils literal notranslate">
 <span class="pre">axis
 </span>
-</code>, on log scale. The points may be
-colored by the 
+</code>, on log scale. Both axes use the
+
+<code class="docutils literal notranslate">
+<span class="pre">log_base
+</span>
+</code> (left out, the default of 
+<code class="docutils literal notranslate">
+<span class="pre">gene_gene_graph
+</span>
+</code> of 
+<code class="docutils literal notranslate">
+<span class="pre">metacellsgraphspy
+</span>
+</code>, which is 2), or are linear if
+it is 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code>. The points may be colored by the 
 <code class="docutils literal notranslate">
 <span class="pre">colors
 </span>
@@ -584,12 +615,12 @@ colored by the
 <code class="docutils literal notranslate">
 <span class="pre">sizes
 </span>
-</code> property. The 
+</code> property. The
+
 <code class="docutils literal notranslate">
 <span class="pre">hovers
 </span>
-</code> properties add lines to the
-hover of each point (left out, there are none).
+</code> properties add lines to the hover of each point (left out, there are none).
 </p>
 
 <p>Some of the points may be selected, by the 
@@ -655,6 +686,25 @@ given.
 <strong>y_gene
 </strong> (
 <em>str
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>log_base
+</strong> (
+<a class="reference internal" href="properties.html#metacellswidgets.properties.LogBase" title="somegraphspy.common.LogBase">
+<em>LogBase
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>
+<em> | 
+</em>
+<em>EllipsisType
 </em>)
 </p>
 </li>

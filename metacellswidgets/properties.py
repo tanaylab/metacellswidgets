@@ -6,7 +6,7 @@ says what kind of values it produces (its ``eltype``), and that decides which sl
 a property, and how to fill a graph from it, is implemented separately for each kind of data source.
 
 Some arguments change only how a property is shown, not its data: ``show_legend``, and for a property shown on a log
-scale, ``log_base``. They mirror the keywords of the property's data source in ``metacellsgraphspy``, and ``DEFAULT``
+scale, ``log_base`` (``None`` for a linear scale). They mirror the keywords of the property's data source in ``metacellsgraphspy``, and ``DEFAULT``
 leaves the data source's default. They are the property's look arguments.
 """
 
@@ -310,7 +310,7 @@ def _init_with_show_legend_and_log_base(
     self: Property,
     *,
     show_legend: bool | DefaultValue = DEFAULT,
-    log_base: LogBase | DefaultValue = DEFAULT,
+    log_base: LogBase | None | DefaultValue = DEFAULT,
 ) -> None:
     setattr(self, "show_legend", show_legend)
     setattr(self, "log_base", log_base)
@@ -369,7 +369,7 @@ class GeneExpression(Property):
         gene: str,
         *,
         show_legend: bool | DefaultValue = DEFAULT,
-        log_base: LogBase | DefaultValue = DEFAULT,
+        log_base: LogBase | None | DefaultValue = DEFAULT,
     ) -> None:
         self.gene = gene
         self.show_legend = show_legend

@@ -247,7 +247,7 @@ def _rewritten_cell(
     namespace: Mapping[str, Any] | None = None,
 ) -> str:
     # The code of the cell with the form call's keyword arguments set to ``form_keywords`` (leaving out those which are
-    # ``None`` or ``DEFAULT``), its method replaced by ``form_method`` on the same receiver (if given), and the edit call
+    # ``DEFAULT``), its method replaced by ``form_method`` on the same receiver (if given), and the edit call
     # removed (``form.edit()`` becomes ``form``). The form call may be on another line than the edit call, or chained
     # to it. Values with a ``code`` method (e.g. properties) name their classes as the cell's ``namespace`` does. The
     # ``source`` is the cell as written, and its magics are kept as written.
@@ -288,8 +288,8 @@ def _rewritten_menu_cell(
     namespace: Mapping[str, Any] | None = None,
 ) -> str:
     # The code of the cell with the menu call replaced by a call of the ``method`` on the same receiver, with the
-    # ``form_keywords`` (leaving out those which are ``None`` or ``DEFAULT``). The ``source`` is the cell as written, and
-    # its magics are kept as written.
+    # ``form_keywords`` (leaving out those which are ``DEFAULT``). The ``source`` is the cell as written, and its magics
+    # are kept as written.
     magic_line, code = _split_cell_magic(source)
     python = _python_code(code)
     tree = ast.parse(python)
@@ -318,12 +318,12 @@ def _call_text(
     namespace: Mapping[str, Any] | None,
 ) -> str:
     # The code calling the ``callee`` with the positional arguments of the ``call`` (if any) as written, and the
-    # ``keywords`` (leaving out those which are ``None`` or ``DEFAULT``).
+    # ``keywords`` (leaving out those which are ``DEFAULT``).
     arguments = [] if call is None else [_segment(source, argument) for argument in call.args]
     arguments += [
         f"{name}={_literal_text(name, value, namespace)}"
         for name, value in keywords.items()
-        if value is not None and not isinstance(value, DefaultValue)
+        if not isinstance(value, DefaultValue)
     ]
     return f"{callee}({', '.join(arguments)})"
 

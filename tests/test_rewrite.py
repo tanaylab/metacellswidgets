@@ -11,6 +11,7 @@ from typing import Dict
 
 import numpy as np
 import pytest
+from dafpy.julia_import import DEFAULT
 
 import metacellswidgets
 from metacellswidgets.rewrite import _call_position
@@ -195,17 +196,19 @@ def test_menu() -> None:
         source,
         menu_position=recorder.menu_position,
         method="gene_gene",
-        form_keywords={"x_gene": "A", "colors": None},
+        form_keywords={"x_gene": "A", "colors": DEFAULT},
     )
     assert rewritten == "# The menu.\nform = mw.form(daf).gene_gene(x_gene='A').svg  # chosen\n"
 
 
-def test_none_values_are_left_out() -> None:
+def test_default_values_are_left_out() -> None:
     """
-    A keyword whose value is ``None`` is left to its default.
+    A keyword whose value is ``DEFAULT`` is left to its default, and one whose value is ``None`` is written (the form
+    leaves out a ``None`` which is its parameter's default).
     """
     source = "form = mw.form(daf, selected_box=(1, 2, 3, 4))\nform.edit()\n"
-    assert _rewrite(source, {"x_gene": "C", "selected_box": None}) == "form = mw.form(daf, x_gene='C')\nform\n"
+    keywords = {"x_gene": "C", "selected_box": DEFAULT, "log_base": None}
+    assert _rewrite(source, keywords) == "form = mw.form(daf, x_gene='C', log_base=None)\nform\n"
 
 
 def test_selection_values() -> None:

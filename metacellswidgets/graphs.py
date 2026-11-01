@@ -11,6 +11,7 @@ from typing import Sequence
 from typing import Tuple
 from typing import cast
 
+import metacellsgraphspy as mg
 import numpy as np
 from dafpy.julia_import import DEFAULT
 from dafpy.julia_import import DefaultValue
@@ -23,12 +24,14 @@ from plotly.callbacks import BoxSelector  # type: ignore
 from plotly.callbacks import LassoSelector  # type: ignore
 from somegraphspy import Graph
 from somegraphspy import HeatmapGraph
+from somegraphspy import LogBase
 from somegraphspy import PointsGraph
 
 from .editors import AxisPicker
 from .editors import GeneChoices
 from .editors import GenePicker
 from .editors import ListEditor
+from .editors import LogBasePicker
 from .editors import PropertyPicker
 from .editors import ShownProperties
 from .entries import EntryFilter
@@ -66,9 +69,10 @@ def _check_hovers(hovers: Sequence[Property] | None, shown: Sequence[Property | 
 
 class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
     """
-    The expression of ``x_gene`` against ``y_gene``, a point per entry of the ``axis``, on log scale. The points may be
-    colored by the ``colors`` property, and sized by the ``sizes`` property. The ``hovers`` properties add lines to the
-    hover of each point (left out, there are none).
+    The expression of ``x_gene`` against ``y_gene``, a point per entry of the ``axis``, on log scale. Both axes use the
+    ``log_base`` (left out, the default of ``gene_gene_graph`` of ``metacellsgraphspy``, which is 2), or are linear if
+    it is ``None``. The points may be colored by the ``colors`` property, and sized by the ``sizes`` property. The
+    ``hovers`` properties add lines to the hover of each point (left out, there are none).
 
     Some of the points may be selected, by the ``selected_box`` (the minimal X, maximal X, minimal Y and maximal Y) or
     the ``selected_lasso`` (its vertices), in the units of the data (e.g. gene fractions). At most one of them may be
@@ -85,6 +89,7 @@ class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
         axis: str = "metacell",
         x_gene: str,
         y_gene: str,
+        log_base: LogBase | None | DefaultValue = DEFAULT,
         colors: Property | None = None,
         sizes: Property | None = None,
         hovers: Sequence[Property] | None = None,
@@ -97,6 +102,7 @@ class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
         # While editing, a gene may not be picked yet.
         self.x_gene: str | None = x_gene
         self.y_gene: str | None = y_gene
+        self.log_base = log_base
         self.colors = colors
         self.sizes = sizes
         self.hovers = None if hovers is None else list(hovers)
@@ -141,6 +147,7 @@ class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
         axis = AxisPicker(self.source, ["metacell", "block"], self.axis)
         x_gene = GenePicker(genes, self.x_gene)
         y_gene = GenePicker(genes, self.y_gene)
+        log_base = LogBasePicker(self.log_base, mg.function_default(mg.gene_gene_graph, "log_base"))
         colors = PropertyPicker(self.source, Slot.COLORS, axis, self.colors)
         sizes = PropertyPicker(self.source, Slot.SIZES, axis, self.sizes)
         points_shown = ShownProperties()
@@ -150,10 +157,10 @@ class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
             title="Hovers",
         )
         points_shown.watch([colors, sizes], hovers, axis)
-        self.bind(axis=axis, x_gene=x_gene, y_gene=y_gene, colors=colors, sizes=sizes, hovers=hovers)
+        self.bind(axis=axis, x_gene=x_gene, y_gene=y_gene, log_base=log_base, colors=colors, sizes=sizes, hovers=hovers)
         return VBox(
             [
-                HBox([Label("Axis"), axis, Label("X"), x_gene, Label("Y"), y_gene]),
+                HBox([Label("Axis"), axis, Label("X"), x_gene, Label("Y"), y_gene, Label("Log"), log_base]),
                 HBox([Label("Colors"), colors]),
                 HBox([Label("Sizes"), sizes]),
                 hovers,

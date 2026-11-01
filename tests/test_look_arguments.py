@@ -6,6 +6,7 @@ import pytest
 from dafpy.julia_import import DEFAULT
 
 import metacellswidgets as mw
+from metacellswidgets.editors import LogBasePicker
 from metacellswidgets.editors import PropertyPicker
 from metacellswidgets.properties import Slot
 from metacellswidgets.rewrite import _literal_text
@@ -79,17 +80,45 @@ def test_picker_look_widgets() -> None:
     """
     source = mw.DafWidgets(_full_daf())
     picker = PropertyPicker(source, Slot.COLORS, "metacell", mw.TotalUMIs())
-    checkbox, dropdown = picker._look_box.children
+    checkbox, log_base = picker._look_box.children
     assert checkbox.value is True
-    assert dropdown.value == mw.LogBase.Log10Base
+    assert log_base.value is DEFAULT
+    assert log_base._dropdown.label == "log10 (default)"
     assert picker.value == mw.TotalUMIs()
 
-    dropdown.value = mw.LogBase.Log2Base
+    log_base._dropdown.index = 1
     assert picker.value == mw.TotalUMIs(log_base=mw.LogBase.Log2Base)
     checkbox.value = False
     assert picker.value == mw.TotalUMIs(show_legend=False, log_base=mw.LogBase.Log2Base)
+    log_base._dropdown.index = 0
+    assert picker.value == mw.TotalUMIs(show_legend=False, log_base=None)
 
     assert not PropertyPicker(source, Slot.HOVERS, "metacell", mw.TotalUMIs())._look_box.children
+
+
+def test_log_base_picker() -> None:
+    """
+    A log base picker offers linear, log2 and log10, marking the default. Picking the default sets ``DEFAULT``. The
+    border is dotted while the default is shown. An explicit value equal to the default stays explicit until the user
+    picks, but is shown as the default.
+    """
+    picker = LogBasePicker(DEFAULT, mw.LogBase.Log2Base)
+    assert picker._dropdown.options == ("linear", "log2 (default)", "log10")
+    assert picker._dropdown.label == "log2 (default)"
+    assert picker._dropdown.layout.border == "1px dotted black"
+
+    picker._dropdown.index = 0
+    assert picker.value is None
+    assert picker._dropdown.layout.border == "1px solid black"
+
+    picker._dropdown.index = 1
+    assert picker.value is DEFAULT
+    assert picker._dropdown.layout.border == "1px dotted black"
+
+    explicit = LogBasePicker(mw.LogBase.Log2Base, mw.LogBase.Log2Base)
+    assert explicit.value == mw.LogBase.Log2Base
+    assert explicit._dropdown.label == "log2 (default)"
+    assert explicit._dropdown.layout.border == "1px dotted black"
 
 
 def test_picker_look_of_a_default() -> None:

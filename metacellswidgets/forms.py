@@ -346,7 +346,7 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
             _rewritten_cell(
                 _current_cell_source(),
                 form_position=call_site.position,
-                form_keywords=form.arguments(),
+                form_keywords=_written_arguments(form),
                 edit_position=edit_site.position,
                 form_method=None if type(form) is type(self) else _method_name(self.source, type(form)),
                 namespace=shell.user_ns,
@@ -544,7 +544,7 @@ def _show_menu(source: SourceWidgets, tree: Branch, call_site: _CallSite | None)
             _current_cell_source(),
             menu_position=call_site.position,
             method=_method_name(source, type(form)),
-            form_keywords=form.arguments(),
+            form_keywords=_written_arguments(form),
             namespace=shell.user_ns,
         ),
         replace=True,
@@ -559,6 +559,17 @@ def _kind_tree(source: SourceWidgets) -> Branch | None:
             if isinstance(value, _GraphMenu):
                 return value.tree
     return None
+
+
+def _written_arguments(form: GraphForm) -> Dict[str, Any]:
+    # The arguments of the ``form`` to write into the code of the cell. A ``None`` is left out where it is the default
+    # of its parameter (e.g. no ``colors``), but written where it means something else (e.g. a linear ``log_base``).
+    parameters = inspect.signature(type(form).__init__).parameters
+    return {
+        name: value
+        for name, value in form.arguments().items()
+        if value is not None or parameters[name].default is not None
+    }
 
 
 def _method_name(source: SourceWidgets, graph_class: Type[GraphForm]) -> str:

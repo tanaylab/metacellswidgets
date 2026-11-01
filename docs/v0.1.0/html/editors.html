@@ -292,6 +292,15 @@
 </li>
 
 <li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.editors.LogBasePicker">
+<code class="docutils literal notranslate">
+<span class="pre">LogBasePicker
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l3">
 <a class="reference internal" href="#metacellswidgets.editors.NamePicker">
 <code class="docutils literal notranslate">
 <span class="pre">NamePicker
@@ -2273,6 +2282,153 @@ the graph (e.g. a tweak’s size) can follow it. A value the user set is kept. B
 </dd>
 </dl>
 
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.editors.LogBasePicker">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.editors.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">LogBasePicker
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">args
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="o">
+<span class="pre">**
+</span>
+</span>
+<span class="n">
+<span class="pre">kwargs
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/editors.html#LogBasePicker">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.editors.LogBasePicker" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Pick a log base: linear (
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code>), log2 or log10. The 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> starts as the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> log base. While it is
+
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code>, the dropdown shows the 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code>, whose entry says so (e.g. “log10 (default)”). Picking that entry
+sets 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code>, and picking another sets its log base. The dropdown’s border is dotted while it shows the
+default (whether the 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code> or equal to the default), and solid otherwise.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>current
+</strong> (
+<a class="reference internal" href="properties.html#metacellswidgets.properties.LogBase" title="somegraphspy.common.LogBase">
+<em>LogBase
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>
+<em> | 
+</em>
+<em>EllipsisType
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>default
+</strong> (
+<a class="reference internal" href="properties.html#metacellswidgets.properties.LogBase" title="somegraphspy.common.LogBase">
+<em>LogBase
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
 
 </dd>
 </dl>

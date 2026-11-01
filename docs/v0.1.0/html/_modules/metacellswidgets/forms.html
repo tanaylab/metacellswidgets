@@ -451,7 +451,7 @@
             <span class="n">_rewritten_cell</span><span class="p">(</span>
                 <span class="n">_current_cell_source</span><span class="p">(),</span>
                 <span class="n">form_position</span><span class="o">=</span><span class="n">call_site</span><span class="o">.</span><span class="n">position</span><span class="p">,</span>
-                <span class="n">form_keywords</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">arguments</span><span class="p">(),</span>
+                <span class="n">form_keywords</span><span class="o">=</span><span class="n">_written_arguments</span><span class="p">(</span><span class="n">form</span><span class="p">),</span>
                 <span class="n">edit_position</span><span class="o">=</span><span class="n">edit_site</span><span class="o">.</span><span class="n">position</span><span class="p">,</span>
                 <span class="n">form_method</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">form</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="k">else</span> <span class="n">_method_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">form</span><span class="p">)),</span>
                 <span class="n">namespace</span><span class="o">=</span><span class="n">shell</span><span class="o">.</span><span class="n">user_ns</span><span class="p">,</span>
@@ -671,7 +671,7 @@
             <span class="n">_current_cell_source</span><span class="p">(),</span>
             <span class="n">menu_position</span><span class="o">=</span><span class="n">call_site</span><span class="o">.</span><span class="n">position</span><span class="p">,</span>
             <span class="n">method</span><span class="o">=</span><span class="n">_method_name</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">form</span><span class="p">)),</span>
-            <span class="n">form_keywords</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">arguments</span><span class="p">(),</span>
+            <span class="n">form_keywords</span><span class="o">=</span><span class="n">_written_arguments</span><span class="p">(</span><span class="n">form</span><span class="p">),</span>
             <span class="n">namespace</span><span class="o">=</span><span class="n">shell</span><span class="o">.</span><span class="n">user_ns</span><span class="p">,</span>
         <span class="p">),</span>
         <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -686,6 +686,17 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">_GraphMenu</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">tree</span>
     <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_written_arguments</span><span class="p">(</span><span class="n">form</span><span class="p">:</span> <span class="n">GraphForm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="c1"># The arguments of the ``form`` to write into the code of the cell. A ``None`` is left out where it is the default</span>
+    <span class="c1"># of its parameter (e.g. no ``colors``), but written where it means something else (e.g. a linear ``log_base``).</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">form</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">value</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">form</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">parameters</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_method_name</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="n">SourceWidgets</span><span class="p">,</span> <span class="n">graph_class</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">GraphForm</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>

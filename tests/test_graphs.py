@@ -6,6 +6,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from dafpy.julia_import import DEFAULT
 from plotly.graph_objects import Figure  # type: ignore
 from somegraphspy import HtmlText
 from somegraphspy import PngImage
@@ -13,6 +14,7 @@ from somegraphspy import PointsGraph
 from somegraphspy import SvgImage
 
 import metacellswidgets as mw
+from metacellswidgets.forms import _written_arguments
 
 from .test_anndata_widgets import _source
 from .test_daf_widgets import _full_daf
@@ -29,6 +31,7 @@ def test_gene_gene_arguments() -> None:
         "axis": "metacell",
         "x_gene": "A",
         "y_gene": "B",
+        "log_base": DEFAULT,
         "colors": mw.Type(),
         "sizes": None,
         "hovers": None,
@@ -69,6 +72,29 @@ def test_bare_form_shows_its_repr() -> None:
     form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B")
     assert not hasattr(form, "_ipython_display_")
     assert not hasattr(form, "_repr_mimebundle_")
+
+
+def test_gene_gene_log_base(tmp_path: Path) -> None:
+    """
+    The log base reaches both axes of the graph, for both kinds of data sources, and ``None`` makes them linear.
+    """
+    for source in (mw.DafWidgets(_full_daf()), _source(tmp_path)):
+        graph = source.gene_gene(x_gene="A", y_gene="B", log_base=mw.LogBase.Log10Base).graph()
+        assert graph.configuration.x_axis.scale.log_base == mw.LogBase.Log10Base
+        assert graph.configuration.y_axis.scale.log_base == mw.LogBase.Log10Base
+        graph = source.gene_gene(x_gene="A", y_gene="B", log_base=None).graph()
+        assert graph.configuration.x_axis.scale.log_base is None
+
+
+def test_written_arguments() -> None:
+    """
+    The code of a cell leaves out a ``None`` which is its parameter's default, but writes a ``None`` which means
+    something else (a linear ``log_base``).
+    """
+    form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B", log_base=None)
+    written = _written_arguments(form)
+    assert written["log_base"] is None
+    assert "colors" not in written
 
 
 def test_gene_gene_tweaks() -> None:
