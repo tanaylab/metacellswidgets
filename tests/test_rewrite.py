@@ -15,6 +15,7 @@ from dafpy.julia_import import DEFAULT
 
 import metacellswidgets
 from metacellswidgets.rewrite import _call_position
+from metacellswidgets.rewrite import _cell_with_edit
 from metacellswidgets.rewrite import _Position
 from metacellswidgets.rewrite import _python_code
 from metacellswidgets.rewrite import _rewritten_cell
@@ -199,6 +200,50 @@ def test_menu() -> None:
         form_keywords={"x_gene": "A", "colors": DEFAULT},
     )
     assert rewritten == "# The menu.\nform = mw.form(daf).gene_gene(x_gene='A').svg  # chosen\n"
+
+
+def test_edit_kept() -> None:
+    """
+    The edit call may be kept, so only the form call's keyword arguments change (the text an "Edit" button of the
+    edited graph restores).
+    """
+    source = "form = mw.form(daf).edit().svg\n"
+    assert _rewrite(source, {"x_gene": "C"}, is_edit_kept=True) == "form = mw.form(daf, x_gene='C').edit().svg\n"
+
+
+def test_menu_with_edit() -> None:
+    """
+    A menu call may become the chosen form's call followed by an edit call.
+    """
+    source = "mw.form(daf).menu().svg\n"
+    recorder = _Recorder()
+    _run(source, recorder)
+    assert recorder.menu_position is not None
+    rewritten = _rewritten_menu_cell(
+        source, menu_position=recorder.menu_position, method="gene_gene", form_keywords={}, is_edit_added=True
+    )
+    assert rewritten == "mw.form(daf).gene_gene().edit().svg\n"
+
+
+def _with_edit(source: str) -> str:
+    """
+    Run the cell, then add an edit call after its form call.
+    """
+    recorder = _Recorder()
+    _run(source, recorder)
+    assert recorder.form_position is not None
+    return _cell_with_edit(source, recorder.form_position)
+
+
+def test_cell_with_edit() -> None:
+    """
+    An edit call is added right after the form call: chained before the format, on the line which assigns the form,
+    after a call spread over several lines, and under a cell magic, which is kept.
+    """
+    assert _with_edit("mw.form(daf, x_gene='A').svg\n") == "mw.form(daf, x_gene='A').edit().svg\n"
+    assert _with_edit("form = mw.form(daf)\nform.svg\n") == "form = mw.form(daf).edit()\nform.svg\n"
+    assert _with_edit("mw.form(\n    daf,\n).svg\n") == "mw.form(\n    daf,\n).edit().svg\n"
+    assert _with_edit("%%time\nmw.form(daf).svg\n") == "%%time\nmw.form(daf).edit().svg\n"
 
 
 def test_default_values_are_left_out() -> None:

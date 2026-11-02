@@ -69,9 +69,11 @@ from .kernel import _route_to_subshell
 from .kernel import _routing_new_widgets
 from .rewrite import _CallSite
 from .rewrite import _cell_site
+from .rewrite import _cell_with_edit
 from .rewrite import _check_cell_rewrite
 from .rewrite import _claim_cell_rewrite
 from .rewrite import _current_cell_source
+from .rewrite import _current_cell_token
 from .rewrite import _rewritten_cell
 from .rewrite import _rewritten_menu_cell
 from .selections import _points_key
@@ -169,33 +171,55 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
     @property
     def fig(self) -> Figure:
         """
-        The graph (see :py:meth:`graph`) as a Plotly figure. A notebook shows it as an interactive figure.
+        The graph (see :py:meth:`graph`) as a Plotly figure. A notebook shows it as an interactive figure, with an "Edit"
+        button (see :py:meth:`edit`).
         """
-        return self._shown_graph().fig
+        return _EditableFigure(self._shown_graph().fig, self._edit_texts())
 
     @property
     def html(self) -> HtmlText:
         """
         The graph (see :py:meth:`graph`) as a standalone HTML page, which shows the interactive Plotly figure. It is the
-        HTML text, which a notebook shows as the page.
+        HTML text, which a notebook shows as the page, with an "Edit" button (see :py:meth:`edit`).
         """
-        return self._shown_graph().html
+        return _EditableHtmlText(self._shown_graph().html, self._edit_texts())
 
     @property
     def svg(self) -> SvgImage:
         """
         The graph (see :py:meth:`graph`) as a static SVG image, which obeys the graph's size. It is the SVG text, which a
-        notebook shows as the image.
+        notebook shows as the image, with an "Edit" button (see :py:meth:`edit`).
         """
-        return self._shown_graph().svg
+        return _EditableSvgImage(self._shown_graph().svg, self._edit_texts())
 
     @property
     def png(self) -> PngImage:
         """
         The graph (see :py:meth:`graph`) as a static PNG image, which obeys the graph's size. It is the PNG bytes, which
-        a notebook shows as the image.
+        a notebook shows as the image, with an "Edit" button (see :py:meth:`edit`).
         """
-        return self._shown_graph().png
+        return _EditablePngImage(self._shown_graph().png, self._edit_texts())
+
+    def _edit_texts(self) -> Tuple[str, str] | None:
+        # The code the running cell is expected to have, and the code which edits this form, for the "Edit" button of
+        # its shown graph. If this run edited the form, these are the texts it recorded (see ``_EditedCell``). Otherwise
+        # they are the cell's code, and that code with an edit call after the call which created the form. ``None`` if
+        # the graph has no "Edit" button (e.g. the form was created in another cell, or outside a notebook).
+        if get_ipython() is None:
+            return None
+        cell_token = _current_cell_token()
+        edited = _EDITED_CELL
+        if edited is not None and edited.cell_token == cell_token and edited.form is self:
+            return (edited.text, edited.edit_text)
+        call_site = self._call_site
+        if call_site is None or call_site.cell_token != cell_token:
+            return None
+        try:
+            _check_cell_rewrite(call_site)
+            source = _current_cell_source()
+            return (source, _cell_with_edit(source, call_site.position))
+        except RuntimeError:
+            return None
 
     def _shown_graph(self) -> Graph:
         # The graph, to show. If its points differ from those the selection was made on, the selection is cleared (only
@@ -315,6 +339,10 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
         This shows nothing after the editor closes. Follow it by a format to show the graph (e.g. ``.edit().fig``). It
         requires the form to be created in the same cell, at its top level, by a method of a kind of data source (e.g.
         ``source.gene_gene(...)``).
+
+        A notebook shows such a form's graph with an "Edit" button, which adds this call back and runs the cell again.
+        It works only in JupyterLab or Notebook 7 started with ``expose_app_in_browser=True``. Otherwise, it says how to
+        edit the graph by hand.
         """
         edited = self._edit(_cell_site(sys._getframe(1)))  # pylint: disable=protected-access
         return self if edited is None else edited
@@ -332,7 +360,8 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
     def _edit(self, edit_site: _CallSite | None) -> "GraphForm | None":
         # Show the editor until "Done" is clicked, then rewrite the cell. Returns the form the editor ended with. If
         # "Cancel" is clicked instead, leave the cell as it is, restore the arguments (the editor changes them in place),
-        # and return ``None``.
+        # and return ``None``. Either way, record the run for the "Edit" button of the graph shown after it.
+        global _EDITED_CELL  # pylint: disable=global-statement
         call_site = self._call_site
         _check_cell_rewrite(call_site, edit_site)
         if call_site is None or edit_site is None or edit_site.cell_token != call_site.cell_token:
@@ -343,22 +372,28 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
         _claim_cell_rewrite()
         original_arguments = copy.deepcopy(self.arguments())
         form = _EditSession(self.source, self, _kind_tree(self.source)).run()
+        source = _current_cell_source()
         if form is None:
             for name, value in original_arguments.items():
                 setattr(self, name, value)
+            _EDITED_CELL = _EditedCell(cell_token=_current_cell_token(), form=self, text=source, edit_text=source)
             return None
         shell = get_ipython()
-        shell.set_next_input(
-            _rewritten_cell(
-                _current_cell_source(),
+
+        def rewritten(is_edit_kept: bool) -> str:
+            return _rewritten_cell(
+                source,
                 form_position=call_site.position,
                 form_keywords=_written_arguments(form),
                 edit_position=edit_site.position,
                 form_method=None if type(form) is type(self) else _method_name(self.source, type(form)),
                 namespace=shell.user_ns,
-            ),
-            replace=True,
-        )
+                is_edit_kept=is_edit_kept,
+            )
+
+        text = rewritten(False)
+        _EDITED_CELL = _EditedCell(cell_token=_current_cell_token(), form=form, text=text, edit_text=rewritten(True))
+        shell.set_next_input(text, replace=True)
         return form
 
 
@@ -402,6 +437,97 @@ class _DragBar(anywidget.AnyWidget):  # pylint: disable=too-many-ancestors,abstr
     start = traitlets.Int(0).tag(sync=True)
     smallest = traitlets.Int(_SMALLEST_DRAGGED_SIZE).tag(sync=True)
     dragged = traitlets.Int(0).tag(sync=True)
+
+
+class _EditButton(anywidget.AnyWidget):  # pylint: disable=too-many-ancestors,abstract-method
+    # The "Edit" button of a shown graph, on top of its top left corner. Clicking it replaces the code of its cell, if
+    # the cell still has the ``expected`` code, by the ``replacement`` code, which edits the graph, and runs the cell.
+
+    _esm = Path(__file__).parent / "edit_button.js"
+
+    expected = traitlets.Unicode("").tag(sync=True)
+    replacement = traitlets.Unicode("").tag(sync=True)
+
+
+@dataclass(frozen=True)
+class _EditedCell:
+    # A run of a cell which edited a form: the code it leaves in the cell (``text``), and the code which edits the form
+    # again (``edit_text``). The "Edit" button of the graph of the edited ``form``, shown later in the same run, uses
+    # these, since the cell's code is replaced only when the run ends.
+    cell_token: int
+    form: "GraphForm"
+    text: str
+    edit_text: str
+
+
+# The last run which edited a form (see ``_EditedCell``).
+_EDITED_CELL: _EditedCell | None = None
+
+
+def _show_with_edit_button(edit_texts: Tuple[str, str] | None, show: Callable[[], None]) -> None:
+    # Show a graph by ``show``, with an "Edit" button on top of it if there are ``edit_texts`` (the code the cell is
+    # expected to have, and the code which edits the graph).
+    if edit_texts is None:
+        show()
+        return
+    output = Output()
+    with output:
+        show()
+    expected, replacement = edit_texts
+    display_in_cell(VBox([_EditButton(expected=expected, replacement=replacement), output]))
+
+
+class _EditableFigure(Figure):  # pylint: disable=too-many-ancestors
+    # A Plotly figure of a form's graph, which a notebook shows with an "Edit" button (see ``GraphForm._edit_texts``).
+
+    def __init__(self, figure: Figure, edit_texts: Tuple[str, str] | None) -> None:
+        super().__init__(figure)
+        self._edit_texts = edit_texts
+
+    def _ipython_display_(self) -> None:
+        _show_with_edit_button(self._edit_texts, super()._ipython_display_)
+
+
+class _EditableSvgImage(SvgImage):
+    # An SVG image of a form's graph, which a notebook shows with an "Edit" button (see ``GraphForm._edit_texts``).
+
+    _edit_texts: Tuple[str, str] | None
+
+    def __new__(cls, text: str, edit_texts: Tuple[str, str] | None) -> "_EditableSvgImage":
+        image = super().__new__(cls, text)
+        image._edit_texts = edit_texts
+        return image
+
+    def _ipython_display_(self) -> None:
+        _show_with_edit_button(self._edit_texts, lambda: display_in_cell(SvgImage(self)))
+
+
+class _EditablePngImage(PngImage):
+    # A PNG image of a form's graph, which a notebook shows with an "Edit" button (see ``GraphForm._edit_texts``).
+
+    _edit_texts: Tuple[str, str] | None
+
+    def __new__(cls, data: bytes, edit_texts: Tuple[str, str] | None) -> "_EditablePngImage":
+        image = super().__new__(cls, data)
+        image._edit_texts = edit_texts
+        return image
+
+    def _ipython_display_(self) -> None:
+        _show_with_edit_button(self._edit_texts, lambda: display_in_cell(PngImage(self)))
+
+
+class _EditableHtmlText(HtmlText):
+    # The HTML page of a form's graph, which a notebook shows with an "Edit" button (see ``GraphForm._edit_texts``).
+
+    _edit_texts: Tuple[str, str] | None
+
+    def __new__(cls, text: str, edit_texts: Tuple[str, str] | None) -> "_EditableHtmlText":
+        page = super().__new__(cls, text)
+        page._edit_texts = edit_texts
+        return page
+
+    def _ipython_display_(self) -> None:
+        _show_with_edit_button(self._edit_texts, lambda: display_in_cell(HtmlText(self)))
 
 
 @dataclass(frozen=True)
@@ -570,8 +696,9 @@ class Cancelled(Exception):
 
 def _show_menu(source: SourceWidgets, tree: Branch, call_site: _CallSite | None) -> GraphForm:
     # Show the menu of the graphs of the ``tree`` until "Done" is clicked, then rewrite the menu call (at the
-    # ``call_site``) into the chosen form's. If "Cancel" is clicked instead, leave the cell as it is, and raise
-    # ``Cancelled``.
+    # ``call_site``) into the chosen form's, and record the run for the "Edit" button of the graph shown after it. If
+    # "Cancel" is clicked instead, leave the cell as it is, and raise ``Cancelled``.
+    global _EDITED_CELL  # pylint: disable=global-statement
     _check_cell_rewrite(call_site)
     if call_site is None:
         raise RuntimeError("a menu must be shown at the top level of a cell (e.g. source.menu())")
@@ -580,16 +707,20 @@ def _show_menu(source: SourceWidgets, tree: Branch, call_site: _CallSite | None)
     if form is None:
         raise Cancelled("The menu was cancelled.")
     shell = get_ipython()
-    shell.set_next_input(
-        _rewritten_menu_cell(
+
+    def rewritten(is_edit_added: bool) -> str:
+        return _rewritten_menu_cell(
             _current_cell_source(),
             menu_position=call_site.position,
             method=_method_name(source, type(form)),
             form_keywords=_written_arguments(form),
             namespace=shell.user_ns,
-        ),
-        replace=True,
-    )
+            is_edit_added=is_edit_added,
+        )
+
+    text = rewritten(False)
+    _EDITED_CELL = _EditedCell(cell_token=_current_cell_token(), form=form, text=text, edit_text=rewritten(True))
+    shell.set_next_input(text, replace=True)
     return form
 
 

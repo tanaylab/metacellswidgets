@@ -1279,7 +1279,14 @@ each of the
 <span class="pre">graph()
 </span>
 </code>
-</a>) as a Plotly figure. A notebook shows it as an interactive figure.
+</a>) as a Plotly figure. A notebook shows it as an interactive figure, with an “Edit”
+button (see 
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.edit" title="metacellswidgets.forms.GraphForm.edit">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">edit()
+</span>
+</code>
+</a>).
 </p>
 
 </dd>
@@ -1324,7 +1331,13 @@ each of the
 </span>
 </code>
 </a>) as a standalone HTML page, which shows the interactive Plotly figure. It is the
-HTML text, which a notebook shows as the page.
+HTML text, which a notebook shows as the page, with an “Edit” button (see 
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.edit" title="metacellswidgets.forms.GraphForm.edit">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">edit()
+</span>
+</code>
+</a>).
 </p>
 
 </dd>
@@ -1369,7 +1382,13 @@ HTML text, which a notebook shows as the page.
 </span>
 </code>
 </a>) as a static SVG image, which obeys the graph’s size. It is the SVG text, which a
-notebook shows as the image.
+notebook shows as the image, with an “Edit” button (see 
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.edit" title="metacellswidgets.forms.GraphForm.edit">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">edit()
+</span>
+</code>
+</a>).
 </p>
 
 </dd>
@@ -1414,7 +1433,13 @@ notebook shows as the image.
 </span>
 </code>
 </a>) as a static PNG image, which obeys the graph’s size. It is the PNG bytes, which
-a notebook shows as the image.
+a notebook shows as the image, with an “Edit” button (see 
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.edit" title="metacellswidgets.forms.GraphForm.edit">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">edit()
+</span>
+</code>
+</a>).
 </p>
 
 </dd>
@@ -1827,6 +1852,15 @@ requires the form to be created in the same cell, at its top level, by a method 
 <span class="pre">source.gene_gene(...)
 </span>
 </code>).
+</p>
+
+<p>A notebook shows such a form’s graph with an “Edit” button, which adds this call back and runs the cell again.
+It works only in JupyterLab or Notebook 7 started with 
+<code class="docutils literal notranslate">
+<span class="pre">expose_app_in_browser=True
+</span>
+</code>. Otherwise, it says how to
+edit the graph by hand.
 </p>
 
 <dl class="field-list simple">

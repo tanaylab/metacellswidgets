@@ -310,9 +310,50 @@ def test_edit_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
     colors_gene = _opened_widgets(client, _is_gene_picker, 1)[0]
     _send_state(client, colors_gene, {"value": "D"})
     _click(client, done)
-    assert _rewritten_text(client, message_id) == (
-        "mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='D', colors=mw.GeneExpression(gene='D')).fig"
-    )
+    edit_button = _opened_widgets(client, _is_edit_button, 1)[0]
+    rewritten = _rewritten_text(client, message_id)
+    assert rewritten == ("mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='D', colors=mw.GeneExpression(gene='D')).fig")
+    # The graph shown after editing has an "Edit" button, which expects the rewritten cell, and adds the edit call back.
+    assert edit_button["expected"] == rewritten
+    assert edit_button["replacement"] == rewritten.replace(").fig", ").edit().fig")
+
+
+def _is_edit_button(state: Dict[str, Any]) -> bool:
+    # Whether the widget state is of the "Edit" button of a shown graph.
+    return "expected" in state and "replacement" in state
+
+
+def test_shown_graph_has_an_edit_button(kernel: Tuple[Any, Any]) -> None:
+    """
+    A graph shown as the value of a cell has an "Edit" button, which expects the cell's code and adds an edit call after
+    the form's call.
+    """
+    _, client = kernel
+    _execute(client, _DAF_SETUP)
+
+    cell = "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.fig"
+    client.execute(cell)
+    edit_button = _opened_widgets(client, _is_edit_button, 1)[0]
+    assert edit_button["expected"] == cell
+    assert edit_button["replacement"] == cell.replace("y_gene='B')", "y_gene='B').edit()")
+
+
+def test_cancelled_edit_reruns_the_cell(kernel: Tuple[Any, Any]) -> None:
+    """
+    After "Cancel", the cell keeps its edit call, so the "Edit" button of the graph shown after it runs the cell as it
+    is.
+    """
+    _, client = kernel
+    _execute(client, _DAF_SETUP)
+
+    cell = "mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B').edit().fig"
+    client.execute(cell)
+    cancel = _opened_widgets(client, _is_cancel_button, 1)[0]
+    time.sleep(1)
+    _click(client, cancel)
+    edit_button = _opened_widgets(client, _is_edit_button, 1)[0]
+    assert edit_button["expected"] == cell
+    assert edit_button["replacement"] == cell
 
 
 def test_cell_magic_is_kept_by_the_rewrite(kernel: Tuple[Any, Any]) -> None:
@@ -390,7 +431,32 @@ def test_menu_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
     _send_state(client, x_gene, {"value": "A"})
     _send_state(client, y_gene, {"value": "D"})
     _click(client, done)
-    assert _rewritten_text(client, message_id) == ("mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='D').fig")
+    edit_button = _opened_widgets(client, _is_edit_button, 1)[0]
+    rewritten = _rewritten_text(client, message_id)
+    assert rewritten == ("mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='D').fig")
+    # The chosen graph, shown after the menu, has an "Edit" button which edits it.
+    assert edit_button["expected"] == rewritten
+    assert edit_button["replacement"] == "mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='D').edit().fig"
+
+
+def test_graph_of_another_cell_has_no_edit_button(kernel: Tuple[Any, Any]) -> None:
+    """
+    A graph of a form created in another cell has no "Edit" button, since editing can't rewrite that cell.
+    """
+    _, client = kernel
+    _execute(client, _DAF_SETUP)
+    _execute(client, "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\n")
+
+    message_id = client.execute("form.fig\n")
+    opened: List[Dict[str, Any]] = []
+    while True:
+        message = client.get_iopub_msg(timeout=300)
+        if message["msg_type"] == "comm_open":
+            opened.append(message["content"]["data"].get("state", {}))
+        if message["msg_type"] == "status" and message["content"]["execution_state"] == "idle":
+            if message["parent_header"].get("msg_id") == message_id:
+                break
+    assert not [state for state in opened if _is_edit_button(state)]
 
 
 def _is_cancel_button(state: Dict[str, Any]) -> bool:

@@ -3,7 +3,8 @@ Write the state of a form back into the code of the cell that runs it.
 
 A form records where in its cell it was created. When editing it is done, the cell's code is rewritten: the form call
 gets the form's state as keyword arguments, and the edit call is removed (``form.edit()`` becomes ``form``). A menu call
-is replaced by the call of the chosen form. The rest of the cell is kept as written.
+is replaced by the call of the chosen form. The "Edit" button of a shown graph does the reverse: it adds the edit call
+after the form call. The rest of the cell is kept as written.
 The new code reaches the notebook through IPython's ``set_next_input(..., replace=True)``, which only works while the
 cell runs.
 
@@ -245,12 +246,13 @@ def _rewritten_cell(
     edit_position: _Position,
     form_method: str | None = None,
     namespace: Mapping[str, Any] | None = None,
+    is_edit_kept: bool = False,
 ) -> str:
     # The code of the cell with the form call's keyword arguments set to ``form_keywords`` (leaving out those which are
     # ``DEFAULT``), its method replaced by ``form_method`` on the same receiver (if given), and the edit call
-    # removed (``form.edit()`` becomes ``form``). The form call may be on another line than the edit call, or chained
-    # to it. Values with a ``code`` method (e.g. properties) name their classes as the cell's ``namespace`` does. The
-    # ``source`` is the cell as written, and its magics are kept as written.
+    # removed (``form.edit()`` becomes ``form``), unless it ``is_edit_kept``. The form call may be on another line than
+    # the edit call, or chained to it. Values with a ``code`` method (e.g. properties) name their classes as the cell's
+    # ``namespace`` does. The ``source`` is the cell as written, and its magics are kept as written.
     magic_line, code = _split_cell_magic(source)
     python = _python_code(code)
     tree = ast.parse(python)
@@ -266,17 +268,14 @@ def _rewritten_cell(
         form_callee = f"{_segment(python, form_call.func.value)}.{form_method}"
     form_text = _call_text(python, form_call, form_callee, form_keywords, namespace)
 
-    # The edit call is removed from the end of the form it is called on, which is after the whole form call even when
-    # the two are chained.
-    _, receiver_end_line, _, receiver_end_column = _node_position(edit_call.func.value)
-    _, edit_end_line, _, edit_end_column = _node_position(edit_call)
-    return magic_line + _replaced(
-        code,
-        [
-            ((receiver_end_line, receiver_end_column, edit_end_line, edit_end_column), ""),
-            (_span(form_call), form_text),
-        ],
-    )
+    replacements = [(_span(form_call), form_text)]
+    if not is_edit_kept:
+        # The edit call is removed from the end of the form it is called on, which is after the whole form call even
+        # when the two are chained.
+        _, receiver_end_line, _, receiver_end_column = _node_position(edit_call.func.value)
+        _, edit_end_line, _, edit_end_column = _node_position(edit_call)
+        replacements.append(((receiver_end_line, receiver_end_column, edit_end_line, edit_end_column), ""))
+    return magic_line + _replaced(code, replacements)
 
 
 def _rewritten_menu_cell(
@@ -286,10 +285,11 @@ def _rewritten_menu_cell(
     method: str,
     form_keywords: Mapping[str, Any],
     namespace: Mapping[str, Any] | None = None,
+    is_edit_added: bool = False,
 ) -> str:
     # The code of the cell with the menu call replaced by a call of the ``method`` on the same receiver, with the
-    # ``form_keywords`` (leaving out those which are ``DEFAULT``). The ``source`` is the cell as written, and its magics
-    # are kept as written.
+    # ``form_keywords`` (leaving out those which are ``DEFAULT``), and with ``.edit()`` after it if it ``is_edit_added``.
+    # The ``source`` is the cell as written, and its magics are kept as written.
     magic_line, code = _split_cell_magic(source)
     python = _python_code(code)
     tree = ast.parse(python)
@@ -298,7 +298,19 @@ def _rewritten_menu_cell(
     assert isinstance(menu_call.func, ast.Attribute)
     form_callee = f"{_segment(python, menu_call.func.value)}.{method}"
     form_text = _call_text(python, None, form_callee, form_keywords, namespace)
+    if is_edit_added:
+        form_text += ".edit()"
     return magic_line + _replaced(code, [(_span(menu_call), form_text)])
+
+
+def _cell_with_edit(source: str, form_position: _Position) -> str:
+    # The code of the cell with ``.edit()`` called on the form call at the ``form_position`` (e.g.
+    # ``source.gene_gene(...).fig`` becomes ``source.gene_gene(...).edit().fig``). The ``source`` is the cell as written,
+    # and its magics are kept as written.
+    magic_line, code = _split_cell_magic(source)
+    form_call = _top_level_call(ast.parse(_python_code(code)), form_position, "form")
+    _, end_line, _, end_column = _node_position(form_call)
+    return magic_line + _replaced(code, [((end_line, end_column, end_line, end_column), ".edit()")])
 
 
 def _cell_namespace(tree: ast.Module, namespace: Mapping[str, Any] | None) -> Mapping[str, Any] | None:
