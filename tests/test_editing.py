@@ -87,6 +87,22 @@ def test_redraw_keeps_the_full_width() -> None:
     assert widget.layout.autosize is True
 
 
+def test_redraw_resets_the_shown_layout() -> None:
+    """
+    Redrawing a figure first resets every property of the shown layout in the browser, so a property which the new
+    figure doesn't set (e.g. a title removed with its tweak) doesn't remain there.
+    """
+    widget = FigureWidget()
+    form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B", tweaks=[mw.Title(text="Foo")])
+    _replace_figure(widget, form.fig)
+    sent: List[Any] = []
+    widget._send_relayout_msg = lambda layout_data, source_view_id=None: sent.append(layout_data)
+    form.tweaks = None
+    _replace_figure(widget, form.fig)
+    assert sent[0]["title"] is None
+    assert "title" not in sent[-1]
+
+
 def test_redraw_without_height() -> None:
     """
     Redrawing a figure which sets no height after one which does gives it Plotly's default height, not the previous one.

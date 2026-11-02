@@ -378,12 +378,12 @@ class Title(Tweak):
 
 
 class _TitleEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
-    # The editor of a ``Title``: a text box, which starts with the ``text``. An empty box removes the title. The text is
-    # required, so it has no default.
+    # The editor of a ``Title``: a text box, which starts with the ``text``. An empty box removes the title, and its
+    # placeholder says so. The text is required, so it has no default.
 
     def __init__(self, text: str | None) -> None:
         super().__init__()
-        self._text = Text(value="" if text is None else text, placeholder="Title")
+        self._text = Text(value="" if text is None else text, placeholder="(No title)")
         _mark_default(self._text, False)
         self.children = [self._text]
         self.value = Title(text=text or None)

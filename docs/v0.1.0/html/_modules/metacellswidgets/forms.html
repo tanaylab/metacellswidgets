@@ -1123,7 +1123,10 @@
     <span class="c1"># Show the ``figure`` in the interactive figure ``widget``, replacing its traces and its layout. Replacing the layout</span>
     <span class="c1"># drops its ``autosize``, without which the figure takes Plotly's fixed default width instead of the cell's, so it is</span>
     <span class="c1"># set again. It only applies to a width or a height the figure doesn't set (e.g. by a ``Size`` tweak). It would keep</span>
-    <span class="c1"># the height the previous figure left, so a figure which sets no height gets Plotly's default height.</span>
+    <span class="c1"># the height the previous figure left, so a figure which sets no height gets Plotly's default height. The browser</span>
+    <span class="c1"># merges a new layout into the shown one, so the shown one is reset first, so nothing the new figure doesn't set</span>
+    <span class="c1"># (e.g. a title) remains.</span>
+    <span class="n">widget</span><span class="o">.</span><span class="n">plotly_relayout</span><span class="p">({</span><span class="n">name</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">widget</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">to_plotly_json</span><span class="p">()})</span>
     <span class="k">with</span> <span class="n">widget</span><span class="o">.</span><span class="n">batch_update</span><span class="p">():</span>
         <span class="n">widget</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">widget</span><span class="o">.</span><span class="n">add_traces</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">figure</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>

@@ -996,7 +996,10 @@ def _replace_figure(widget: FigureWidget, figure: Figure) -> None:
     # Show the ``figure`` in the interactive figure ``widget``, replacing its traces and its layout. Replacing the layout
     # drops its ``autosize``, without which the figure takes Plotly's fixed default width instead of the cell's, so it is
     # set again. It only applies to a width or a height the figure doesn't set (e.g. by a ``Size`` tweak). It would keep
-    # the height the previous figure left, so a figure which sets no height gets Plotly's default height.
+    # the height the previous figure left, so a figure which sets no height gets Plotly's default height. The browser
+    # merges a new layout into the shown one, so the shown one is reset first, so nothing the new figure doesn't set
+    # (e.g. a title) remains.
+    widget.plotly_relayout({name: None for name in widget.layout.to_plotly_json()})
     with widget.batch_update():
         widget.data = []
         widget.add_traces(list(figure.data))

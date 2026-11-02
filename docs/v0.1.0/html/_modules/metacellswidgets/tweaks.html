@@ -493,12 +493,12 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_TitleEditor</span><span class="p">(</span><span class="n">ArgumentsEditor</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
-    <span class="c1"># The editor of a ``Title``: a text box, which starts with the ``text``. An empty box removes the title. The text is</span>
-    <span class="c1"># required, so it has no default.</span>
+    <span class="c1"># The editor of a ``Title``: a text box, which starts with the ``text``. An empty box removes the title, and its</span>
+    <span class="c1"># placeholder says so. The text is required, so it has no default.</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_text</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">""</span> <span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">text</span><span class="p">,</span> <span class="n">placeholder</span><span class="o">=</span><span class="s2">"Title"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_text</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">""</span> <span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">text</span><span class="p">,</span> <span class="n">placeholder</span><span class="o">=</span><span class="s2">"(No title)"</span><span class="p">)</span>
         <span class="n">_mark_default</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_text</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_text</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">Title</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">)</span>
