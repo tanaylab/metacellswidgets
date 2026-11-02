@@ -50,9 +50,10 @@ def _rows_box(editor: ListEditor) -> Any:
 def test_list_editor() -> None:
     """
     A list editor starts with a row per object, and ends with a blank row. Its rows are hidden at first, below a
-    disclosure which shows them. Picking in the blank row adds it to the list, and adds a new blank row. Rows move up
-    and down (but not past either end), and are removed. Without a default, removing all of them lands on the default,
-    an empty list, so the value is ``None``.
+    disclosure which shows them. Each row starts with its buttons, which are disabled in the blank row, and where a row
+    can't move. Picking in the blank row adds it to the list, and adds a new blank row. Rows move up and down (but not
+    past either end), and are removed. Without a default, removing all of them lands on the default, an empty list, so
+    the value is ``None``.
     """
     first, second, third = mw.Title(text="A"), mw.Title(text="B"), mw.Title(text="C")
     editor = ListEditor(_Row, [first, second], title="Titles")
@@ -66,8 +67,14 @@ def test_list_editor() -> None:
     assert rows_box.layout.display is None
     assert disclosure.icon == "caret-down"
     assert len(rows_box.children) == 3
+    assert [button.tooltip for button in rows_box.children[0].children[:3]] == ["Remove", "Move up", "Move down"]
+    assert [[button.disabled for button in row_box.children[:3]] for row_box in rows_box.children] == [
+        [False, True, False],
+        [False, False, True],
+        [True, True, True],
+    ]
 
-    rows_box.children[2].pick(third)
+    rows_box.children[2].children[3].pick(third)
     assert editor.value == [first, second, third]
     assert len(rows_box.children) == 4
 
@@ -78,7 +85,7 @@ def test_list_editor() -> None:
     assert editor.value == [first, third, second]
 
     for _ in range(3):
-        rows_box.children[0].children[3].click()
+        rows_box.children[0].children[0].click()
     assert editor.value is None
 
 
@@ -121,7 +128,7 @@ def test_list_editor_hidden_rows() -> None:
     assert editor.value == [second, first, hidden]
 
     assert rows[2].comm is not None
-    rows_box.children[0].children[3].click()
+    rows_box.children[0].children[0].click()
     assert editor.value == [first, hidden]
     assert rows[2].comm is None
 
@@ -136,12 +143,12 @@ def test_list_editor_default() -> None:
     rows_box = _rows_box(editor)
     assert editor.value is DEFAULT
     assert editor.intended() is DEFAULT
-    assert rows_box.children[0].children[0].value == first
+    assert rows_box.children[0].children[3].value == first
 
-    rows_box.children[0].children[0].pick(second)
+    rows_box.children[0].children[3].pick(second)
     assert editor.value == [second]
 
-    rows_box.children[0].children[0].pick(first)
+    rows_box.children[0].children[3].pick(first)
     assert editor.value is DEFAULT
     assert editor.intended() is DEFAULT
 
@@ -157,19 +164,19 @@ def test_list_editor_axis_default() -> None:
     axis = AxisPicker(mw.DafWidgets(_full_daf()), ["metacell", "block"])
     editor = ListEditor(_Row, DEFAULT, axis=axis, default=lambda axis_name: [title_per_axis[axis_name]], title="Titles")
     rows_box = _rows_box(editor)
-    assert rows_box.children[0].children[0].value == title_per_axis["metacell"]
+    assert rows_box.children[0].children[3].value == title_per_axis["metacell"]
 
     axis.children[0].value = "block"
     rows_box = _rows_box(editor)
     assert editor.value is DEFAULT
-    assert rows_box.children[0].children[0].value == title_per_axis["block"]
+    assert rows_box.children[0].children[3].value == title_per_axis["block"]
 
     changed = mw.Title(text="X")
-    rows_box.children[0].children[0].pick(changed)
+    rows_box.children[0].children[3].pick(changed)
     axis.children[0].value = "metacell"
     assert editor.value == [changed]
 
-    rows_box.children[0].children[0].pick(title_per_axis["metacell"])
+    rows_box.children[0].children[3].pick(title_per_axis["metacell"])
     assert editor.value is DEFAULT
 
 

@@ -6,6 +6,9 @@ Each widget has an observable ``value``: the editors' is the property or the twe
 incomplete), and the pickers' is the chosen string (or ``None`` while nothing is chosen).
 """
 
+# The editors share their private helpers, so they are in one module.
+# pylint: disable=too-many-lines
+
 import functools
 import inspect
 from typing import Any
@@ -722,6 +725,18 @@ def _disclosure_icon(is_shown: bool) -> str:
 _SMALL_BUTTON_LAYOUT = Layout(width="2.5em")
 
 
+def _row_buttons(*, is_disabled: bool = False) -> List[Button]:
+    # The buttons of a row of a list editor, to remove the row, to move it up, and to move it down.
+    buttons = [
+        Button(description="\N{MULTIPLICATION X}", tooltip="Remove", layout=_SMALL_BUTTON_LAYOUT),  # NOT F-STRING
+        Button(description="\N{UPWARDS ARROW}", tooltip="Move up", layout=_SMALL_BUTTON_LAYOUT),  # NOT F-STRING
+        Button(description="\N{DOWNWARDS ARROW}", tooltip="Move down", layout=_SMALL_BUTTON_LAYOUT),  # NOT F-STRING
+    ]
+    for button in buttons:
+        button.disabled = is_disabled
+    return buttons
+
+
 # The type of the objects of the list of a ``ListEditor``: the same for its rows, its ``current`` and its ``default``.
 _Item = TypeVar("_Item", bound=Arguments | str)
 
@@ -734,7 +749,7 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
     :py:class:`Disclosure` named ``title``, which shows or hides them (hidden at first). Each row is a picker made by
     ``make_row``, which gets the object the row starts with, or ``None`` for a blank row. The list always ends with a
     blank row; picking something in it makes it a row of the list, and appends a new blank row. Each row of the list
-    has buttons to move it up or down, or to remove it.
+    starts with buttons to remove it, or to move it up or down.
 
     A row which isn't ``is_valid`` (see :py:class:`ArgumentsEditor`) is hidden, and its object is left out of the
     ``value``. It is shown again in its place once it is valid. Moving a row up or down swaps it with the adjacent shown
@@ -770,6 +785,8 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
         self._rows: List[ArgumentsEditor] = []
         self._row_boxes: List[HBox] = []
         self._blank_row: ArgumentsEditor | None = None
+        self._blank_row_box: HBox | None = None
+        self._blank_row_buttons = _row_buttons(is_disabled=True)
         self._rows_box = VBox()
         self.children = [VBox([Disclosure(title, self._rows_box), self._rows_box])]
         # The list observes the axis before its rows do, so it replaces the rows of a shown default before they follow
@@ -826,9 +843,13 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
             row.close()
 
     def _new_blank_row(self) -> None:
-        # Make the blank row at the end of the list, which becomes a row of the list once something is picked in it.
+        # Make the blank row at the end of the list, which becomes a row of the list once something is picked in it. Its
+        # buttons are disabled.
         self._blank_row = self._make_row(None)
         self._blank_row.observe(self._on_blank_row_change, names="is_blank")
+        if self._blank_row_box is not None:
+            self._blank_row_box.close()
+        self._blank_row_box = HBox([*self._blank_row_buttons, self._blank_row], layout=Layout(align_items="flex-start"))
 
     def update_last(self, is_item: Callable[[_Item], bool], update: Callable[[_Item | None], _Item]) -> None:
         """
@@ -848,17 +869,15 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
         self._update()
 
     def _insert(self, row: ArgumentsEditor, index: int) -> None:
-        # Insert the ``row`` at the ``index``, with its buttons.
-        move_up = Button(description="\N{UPWARDS ARROW}", layout=_SMALL_BUTTON_LAYOUT)  # NOT F-STRING
-        move_down = Button(description="\N{DOWNWARDS ARROW}", layout=_SMALL_BUTTON_LAYOUT)  # NOT F-STRING
-        remove = Button(description="\N{MULTIPLICATION X}", layout=_SMALL_BUTTON_LAYOUT)  # NOT F-STRING
+        # Insert the ``row`` at the ``index``, after its buttons.
+        remove, move_up, move_down = _row_buttons()
+        remove.on_click(lambda _button: self._remove(row))
         move_up.on_click(lambda _button: self._move(row, -1))
         move_down.on_click(lambda _button: self._move(row, 1))
-        remove.on_click(lambda _button: self._remove(row))
         row.observe(self._on_row_change, names="value")
         row.observe(self._on_row_is_valid_change, names="is_valid")
         self._rows.insert(index, row)
-        self._row_boxes.insert(index, HBox([row, move_up, move_down, remove], layout=Layout(align_items="flex-start")))
+        self._row_boxes.insert(index, HBox([remove, move_up, move_down, row], layout=Layout(align_items="flex-start")))
 
     def _unobserve_row(self, row: ArgumentsEditor) -> None:
         row.unobserve(self._on_row_change, names="value")
@@ -929,11 +948,13 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
             _on_main_thread(lambda: self._fill(self._default()))
 
     def _update(self) -> None:
-        # Show the valid rows in their order, then the blank row, and set the value from them.
-        self._rows_box.children = [
-            *[row_box for row, row_box in zip(self._rows, self._row_boxes) if row.is_valid],
-            self._blank_row,
-        ]
+        # Show the valid rows in their order, then the blank row, and set the value from them. The first shown row can't
+        # move up, and the last can't move down.
+        shown_row_boxes = [row_box for row, row_box in zip(self._rows, self._row_boxes) if row.is_valid]
+        for position, row_box in enumerate(shown_row_boxes):
+            row_box.children[1].disabled = position == 0
+            row_box.children[2].disabled = position == len(shown_row_boxes) - 1
+        self._rows_box.children = [*shown_row_boxes, self._blank_row_box]
         if self._is_default:
             self.value = self._untouched_value()
         else:
