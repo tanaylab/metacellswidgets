@@ -118,10 +118,10 @@ def test_edit() -> None:
     form._poll_redraw(redraws.append)
     assert not redraws
 
-    form._bound["y_gene"]._combobox.value = "D M"
+    form._bound["y_gene"]._combobox.value = "D (M)"
     # Gene B isn't a marker, so it is offered only once the choices aren't restricted to the markers.
     form._bound["x_gene"]._markers_only._dropdown.index = 1
-    form._bound["x_gene"]._combobox.value = "B L"
+    form._bound["x_gene"]._combobox.value = "B (L)"
     assert form.y_gene == "D"
     assert form.x_gene == "B"
     form._poll_redraw(redraws.append)
@@ -136,7 +136,7 @@ def test_hold_redraw() -> None:
     """
     form, redraws = _form_and_redraws()
     with form.hold_redraw():
-        form._bound["x_gene"]._combobox.value = "D M"
+        form._bound["x_gene"]._combobox.value = "D (M)"
         form._poll_redraw(redraws.append)
         assert not redraws
     form._poll_redraw(redraws.append)
@@ -159,7 +159,7 @@ def test_incomplete() -> None:
     form._poll_redraw(redraws.append)
     assert not redraws
 
-    form._bound["x_gene"]._combobox.value = "A M R"
+    form._bound["x_gene"]._combobox.value = "A (M R)"
     assert form._is_redraw_due()
     form._poll_redraw(redraws.append)
     assert len(redraws) == 1

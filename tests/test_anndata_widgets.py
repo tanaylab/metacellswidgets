@@ -113,11 +113,18 @@ def test_gene_flags(tmp_path: Path) -> None:
 
 def test_gene_choices(tmp_path: Path) -> None:
     """
-    Excluded genes are never offered, and markers are those of the marker column.
+    Excluded genes are never offered, markers are those of the marker column, and the genes are sorted by name, ignoring
+    case. So are the types.
     """
     source = _source(tmp_path)
     assert source.gene_choices() == [("A", "A"), ("B", "B")]
     assert source.gene_choices(markers_only=True) == [("A", "A")]
+
+    source = _source(tmp_path)
+    source.adata.var_names = ["C", "b", "A"]
+    source.adata.obs["cell_type"] = ["T2", "t1", "T2"]
+    assert source.gene_choices() == [("b", "b"), ("C", "C")]
+    assert source.type_names() == ["t1", "T2"]
 
 
 def test_editor(tmp_path: Path) -> None:

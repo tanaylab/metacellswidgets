@@ -65,7 +65,7 @@ class TypeNames(Protocol):  # pylint: disable=too-few-public-methods
 
     def type_names(self) -> List[str]:
         """
-        The names of the types, sorted.
+        The names of the types, sorted ignoring case.
         """
 
 

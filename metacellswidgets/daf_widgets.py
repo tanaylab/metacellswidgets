@@ -15,6 +15,7 @@ from somegraphspy import HeatmapGraph
 from somegraphspy import PointsGraph
 from somegraphspy import VectorDataSinks
 
+from .common import _name_order
 from .common import implements
 from .editors import GenePicker
 from .editors import NamePicker
@@ -85,10 +86,11 @@ class DafWidgets(SourceWidgets):
 
     def gene_choices(self, *, markers_only: bool = False) -> List[Tuple[str, str]]:
         """
-        The (label, name) of each gene, in the order of the gene axis. Excluded genes are never included. If
-        ``markers_only``, only the marker genes are included. The label is the name followed by the flags of the gene:
-        ``L`` (lateral), ``M`` (marker), ``T`` (transcription factor), ``R`` (regulator), ``F`` (forbidden), ``S``
-        (skeleton), e.g. ``Foxa1 M T R``. A flag the data set doesn't have is never shown.
+        The (label, name) of each gene, sorted by name, ignoring case. Excluded genes are never included. If ``markers_only``, only the
+        marker genes are included. The label is the name followed by the flags of the gene in parentheses: ``L``
+        (lateral), ``M`` (marker), ``T`` (transcription factor), ``R`` (regulator), ``F`` (forbidden), ``S``
+        (skeleton), e.g. ``Foxa1 (M T R)``. A gene with no flags is labeled by its name alone. A flag the data set
+        doesn't have is never shown.
         """
         if markers_only not in self._gene_choices:
             names = self.daf.axis_np_vector("gene")
@@ -100,25 +102,26 @@ class DafWidgets(SourceWidgets):
             for index in np.flatnonzero(is_included):
                 name = str(names[index])
                 letters = [flag for flag, mask in flags if mask[index]]
-                choices.append((" ".join([name] + letters), name))
-            self._gene_choices[markers_only] = choices
+                choices.append((f"{name} ({' '.join(letters)})" if letters else name, name))
+            self._gene_choices[markers_only] = sorted(choices, key=lambda choice: _name_order(choice[1]))
         return self._gene_choices[markers_only]
 
     def boolean_vectors(self, axis: str) -> List[str]:
         """
-        The names of the Boolean vector properties of the ``axis``, sorted.
+        The names of the Boolean vector properties of the ``axis``, sorted ignoring case.
         """
         if axis not in self._boolean_vectors:
             self._boolean_vectors[axis] = sorted(
-                name for name in self.daf.vectors_set(axis) if self.daf.get_np_vector(axis, name).dtype == np.bool_
+                (name for name in self.daf.vectors_set(axis) if self.daf.get_np_vector(axis, name).dtype == np.bool_),
+                key=_name_order,
             )
         return self._boolean_vectors[axis]
 
     def type_names(self) -> List[str]:
         """
-        The names of the types, sorted.
+        The names of the types, sorted ignoring case.
         """
-        return sorted(str(name) for name in self.daf.axis_np_vector("type"))
+        return sorted((str(name) for name in self.daf.axis_np_vector("type")), key=_name_order)
 
     def block_names(self) -> List[str]:
         """

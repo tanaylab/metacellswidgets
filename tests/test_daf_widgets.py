@@ -172,12 +172,23 @@ def test_fill(prop: mw.Property, axis: str) -> None:
 
 def test_gene_choices() -> None:
     """
-    Excluded genes are never offered, and the flags follow each name.
+    Excluded genes are never offered, the flags follow each name in parentheses, and the genes are sorted by name,
+    ignoring case. So are the types and the Boolean vectors.
     """
     source = mw.DafWidgets(_full_daf())
-    assert source.gene_choices() == [("A M R", "A"), ("B L", "B"), ("D M", "D")]
-    assert source.gene_choices(markers_only=True) == [("A M R", "A"), ("D M", "D")]
+    assert source.gene_choices() == [("A (M R)", "A"), ("B (L)", "B"), ("D (M)", "D")]
+    assert source.gene_choices(markers_only=True) == [("A (M R)", "A"), ("D (M)", "D")]
     assert mw.DafWidgets(_sparse_daf()).gene_choices() == [("A", "A"), ("B", "B")]
+
+    daf = dp.memory_daf(name="unsorted")
+    daf.add_axis("gene", ["C", "a", "B"])
+    daf.set_vector("gene", "is_marker", np.array([True, False, True]))
+    daf.set_vector("gene", "Y_flag", np.array([False, False, True]))
+    daf.add_axis("type", ["T", "s", "R"])
+    source = mw.DafWidgets(daf)
+    assert source.gene_choices() == [("a", "a"), ("B (M)", "B"), ("C (M)", "C")]
+    assert source.boolean_vectors("gene") == ["is_marker", "Y_flag"]
+    assert source.type_names() == ["R", "s", "T"]
 
 
 def test_editors() -> None:

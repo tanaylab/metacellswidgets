@@ -69,7 +69,7 @@ class GeneChoices(Protocol):  # pylint: disable=too-few-public-methods
 
     def gene_choices(self, *, markers_only: bool = False) -> List[Tuple[str, str]]:
         """
-        The (label, name) of each gene which may be picked, or only of the marker genes.
+        The (label, name) of each gene which may be picked, or only of the marker genes, sorted by name, ignoring case.
         """
 
 

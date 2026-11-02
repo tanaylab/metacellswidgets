@@ -88,6 +88,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">PointsGraph</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">VectorDataSinks</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">_name_order</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">implements</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">GenePicker</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.editors</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamePicker</span>
@@ -165,10 +166,11 @@
 <a class="viewcode-back" href="../../daf_widgets.html#metacellswidgets.daf_widgets.DafWidgets.gene_choices">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">gene_choices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">markers_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        The (label, name) of each gene, in the order of the gene axis. Excluded genes are never included. If</span>
-<span class="sd">        ``markers_only``, only the marker genes are included. The label is the name followed by the flags of the gene:</span>
-<span class="sd">        ``L`` (lateral), ``M`` (marker), ``T`` (transcription factor), ``R`` (regulator), ``F`` (forbidden), ``S``</span>
-<span class="sd">        (skeleton), e.g. ``Foxa1 M T R``. A flag the data set doesn't have is never shown.</span>
+<span class="sd">        The (label, name) of each gene, sorted by name, ignoring case. Excluded genes are never included. If ``markers_only``, only the</span>
+<span class="sd">        marker genes are included. The label is the name followed by the flags of the gene in parentheses: ``L``</span>
+<span class="sd">        (lateral), ``M`` (marker), ``T`` (transcription factor), ``R`` (regulator), ``F`` (forbidden), ``S``</span>
+<span class="sd">        (skeleton), e.g. ``Foxa1 (M T R)``. A gene with no flags is labeled by its name alone. A flag the data set</span>
+<span class="sd">        doesn't have is never shown.</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="n">markers_only</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gene_choices</span><span class="p">:</span>
             <span class="n">names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">axis_np_vector</span><span class="p">(</span><span class="s2">"gene"</span><span class="p">)</span>
@@ -180,8 +182,8 @@
             <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">is_included</span><span class="p">):</span>
                 <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
                 <span class="n">letters</span> <span class="o">=</span> <span class="p">[</span><span class="n">flag</span> <span class="k">for</span> <span class="n">flag</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">flags</span> <span class="k">if</span> <span class="n">mask</span><span class="p">[</span><span class="n">index</span><span class="p">]]</span>
-                <span class="n">choices</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">name</span><span class="p">]</span> <span class="o">+</span> <span class="n">letters</span><span class="p">),</span> <span class="n">name</span><span class="p">))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_gene_choices</span><span class="p">[</span><span class="n">markers_only</span><span class="p">]</span> <span class="o">=</span> <span class="n">choices</span>
+                <span class="n">choices</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="s1">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span> <span class="k">if</span> <span class="n">letters</span> <span class="k">else</span> <span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gene_choices</span><span class="p">[</span><span class="n">markers_only</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">choices</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">choice</span><span class="p">:</span> <span class="n">_name_order</span><span class="p">(</span><span class="n">choice</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gene_choices</span><span class="p">[</span><span class="n">markers_only</span><span class="p">]</span></div>
 
 
@@ -189,11 +191,12 @@
 <a class="viewcode-back" href="../../daf_widgets.html#metacellswidgets.daf_widgets.DafWidgets.boolean_vectors">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">boolean_vectors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        The names of the Boolean vector properties of the ``axis``, sorted.</span>
+<span class="sd">        The names of the Boolean vector properties of the ``axis``, sorted ignoring case.</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="n">axis</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_boolean_vectors</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_boolean_vectors</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
-                <span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">vectors_set</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">get_np_vector</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span>
+                <span class="p">(</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">vectors_set</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">get_np_vector</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">),</span>
+                <span class="n">key</span><span class="o">=</span><span class="n">_name_order</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_boolean_vectors</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span></div>
 
@@ -202,9 +205,9 @@
 <a class="viewcode-back" href="../../daf_widgets.html#metacellswidgets.daf_widgets.DafWidgets.type_names">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">type_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        The names of the types, sorted.</span>
+<span class="sd">        The names of the types, sorted ignoring case.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">axis_np_vector</span><span class="p">(</span><span class="s2">"type"</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">daf</span><span class="o">.</span><span class="n">axis_np_vector</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="n">_name_order</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DafWidgets.block_names">

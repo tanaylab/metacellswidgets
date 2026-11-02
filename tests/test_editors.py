@@ -198,8 +198,8 @@ class _Genes:
         """
         The genes, with their flags.
         """
-        choices = [("A M", "A"), ("B", "B"), ("C M T", "C")]
-        return [choice for choice in choices if not markers_only or " M" in choice[0]]
+        choices = [("A (M)", "A"), ("B", "B"), ("C (M T)", "C")]
+        return [choice for choice in choices if not markers_only or "M" in choice[0]]
 
 
 def test_gene_picker() -> None:
@@ -210,12 +210,12 @@ def test_gene_picker() -> None:
     assert picker.value is None
     assert picker._markers_only.shown()
     assert picker._markers_only._dropdown.label == "Markers only (default)"
-    assert list(picker._combobox.options) == ["A M", "C M T"]
+    assert list(picker._combobox.options) == ["A (M)", "C (M T)"]
 
     picker._markers_only._dropdown.index = 1
-    assert list(picker._combobox.options) == ["A M", "B", "C M T"]
+    assert list(picker._combobox.options) == ["A (M)", "B", "C (M T)"]
 
-    picker._combobox.value = "C M T"
+    picker._combobox.value = "C (M T)"
     assert picker.value == "C"
 
     picker._combobox.value = ""
@@ -229,7 +229,7 @@ def test_gene_picker_current() -> None:
     picker = GenePicker(_Genes(), "B")
     assert picker.value == "B"
     assert picker._combobox.value == "B"
-    assert list(picker._combobox.options) == ["A M", "B", "C M T"]
+    assert list(picker._combobox.options) == ["A (M)", "B", "C (M T)"]
 
 
 def test_gene_picker_markers_only() -> None:
@@ -239,7 +239,7 @@ def test_gene_picker_markers_only() -> None:
     picker = GenePicker(_Genes(), "C")
     picker._markers_only._dropdown.index = 1
     picker._markers_only._dropdown.index = 0
-    assert list(picker._combobox.options) == ["A M", "C M T"]
+    assert list(picker._combobox.options) == ["A (M)", "C (M T)"]
     assert picker.value == "C"
 
     picker = GenePicker(_Genes(), "B")
@@ -291,7 +291,7 @@ def test_argument_editor() -> None:
     editor = PickerEditor(picker, mw.GeneExpression)
     assert editor.value is None
 
-    picker._combobox.value = "A M"
+    picker._combobox.value = "A (M)"
     assert editor.value == mw.GeneExpression("A")
 
     picker._combobox.value = ""

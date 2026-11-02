@@ -54,7 +54,7 @@ def test_property_picker_pick() -> None:
     picker._dropdown.value = mw.GeneExpression
     assert picker.value is None
     assert picker._editor is not None
-    picker._editor.children[0]._combobox.value = "D M"
+    picker._editor.children[0]._combobox.value = "D (M)"
     assert picker.value == mw.GeneExpression("D")
 
     picker._dropdown.value = None

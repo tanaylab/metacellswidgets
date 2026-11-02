@@ -18,6 +18,7 @@ from somegraphspy import HeatmapGraph
 from somegraphspy import PointsGraph
 from somegraphspy import VectorDataSinks
 
+from .common import _name_order
 from .common import implements
 from .editors import GenePicker
 from .editors import NamePicker
@@ -69,7 +70,7 @@ class AnnDataWidgets(SourceWidgets):
 
     def gene_choices(self, *, markers_only: bool = False) -> List[Tuple[str, str]]:
         """
-        The (label, name) of each gene, in the order of the ``var`` entries. The label is the name. Genes marked in the
+        The (label, name) of each gene, sorted by name, ignoring case. The label is the name. Genes marked in the
         ``excluded_gene`` column of ``var`` (if there is one) are never included. If ``markers_only``, only the genes
         marked in the ``marker_gene`` column of ``var`` are included (none, if there is no such column).
         """
@@ -79,16 +80,17 @@ class AnnDataWidgets(SourceWidgets):
                 is_included &= self._var_mask("marker_gene")
             names = self.adata.var_names
             self._gene_choices[markers_only] = [
-                (str(names[index]), str(names[index])) for index in np.flatnonzero(is_included)
+                (name, name)
+                for name in sorted((str(names[index]) for index in np.flatnonzero(is_included)), key=_name_order)
             ]
         return self._gene_choices[markers_only]
 
     def type_names(self) -> List[str]:
         """
         The names of the types (the distinct values of the ``type_property`` of the ``obs``, without missing ones),
-        sorted.
+        sorted ignoring case.
         """
-        return sorted({str(name) for name in self.adata.obs[self.type_property].dropna()})
+        return sorted({str(name) for name in self.adata.obs[self.type_property].dropna()}, key=_name_order)
 
     def _var_mask(self, column: str) -> np.ndarray:
         # The Boolean ``column`` of ``var``, or all false if there is no such column.

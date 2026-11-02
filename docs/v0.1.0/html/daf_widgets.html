@@ -530,17 +530,17 @@
 </dt>
 
 <dd>
-<p>The (label, name) of each gene, in the order of the gene axis. Excluded genes are never included. If
-
+<p>The (label, name) of each gene, sorted by name, ignoring case. Excluded genes are never included. If 
 <code class="docutils literal notranslate">
 <span class="pre">markers_only
 </span>
-</code>, only the marker genes are included. The label is the name followed by the flags of the gene:
-
+</code>, only the
+marker genes are included. The label is the name followed by the flags of the gene in parentheses: 
 <code class="docutils literal notranslate">
 <span class="pre">L
 </span>
-</code> (lateral), 
+</code>
+(lateral), 
 <code class="docutils literal notranslate">
 <span class="pre">M
 </span>
@@ -565,13 +565,14 @@
 <code class="docutils literal notranslate">
 <span class="pre">Foxa1
 </span> 
-<span class="pre">M
+<span class="pre">(M
 </span> 
 <span class="pre">T
 </span> 
-<span class="pre">R
+<span class="pre">R)
 </span>
-</code>. A flag the data set doesn’t have is never shown.
+</code>. A gene with no flags is labeled by its name alone. A flag the data set
+doesn’t have is never shown.
 </p>
 
 <dl class="field-list simple">
@@ -645,7 +646,7 @@
 <code class="docutils literal notranslate">
 <span class="pre">axis
 </span>
-</code>, sorted.
+</code>, sorted ignoring case.
 </p>
 
 <dl class="field-list simple">
@@ -707,7 +708,7 @@
 </dt>
 
 <dd>
-<p>The names of the types, sorted.
+<p>The names of the types, sorted ignoring case.
 </p>
 
 <dl class="field-list simple">

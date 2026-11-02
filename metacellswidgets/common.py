@@ -13,6 +13,7 @@ from typing import FrozenSet
 from typing import List
 from typing import Mapping
 from typing import Sequence
+from typing import Tuple
 from typing import TypeVar
 
 from dafpy.julia_import import DefaultValue
@@ -111,3 +112,9 @@ def implements(method: Callable[..., Any], dispatch_type: type) -> Callable[[_Fu
         return function
 
     return decorate
+
+
+def _name_order(name: str) -> Tuple[str, str]:
+    # The key which sorts the names of the data (genes, types, ...) ignoring case. Names which differ only in case are
+    # then sorted by case, so the order is always the same.
+    return (name.casefold(), name)
