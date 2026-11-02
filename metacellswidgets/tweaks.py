@@ -383,7 +383,7 @@ class _TitleEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstr
 
     def __init__(self, text: str | None) -> None:
         super().__init__()
-        self._text = Text(value="" if text is None else text, placeholder="(No title)")
+        self._text = Text(value="" if text is None else text, placeholder="(No title)", layout=Layout(width="20em"))
         _mark_default(self._text, False)
         self.children = [self._text]
         self.value = Title(text=text or None)

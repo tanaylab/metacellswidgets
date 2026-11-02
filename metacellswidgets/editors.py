@@ -133,7 +133,12 @@ class GenePicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
         super().__init__()
         self._source = source
         self._name_per_label: Dict[str, str] = {}
-        self._combobox = Combobox(placeholder="Gene", ensure_option=True)
+        # As wide as all the genes need, so it keeps its width whichever of them it offers.
+        self._combobox = Combobox(
+            placeholder="Gene",
+            ensure_option=True,
+            layout=_combobox_layout([label for label, _name in source.gene_choices()]),
+        )
         _mark_default(self._combobox, False)
         has_markers = bool(source.gene_choices(markers_only=True))
         self._markers_only = ChoicePicker(_MARKERS_ONLY, DEFAULT, has_markers)
@@ -202,6 +207,23 @@ def _mark_default(widget: Widget, is_default: bool) -> None:
     widget.layout.border = _DEFAULT_BORDER if is_default else _EXPLICIT_BORDER
 
 
+# How much wider (in ``ch``) a combobox is than its longest label. The browser shows its suggestions about as wide as
+# the box, and clips them unless the box has this much room to spare (found in a browser).
+_COMBOBOX_SPARE_WIDTH = 9
+
+
+def _dropdown_layout() -> Layout:
+    # The layout of a dropdown: as wide as its longest option (ipywidgets otherwise makes every dropdown 300 px wide).
+    # Each dropdown has a layout of its own, since its border marks whether it shows its default.
+    return Layout(width="max-content")
+
+
+def _combobox_layout(labels: Sequence[str]) -> Layout:
+    # The layout of a combobox of the ``labels``: as wide as the longest of them, and the spare width its suggestions
+    # need. A combobox doesn't size itself to its options, unlike a dropdown.
+    return Layout(width=f"{max((len(label) for label in labels), default=0) + _COMBOBOX_SPARE_WIDTH}ch")
+
+
 class ChoicePicker(HBox):  # pylint: disable=too-many-ancestors,abstract-method
     """
     Pick one of the ``choices``, each a (label, value), from a dropdown. The ``value`` starts as the ``current`` value.
@@ -219,7 +241,7 @@ class ChoicePicker(HBox):  # pylint: disable=too-many-ancestors,abstract-method
         self._default = default
         labels = [f"{label} (default)" if value == default else label for label, value in choices]
         self.value = current
-        self._dropdown = Dropdown(options=labels, index=self._values.index(self.shown()))
+        self._dropdown = Dropdown(options=labels, index=self._values.index(self.shown()), layout=_dropdown_layout())
         self.children = [self._dropdown]
         self._update_border()
         self._dropdown.observe(self._on_dropdown_change, names="index")
@@ -258,7 +280,7 @@ class NamePicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
     def __init__(self, names: Sequence[str], current: str | None = None) -> None:
         super().__init__()
         is_current = current is not None and current in names
-        self._dropdown = Dropdown(options=list(names), value=current if is_current else None)
+        self._dropdown = Dropdown(options=list(names), value=current if is_current else None, layout=_dropdown_layout())
         _mark_default(self._dropdown, False)
         self.children = [self._dropdown]
         self.value = current if is_current else None
@@ -279,7 +301,11 @@ class ComboPicker(Picker):  # pylint: disable=too-many-ancestors,abstract-method
         super().__init__()
         is_current = current is not None and current in names
         self._combobox = Combobox(
-            options=list(names), value=current if is_current else "", placeholder=placeholder, ensure_option=True
+            options=list(names),
+            value=current if is_current else "",
+            placeholder=placeholder,
+            ensure_option=True,
+            layout=_combobox_layout(names),
         )
         _mark_default(self._combobox, False)
         self.children = [self._combobox]
@@ -413,7 +439,7 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
         self._is_default = False
         self._is_updating = False
         self._editor: ArgumentsEditor | None = None
-        self._dropdown = Dropdown()
+        self._dropdown = Dropdown(layout=_dropdown_layout())
         self._editor_box = HBox(layout=Layout(flex="1 1 auto"))
         self.children = [self._dropdown, self._editor_box]
         self._dropdown.observe(self._on_dropdown_change, names="value")

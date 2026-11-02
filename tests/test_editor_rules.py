@@ -4,7 +4,8 @@ Test that every editor follows the rules of showing values and their defaults.
 Every value field (a dropdown, a combo box, a number or a text) has a dotted border while it shows its default, and a
 solid one otherwise. Its label is a widget of its own, so the field has no ``description``. A Boolean is a dropdown, so
 there is no checkbox, other than the one of each dimension of a ``Size`` tweak. There are no "Reset to default"
-buttons, since changing a value back to its default is how to return to it.
+buttons, since changing a value back to its default is how to return to it. A dropdown is as wide as its options, a
+combobox as its labels need (in ``ch``), and a text or number field has a fixed width, so none takes the default width.
 """
 
 from pathlib import Path
@@ -14,6 +15,7 @@ from typing import List
 import somegraphspy as sg
 from ipywidgets import Button  # type: ignore
 from ipywidgets import Checkbox  # type: ignore
+from ipywidgets import Combobox  # type: ignore
 from ipywidgets import Dropdown  # type: ignore
 from ipywidgets import IntText  # type: ignore
 from ipywidgets import Text  # type: ignore
@@ -44,6 +46,12 @@ def _check(widget: Widget, *, is_in_size: bool = False) -> None:
     if isinstance(widget, (Dropdown, Text, IntText)):
         assert widget.layout.border in _BORDERS, f"a value field without the default's border: {widget}"
         assert not widget.description, f"a value field with its own label: {widget.description}"
+    if isinstance(widget, Dropdown):
+        assert widget.layout.width == "max-content", f"a dropdown not as wide as its options: {widget}"
+    elif isinstance(widget, Combobox):
+        assert widget.layout.width.endswith("ch"), f"a combobox not as wide as its options: {widget}"
+    elif isinstance(widget, (Text, IntText)):
+        assert widget.layout.width, f"a text or number field of the default width: {widget}"
     for child in getattr(widget, "children", ()):
         _check(child, is_in_size=is_in_size)
 

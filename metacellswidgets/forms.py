@@ -60,6 +60,7 @@ from .common import _give_own_dispatchers
 from .editors import _SMALL_BUTTON_LAYOUT
 from .editors import ArgumentsEditor
 from .editors import ListEditor
+from .editors import _dropdown_layout
 from .kernel import _MainThreadJobs
 from .kernel import _on_main_thread
 from .kernel import _owned_subshell_id
@@ -485,7 +486,7 @@ class GraphMenu(HBox):  # pylint: disable=too-many-ancestors,abstract-method
             options = [("Choose...", None)] + [(_node_name(child), child) for child in branch.children]
             # A dropdown given a ``value`` of ``None`` shows nothing, so the placeholder is picked by its index.
             index = 1 + branch.children.index(path[level]) if level < len(path) else 0
-            dropdown = Dropdown(options=options, index=index)
+            dropdown = Dropdown(options=options, index=index, layout=_dropdown_layout())
             dropdown.observe(functools.partial(self._on_dropdown_change, level), names="value")
             self._dropdowns.append(dropdown)
         self.children = self._dropdowns
