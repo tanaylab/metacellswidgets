@@ -718,8 +718,8 @@ def _disclosure_icon(is_shown: bool) -> str:
     return "caret-down" if is_shown else "caret-right"
 
 
-# The layout of the small buttons of each row of a list editor.
-_ROW_BUTTON_LAYOUT = Layout(width="2.5em")
+# The layout of the small buttons: those of each row of a list editor, and those of the top row of a form's editor.
+_SMALL_BUTTON_LAYOUT = Layout(width="2.5em")
 
 
 # The type of the objects of the list of a ``ListEditor``: the same for its rows, its ``current`` and its ``default``.
@@ -849,9 +849,9 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
 
     def _insert(self, row: ArgumentsEditor, index: int) -> None:
         # Insert the ``row`` at the ``index``, with its buttons.
-        move_up = Button(description="\N{UPWARDS ARROW}", layout=_ROW_BUTTON_LAYOUT)  # NOT F-STRING
-        move_down = Button(description="\N{DOWNWARDS ARROW}", layout=_ROW_BUTTON_LAYOUT)  # NOT F-STRING
-        remove = Button(description="\N{MULTIPLICATION X}", layout=_ROW_BUTTON_LAYOUT)  # NOT F-STRING
+        move_up = Button(description="\N{UPWARDS ARROW}", layout=_SMALL_BUTTON_LAYOUT)  # NOT F-STRING
+        move_down = Button(description="\N{DOWNWARDS ARROW}", layout=_SMALL_BUTTON_LAYOUT)  # NOT F-STRING
+        remove = Button(description="\N{MULTIPLICATION X}", layout=_SMALL_BUTTON_LAYOUT)  # NOT F-STRING
         move_up.on_click(lambda _button: self._move(row, -1))
         move_down.on_click(lambda _button: self._move(row, 1))
         remove.on_click(lambda _button: self._remove(row))

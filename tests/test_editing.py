@@ -24,7 +24,7 @@ def test_figure_follows_its_width() -> None:
     """
     form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B")
     session = _EditSession(form.source, form)
-    assert session._spinner.layout.visibility is None
+    assert session._cancel.icon == "spinner spin"
     assert not session._body.children
     assert not session._poll_width()
     session._show_form()

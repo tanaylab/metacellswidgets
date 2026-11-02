@@ -214,7 +214,7 @@ def _is_gene_picker(state: Dict[str, Any]) -> bool:
 
 def _is_done_button(state: Dict[str, Any]) -> bool:
     # Whether the widget state is of the "Done" button.
-    return state.get("_model_name") == "ButtonModel" and state.get("description") == "Done"
+    return state.get("_model_name") == "ButtonModel" and state.get("tooltip") == "Done"
 
 
 def _is_class_choice(state: Dict[str, Any]) -> bool:
@@ -395,7 +395,7 @@ def test_menu_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
 
 def _is_cancel_button(state: Dict[str, Any]) -> bool:
     # Whether the widget state is of the "Cancel" button.
-    return state.get("_model_name") == "ButtonModel" and state.get("description") == "Cancel"
+    return state.get("_model_name") == "ButtonModel" and state.get("tooltip") == "Cancel"
 
 
 def _error(client: Any, message_id: str) -> Dict[str, Any]:
@@ -423,30 +423,21 @@ def test_menu_cancel_shows_only_a_message(kernel: Tuple[Any, Any]) -> None:
     assert error["traceback"] == ["The menu was cancelled."]
 
 
-def _is_graphs_button(state: Dict[str, Any]) -> bool:
-    # Whether the widget state is of the "Graphs" toggle.
-    return state.get("_model_name") == "ToggleButtonModel" and state.get("description") == "Graphs"
-
-
-def test_graphs_button_switches_the_graph(kernel: Tuple[Any, Any]) -> None:
+def test_menu_switches_the_graph(kernel: Tuple[Any, Any]) -> None:
     """
-    In a form's editor, the "Graphs" toggle shows the menu; choosing another graph there and clicking "Done" rewrites
-    the form call into the chosen graph's, on the same receiver, keeping the arguments they share.
+    In a form's editor, choosing another graph in the menu of its top row and clicking "Done" rewrites the form call
+    into the chosen graph's, on the same receiver, keeping the arguments they share.
     """
     _, client = kernel
     _execute(client, _DAF_SETUP)
 
     cell = "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B')\nform.edit()\n"
     message_id = client.execute(cell)
-    widgets = _opened_widgets(
-        client, lambda state: _is_done_button(state) or _is_graphs_button(state) or _is_graph_menu(state), 3
-    )
+    widgets = _opened_widgets(client, lambda state: _is_done_button(state) or _is_graph_menu(state), 2)
     done = next(widget for widget in widgets if _is_done_button(widget))
-    graphs = next(widget for widget in widgets if _is_graphs_button(widget))
     menu = next(widget for widget in widgets if _is_graph_menu(widget))
 
     time.sleep(1)
-    _send_state(client, graphs, {"value": True})
     _send_state(client, menu, {"index": menu["_options_labels"].index("GenesHeatmap")})
     time.sleep(2)
     _click(client, done)

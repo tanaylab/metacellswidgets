@@ -41,7 +41,6 @@ import anywidget  # type: ignore
 import traitlets  # type: ignore
 from IPython import get_ipython
 from IPython.display import display as display_in_cell
-from ipywidgets import HTML  # type: ignore
 from ipywidgets import Button  # type: ignore
 from ipywidgets import Dropdown  # type: ignore
 from ipywidgets import HBox  # type: ignore
@@ -58,8 +57,8 @@ from somegraphspy import SvgImage
 
 from .common import Arguments
 from .common import _give_own_dispatchers
+from .editors import _SMALL_BUTTON_LAYOUT
 from .editors import ArgumentsEditor
-from .editors import Disclosure
 from .editors import ListEditor
 from .kernel import _MainThreadJobs
 from .kernel import _on_main_thread
@@ -366,6 +365,15 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
 # failed (e.g. its JavaScript didn't load).
 _WIDTH_TIMEOUT_SECONDS = 10.0
 
+# The icon of an editor's "Cancel" button, and its icon while the editor is busy.
+_CANCEL_ICON = "times"
+_SPINNER_ICON = "spinner spin"
+
+# The muted colors of the icons of an editor's "Cancel", "Revert" and "Done" buttons. The spinner has the default color.
+_CANCEL_COLOR = "#b05050"
+_REVERT_COLOR = "#3b5d93"
+_DONE_COLOR = "#4a8a4a"
+
 
 class _WidthWatcher(anywidget.AnyWidget):  # pylint: disable=too-many-ancestors,abstract-method
     # An invisible element as wide as the figure's box, which reports its ``width`` (in pixels) whenever it changes, and
@@ -659,12 +667,12 @@ def _switched_form(
 
 class _EditSession:  # pylint: disable=too-many-instance-attributes
     # The editor of a form (or, with no form, of a graph to choose), shown until "Done" is clicked, or "Cancel", which
-    # discards the editing. With a ``tree``, it
-    # also has a menu of its graphs, and a "Graphs" toggle which shows or hides it. The menu is shown at first only if
-    # there is no form. The figure is hidden while there is no graph to show. Choosing a graph in the menu replaces the edited form with one of the chosen graph (see
-    # ``_switched_form``). The session pools the values of the arguments of the forms it leaves, so values set in one
-    # graph reach any later graph which has them, and going back to a graph restores them. A "Revert" button goes back
-    # to the graph and the arguments the session started with (or to no graph), and clears the pool.
+    # discards the editing. Its top row has the small "Cancel", "Revert" and "Done" buttons. With a ``tree``, the menu
+    # of its graphs follows them. The figure is hidden while there is no graph to show. Choosing a graph in the menu
+    # replaces the edited form with one of the chosen graph (see ``_switched_form``). The session pools the values of
+    # the arguments of the forms it leaves, so values set in one graph reach any later graph which has them, and going
+    # back to a graph restores them. "Revert" goes back to the graph and the arguments the session started with (or to
+    # no graph), and clears the pool.
 
     def __init__(self, source: SourceWidgets, form: GraphForm | None, tree: Branch | None = None) -> None:
         self._source = source
@@ -673,16 +681,15 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         self._pool: _Pool = {}
         self._pooled_selection_points: Any | None = None
         self._is_reverting = False
-        self._done = Button(description="Done")
-        self._revert_button = Button(description="Revert")
+        self._done = Button(icon="check", tooltip="Done", layout=_SMALL_BUTTON_LAYOUT)
+        self._done.style.text_color = _DONE_COLOR
+        self._revert_button = Button(icon="undo", tooltip="Revert", layout=_SMALL_BUTTON_LAYOUT)
+        self._revert_button.style.text_color = _REVERT_COLOR
         self._revert_button.on_click(self._on_revert)
-        self._cancel = Button(description="Cancel")
-        # Shown while work which may take a while is in progress (see ``_showing_spinner``), and while the figure waits for
-        # its width. Hidden (keeping its place) otherwise. It shows at once if there is a form, whose editors the first
-        # poll makes.
-        self._spinner = HTML(
-            '<i class="fa fa-spinner fa-spin"></i>', layout=Layout(visibility=None if form is not None else "hidden")
-        )
+        # Its icon is a spinner while work which may take a while is in progress (see ``_showing_spinner``), and while
+        # the figure waits for its width. It is a spinner at once if there is a form, whose editors the first poll makes.
+        self._cancel = Button(tooltip="Cancel", layout=_SMALL_BUTTON_LAYOUT)
+        self._show_cancel_icon(is_busy=form is not None)
         self._busy = 0
         self._is_waiting_for_width = False
         self._errors = Output()
@@ -713,19 +720,14 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         # the editor when this is shown (see ``_route_to_subshell``); the figure is put above it when it is made.
         self._figure_column = VBox([self._width_watcher, self._height_bar], layout=Layout(flex="1 1 auto"))
         self._figure_box = HBox([self._figure_column, self._width_bar], layout=Layout(display="none"))
-        toolbar: List[Widget] = []
-        rows: List[Widget] = []
+        toolbar: List[Widget] = [self._cancel, self._revert_button, self._done]
         self._menu: GraphMenu | None = None
-        self._graphs: Disclosure | None = None
         visible = None if tree is None else tree.visible(source)
         if tree is not None and visible is not None and (form is None or _path_to(visible, type(form))):
             self._menu = GraphMenu(source, tree, None if form is None else type(form))
             self._menu.observe(self._on_menu_change, names="value")
-            self._graphs = Disclosure("Graphs", self._menu, is_shown=form is None)
-            toolbar.append(self._graphs)
-            rows.append(self._menu)
-        toolbar += [self._revert_button, self._cancel, self._done, self._spinner]
-        self._editor = VBox([HBox(toolbar), *rows, self._body, self._figure_box, self._errors])
+            toolbar.append(self._menu)
+        self._editor = VBox([HBox(toolbar), self._body, self._figure_box, self._errors])
         self._watch_selection()
         self._update_buttons()
 
@@ -879,14 +881,9 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         )
 
     def _update_buttons(self) -> None:
-        # "Done" needs a complete form, and "Revert" a change. Without a form, the menu is the only thing to use, so it
-        # is shown, and "Graphs" can't hide it.
+        # "Done" needs a complete form, and "Revert" a change.
         self._done.disabled = not self._is_complete()
         self._revert_button.disabled = self._is_original()
-        if self._graphs is not None:
-            if self._form is None:
-                self._graphs.value = True
-            self._graphs.disabled = self._form is None
 
     def _on_menu_change(self, change: Dict) -> None:
         if not self._is_reverting:
@@ -957,9 +954,14 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
             self._update_spinner()
 
     def _update_spinner(self) -> None:
-        # Show the spinner while some work is in progress, or while the figure waits for its width.
-        is_shown = self._busy > 0 or self._is_waiting_for_width
-        self._spinner.layout.visibility = None if is_shown else "hidden"
+        # Show the spinner (as the icon of "Cancel") while some work is in progress, or while the figure waits for its
+        # width.
+        self._show_cancel_icon(is_busy=self._busy > 0 or self._is_waiting_for_width)
+
+    def _show_cancel_icon(self, *, is_busy: bool) -> None:
+        # Show the spinner (in the default color) as the icon of "Cancel" if the editor ``is_busy``, and else its own icon.
+        self._cancel.icon = _SPINNER_ICON if is_busy else _CANCEL_ICON
+        self._cancel.style.text_color = None if is_busy else _CANCEL_COLOR
 
     def _draw(self, figure: Figure | None) -> None:
         # Show the ``figure`` (or hide the figure, if there is none), and report its selections to the edited form. The
