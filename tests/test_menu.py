@@ -152,7 +152,7 @@ def test_intended_values() -> None:
     """
     # pylint: disable=protected-access
     source = mw.DafWidgets(_daf())
-    form = source.gene_gene(x_gene="A", y_gene="B", hovers=[mw.Type()], tweaks=[_Heatmaps()])
+    form = source.gene_gene(x_gene="A", y_gene="B", colors=None, hovers=[mw.Type()], tweaks=[_Heatmaps()])
     session = _EditSession(source, form, mw.DafWidgets.tree)
     session._show_form()
     assert form.tweaks == []
@@ -166,7 +166,7 @@ def test_intended_values() -> None:
     session._switch(mw.GeneGene)
     switched = session._form
     assert isinstance(switched, mw.GeneGene)
-    assert switched.colors == mw.Type()
+    assert switched.colors is DEFAULT
     assert switched.hovers == []
     assert switched.tweaks == []
     switched._bound["colors"]._dropdown.value = None

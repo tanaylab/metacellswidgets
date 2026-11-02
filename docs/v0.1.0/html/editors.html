@@ -1331,20 +1331,29 @@ incomplete.
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
-</code> object. While it shows the 
+</code> object, which may be 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> (e.g. no colors where the data has no types). While it
+shows the 
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
-</code> (picked, with its arguments), its 
+</code> (picked, with its arguments, or nothing picked for 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code>), its 
 <code class="docutils literal notranslate">
 <span class="pre">value
 </span>
-</code> is
-
+</code> is 
 <code class="docutils literal notranslate">
 <span class="pre">DEFAULT
 </span>
-</code>. It shows the 
+</code>. It
+shows the 
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
@@ -1352,8 +1361,8 @@ incomplete.
 <code class="docutils literal notranslate">
 <span class="pre">DEFAULT
 </span>
-</code> and wasn’t changed, and after any change which
-lands on the 
+</code> and wasn’t changed, and after any change which lands on the
+
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
@@ -1361,7 +1370,20 @@ lands on the
 <code class="docutils literal notranslate">
 <span class="pre">default
 </span>
-</code> is how to return to it.
+</code> is how to return to it. A picker without a 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code> has no
+
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code>: nothing picked is 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code>.
 </p>
 
 <p>The picker keeps the object it was given or changed to. An object isn’t valid if it isn’t one of the choices (e.g.,
@@ -1382,12 +1404,16 @@ after the axis changed), or if its arguments aren’t valid. While the kept obje
 <code class="docutils literal notranslate">
 <span class="pre">DEFAULT
 </span>
-</code>), or nothing (its 
+</code>), or, without a 
+<code class="docutils literal notranslate">
+<span class="pre">default
+</span>
+</code>, nothing (its
+
 <code class="docutils literal notranslate">
 <span class="pre">value
 </span>
-</code> is then
-
+</code> is then 
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>

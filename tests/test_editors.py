@@ -168,7 +168,8 @@ def test_list_editor_axis_default() -> None:
 
 def test_property_picker_axis_default() -> None:
     """
-    A property picker following an axis shows the default of the new axis when the axis changes.
+    A property picker following an axis shows the default of the new axis when the axis changes. A default of ``None``
+    shows nothing picked, and its value is still ``DEFAULT``. Picking nothing then lands on that default.
     """
     axis = AxisPicker(mw.DafWidgets(_full_daf()), ["metacell", "block"])
     picker = PropertyPicker(
@@ -182,8 +183,13 @@ def test_property_picker_axis_default() -> None:
     assert picker.children[0].value is mw.Type
 
     axis.children[0].value = "block"
-    assert picker.value is None
+    assert picker.value is DEFAULT
     assert picker.children[0].value is None
+
+    picker.children[0].value = mw.NCells
+    assert picker.value == mw.NCells()
+    picker.children[0].value = None
+    assert picker.value is DEFAULT
 
     axis.children[0].value = "metacell"
     assert picker.children[0].value is mw.Type

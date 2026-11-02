@@ -34,6 +34,7 @@ from .properties import UMAP
 from .properties import GeneExpression
 from .properties import IsLateral
 from .properties import IsMarker
+from .properties import NCells
 from .properties import Property
 from .properties import TotalUMIs
 from .properties import Type
@@ -104,7 +105,10 @@ class AnnDataWidgets(SourceWidgets):
 _BucketLine = Tuple[type[Property], str, str, Callable[..., None]]
 
 # The properties which are counts.
-_SIZE_PROPERTIES: Sequence[_BucketLine] = ((TotalUMIs, "metacell", "total_umis", mg.ad_fill_total_UMIs),)
+_SIZE_PROPERTIES: Sequence[_BucketLine] = (
+    (NCells, "metacell", "grouped", mg.ad_fill_n_cells),
+    (TotalUMIs, "metacell", "total_umis", mg.ad_fill_total_UMIs),
+)
 
 # The properties which are Boolean flags.
 _BOOLEAN_PROPERTIES: Sequence[_BucketLine] = (

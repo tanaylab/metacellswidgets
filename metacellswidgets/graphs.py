@@ -42,6 +42,7 @@ from .entries import GeneSelectionPicker
 from .entries import TopMarkers
 from .forms import GraphForm
 from .properties import IsLateral
+from .properties import NCells
 from .properties import Property
 from .properties import Slot
 from .properties import Type
@@ -77,8 +78,10 @@ class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
     """
     The expression of ``x_gene`` against ``y_gene``, a point per entry of the ``axis`` (left out, the default of
     ``gene_gene_graph`` of ``metacellsgraphspy``, which is the metacells), on log scale. Both axes use the ``log_base``
-    (left out, the default of ``gene_gene_graph``, which is 2), or are linear if it is ``None``. The points may be colored by the ``colors`` property, and sized by the ``sizes`` property. The
-    ``hovers`` properties add lines to the hover of each point (left out, there are none).
+    (left out, the default of ``gene_gene_graph``, which is 2), or are linear if it is ``None``. The points are colored
+    by the ``colors`` property (left out, see :py:meth:`default_colors`), and sized by the ``sizes`` property (left
+    out, see :py:meth:`default_sizes`); either is ``None`` for none. The ``hovers`` properties add lines to the hover
+    of each point (left out, there are none).
 
     Some of the points may be selected, by the ``selected_box`` (the minimal X, maximal X, minimal Y and maximal Y) or
     the ``selected_lasso`` (its vertices), in the units of the data (e.g. gene fractions). At most one of them may be
@@ -96,8 +99,8 @@ class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
         x_gene: str,
         y_gene: str,
         log_base: LogBase | None | DefaultValue = DEFAULT,
-        colors: Property | None = None,
-        sizes: Property | None = None,
+        colors: Property | None | DefaultValue = DEFAULT,
+        sizes: Property | None | DefaultValue = DEFAULT,
         hovers: Sequence[Property] | None = None,
         selected_box: Tuple[float, float, float, float] | None = None,
         selected_lasso: Sequence[Tuple[float, float]] | None = None,
@@ -112,7 +115,7 @@ class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
         self.colors = colors
         self.sizes = sizes
         self.hovers = None if hovers is None else list(hovers)
-        _check_hovers(self.hovers, [colors, sizes], "points")
+        _check_hovers(self.hovers, [self._colors(), self._sizes()], "points")
         if selected_box is not None and selected_lasso is not None:
             raise ValueError("at most one of selected_box and selected_lasso may be given")
         self.selected_box: Tuple[float, float, float, float] | None = (
@@ -147,6 +150,30 @@ class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
         self.selected_box = None
         self.selected_lasso = None
 
+    def _colors(self) -> Property | None:
+        # The colors of the points: the given ones, or else the default ones.
+        return self.default_colors() if isinstance(self.colors, DefaultValue) else self.colors
+
+    def _sizes(self) -> Property | None:
+        # The sizes of the points: the given ones, or else the default ones.
+        return self.default_sizes() if isinstance(self.sizes, DefaultValue) else self.sizes
+
+    def default_colors(self, axis: str | DefaultValue = DEFAULT) -> Property | None:
+        """
+        The colors of the points when ``colors`` is left out: the type of each entry, if the data has it. The entries
+        are of the ``axis`` (by default, the form's).
+        """
+        axis = self.shown_axis() if isinstance(axis, DefaultValue) else axis
+        return Type() if Type.exists(self.source, axis) else None
+
+    def default_sizes(self, axis: str | DefaultValue = DEFAULT) -> Property | None:
+        """
+        The sizes of the points when ``sizes`` is left out: the number of cells of each entry, if the data has it. The
+        entries are of the ``axis`` (by default, the form's).
+        """
+        axis = self.shown_axis() if isinstance(axis, DefaultValue) else axis
+        return NCells() if NCells.exists(self.source, axis) else None
+
     def shown_axis(self) -> str:
         """
         The ``axis``, or the default axis if it is left out.
@@ -162,8 +189,8 @@ class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
         x_gene = GenePicker(genes, self.x_gene)
         y_gene = GenePicker(genes, self.y_gene)
         log_base = LogBasePicker(self.log_base, mg.function_default(mg.gene_gene_graph, "log_base"))
-        colors = PropertyPicker(self.source, Slot.COLORS, axis, self.colors)
-        sizes = PropertyPicker(self.source, Slot.SIZES, axis, self.sizes)
+        colors = PropertyPicker(self.source, Slot.COLORS, axis, self.colors, default=self.default_colors)
+        sizes = PropertyPicker(self.source, Slot.SIZES, axis, self.sizes, default=self.default_sizes)
         points_shown = ShownProperties()
         hovers: ListEditor[Property] = ListEditor(
             lambda current: PropertyPicker(self.source, Slot.HOVERS, axis, current, shown=points_shown),
@@ -184,10 +211,12 @@ class GeneGene(GraphForm):  # pylint: disable=too-many-instance-attributes
     def fill_slots(self, graph: Graph) -> None:
         assert isinstance(graph, PointsGraph)
         axis = self.shown_axis()
-        if self.colors is not None:
-            self.colors.fill(self.source, graph.points_colors_vector_fields(), axis)
-        if self.sizes is not None:
-            self.sizes.fill(self.source, graph.points_sizes_vector_fields(), axis)
+        colors = self._colors()
+        if colors is not None:
+            colors.fill(self.source, graph.points_colors_vector_fields(), axis)
+        sizes = self._sizes()
+        if sizes is not None:
+            sizes.fill(self.source, graph.points_sizes_vector_fields(), axis)
         for hover_property in self.hovers or []:
             hover_property.fill(self.source, graph.points_entities(), axis)
         if self.selected_box is not None or self.selected_lasso is not None:

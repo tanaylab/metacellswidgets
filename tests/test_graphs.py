@@ -33,7 +33,7 @@ def test_gene_gene_arguments() -> None:
         "y_gene": "B",
         "log_base": DEFAULT,
         "colors": mw.Type(),
-        "sizes": None,
+        "sizes": DEFAULT,
         "hovers": None,
         "selected_box": None,
         "selected_lasso": None,
@@ -47,7 +47,7 @@ def test_gene_gene_repr() -> None:
     """
     form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B", sizes=mw.TotalUMIs())
     assert repr(form) == (
-        "GeneGene(x_gene='A', y_gene='B', colors=None, sizes=TotalUMIs(), hovers=None, "
+        "GeneGene(x_gene='A', y_gene='B', sizes=TotalUMIs(), hovers=None, "
         "selected_box=None, selected_lasso=None, tweaks=None)"
     )
     assert form.shown_axis() == "metacell"
@@ -95,7 +95,7 @@ def test_written_arguments() -> None:
     form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B", log_base=None)
     written = _written_arguments(form)
     assert written["log_base"] is None
-    assert "colors" not in written
+    assert "hovers" not in written
 
 
 def test_gene_gene_tweaks() -> None:
@@ -142,7 +142,7 @@ def test_gene_gene_hovers() -> None:
     """
     Hover properties add lines to the hover of each point, without coloring or sizing it.
     """
-    form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B", hovers=[mw.Type()])
+    form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B", colors=None, hovers=[mw.Type()])
     graph = form.graph()
     assert graph.data.points.colors.vector is None
     assert graph.data.points.entities.hovers is not None
@@ -151,17 +151,19 @@ def test_gene_gene_hovers() -> None:
 
 def test_gene_gene_hovers_are_new() -> None:
     """
-    A hover which the colors, the sizes, or another hover already show is an error. While editing, the hovers offer
-    only what the points don't already show. A hover which the colors come to show is hidden, until the colors show
-    something else.
+    A hover which the colors, the sizes (given or default), or another hover already show is an error. While editing,
+    the hovers offer only what the points don't already show. A hover which the colors come to show is hidden, until
+    the colors show something else.
     """
     source = mw.DafWidgets(_full_daf())
     with pytest.raises(ValueError):
         source.gene_gene(x_gene="A", y_gene="B", colors=mw.Type(), hovers=[mw.Type()])
     with pytest.raises(ValueError):
-        source.gene_gene(x_gene="A", y_gene="B", hovers=[mw.Type(), mw.Type()])
+        source.gene_gene(x_gene="A", y_gene="B", colors=None, hovers=[mw.Type(), mw.Type()])
+    with pytest.raises(ValueError):
+        source.gene_gene(x_gene="A", y_gene="B", hovers=[mw.Type()])
 
-    form = source.gene_gene(x_gene="A", y_gene="B", hovers=[mw.Type()])
+    form = source.gene_gene(x_gene="A", y_gene="B", colors=None, hovers=[mw.Type()])
     editor = form.editor()
     colors = editor.children[1].children[1]
     hovers = editor.children[3]
@@ -171,7 +173,7 @@ def test_gene_gene_hovers_are_new() -> None:
     assert mw.Type in [choice for _label, choice in hover_rows[0].children[0].children[0].options]
 
     colors.children[0].value = mw.Type
-    assert form.colors == mw.Type()
+    assert form.colors is DEFAULT
     assert form.hovers == []
     assert mw.Type not in [choice for _label, choice in blank_row.children[0].options]
 
@@ -196,6 +198,35 @@ def test_gene_gene_of_anndata(tmp_path: Path) -> None:
     graph = _source(tmp_path).gene_gene(x_gene="A", y_gene="B", colors=mw.Type()).graph()
     assert graph.data.points.colors.vector is not None
     assert list(graph.data.points.colors.vector) == ["T1", "T2", "T1"]
+
+
+def test_gene_gene_defaults(tmp_path: Path) -> None:
+    """
+    Left out, the points are colored by their type and sized by their number of cells, if the data has these, for both
+    kinds of data sources. The editor shows these defaults, and leaves the arguments ``DEFAULT``.
+    """
+    form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B")
+    assert (form.default_colors(), form.default_sizes()) == (mw.Type(), mw.NCells())
+    graph = form.graph()
+    assert graph.data.points.colors.vector is not None
+    assert list(graph.data.points.colors.vector) == ["T1", "T2", "T1"]
+    assert graph.data.points.sizes.vector is not None
+    editor = form.editor()
+    assert editor.children[1].children[1].children[0].value is mw.Type
+    assert editor.children[2].children[1].children[0].value is mw.NCells
+    assert (form.colors, form.sizes) == (DEFAULT, DEFAULT)
+
+    form = mw.DafWidgets(_sparse_daf()).gene_gene(x_gene="A", y_gene="B")
+    assert (form.default_colors(), form.default_sizes()) == (None, mw.NCells())
+
+    source = _source(tmp_path)
+    form = source.gene_gene(x_gene="A", y_gene="B")
+    assert (form.default_colors(), form.default_sizes()) == (mw.Type(), None)
+    source.adata.obs["grouped"] = [10, 20, 30]
+    assert form.default_sizes() == mw.NCells()
+    sizes = form.graph().data.points.sizes.vector
+    assert sizes is not None
+    assert list(sizes) == [10, 20, 30]
 
 
 def test_gene_gene_exists(tmp_path: Path) -> None:

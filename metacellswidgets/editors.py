@@ -372,14 +372,16 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
     right of the choice. The ``value`` is the object, or ``None`` while nothing is picked or its arguments are
     incomplete.
 
-    A picker may have a ``default`` object. While it shows the ``default`` (picked, with its arguments), its ``value`` is
-    ``DEFAULT``. It shows the ``default`` while it was given ``DEFAULT`` and wasn't changed, and after any change which
-    lands on the ``default``. So changing it back to the ``default`` is how to return to it.
+    A picker may have a ``default`` object, which may be ``None`` (e.g. no colors where the data has no types). While it
+    shows the ``default`` (picked, with its arguments, or nothing picked for ``None``), its ``value`` is ``DEFAULT``. It
+    shows the ``default`` while it was given ``DEFAULT`` and wasn't changed, and after any change which lands on the
+    ``default``. So changing it back to the ``default`` is how to return to it. A picker without a ``default`` has no
+    ``DEFAULT``: nothing picked is ``None``.
 
     The picker keeps the object it was given or changed to. An object isn't valid if it isn't one of the choices (e.g.,
     after the axis changed), or if its arguments aren't valid. While the kept object isn't valid, the picker isn't
-    ``is_valid``: it shows the ``default`` (its ``value`` is then ``DEFAULT``), or nothing (its ``value`` is then
-    ``None``). Any change replaces the kept object.
+    ``is_valid``: it shows the ``default`` (its ``value`` is then ``DEFAULT``), or, without a ``default``, nothing (its
+    ``value`` is then ``None``). Any change replaces the kept object.
 
     A picker may be for the entries of an ``axis``, which may be an :py:class:`AxisPicker` to follow. The ``default``
     may then be a function giving the default object for an axis. When the followed axis changes, the choices change
@@ -493,9 +495,9 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
             current = None
             choice = None
         default = self._default()
-        self._is_default = is_default_allowed and current is None and default is not None and type(default) in choices
-        if self._is_default:
-            assert default is not None
+        is_default_shown = self._given_default is not None if default is None else type(default) in choices
+        self._is_default = is_default_allowed and current is None and is_default_shown
+        if self._is_default and default is not None:
             current = default
             choice = type(default)
         self._set_options(choices, choice)
@@ -534,8 +536,11 @@ class ClassPicker(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
 
     def _normalize(self) -> None:
         # After a change, show the default if the change landed on it, so the ``value`` is ``DEFAULT``. An incomplete
-        # object (a ``value`` of ``None``) is never the default.
-        if not self._is_default and self.value is not None and self.value == self._default():
+        # object (a ``value`` of ``None`` with a class picked) is never the default.
+        if self._is_default or self._given_default is None:
+            return
+        default = self._default()
+        if (self.value is not None and self.value == default) or (default is None and self._dropdown.value is None):
             self._is_default = True
             self._set_value(self.value)
 

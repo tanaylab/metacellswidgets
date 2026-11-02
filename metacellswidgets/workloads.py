@@ -56,6 +56,7 @@ def _run_anndata_workload(directory: str) -> None:
             {
                 "cell_type": pd.Categorical(["T1", "T1", "T2", None]),
                 "total_umis": np.array([100, 200, 300, 400], dtype="float32"),
+                "grouped": np.array([10, 20, 30, 40], dtype="int32"),
                 "x": np.array([0, 1, 2, 3], dtype="float32"),
                 "y": np.array([3, 2, 1, 0], dtype="float32"),
             },

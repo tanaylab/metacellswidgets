@@ -145,9 +145,10 @@ def test_hold_redraw() -> None:
 
 def test_incomplete() -> None:
     """
-    A missing gene leaves the graph undrawn; missing sizes don't.
+    A missing gene leaves the graph undrawn; no sizes don't.
     """
     form, redraws = _form_and_redraws()
+    form._bound["sizes"]._dropdown.value = None
     assert form.sizes is None
     assert form.is_complete()
 

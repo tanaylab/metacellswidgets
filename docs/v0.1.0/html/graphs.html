@@ -165,6 +165,24 @@
 </li>
 
 <li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.graphs.GeneGene.default_colors">
+<code class="docutils literal notranslate">
+<span class="pre">GeneGene.default_colors()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.graphs.GeneGene.default_sizes">
+<code class="docutils literal notranslate">
+<span class="pre">GeneGene.default_sizes()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
 <a class="reference internal" href="#metacellswidgets.graphs.GeneGene.shown_axis">
 <code class="docutils literal notranslate">
 <span class="pre">GeneGene.shown_axis()
@@ -508,7 +526,7 @@ which each kind implements in its own module (see
 </span>
 </span>
 <span class="default_value">
-<span class="pre">None
+<span class="pre">Ellipsis
 </span>
 </span>
 </em>, 
@@ -522,7 +540,7 @@ which each kind implements in its own module (see
 </span>
 </span>
 <span class="default_value">
-<span class="pre">None
+<span class="pre">Ellipsis
 </span>
 </span>
 </em>, 
@@ -629,20 +647,38 @@ which each kind implements in its own module (see
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
-</code>. The points may be colored by the 
+</code>. The points are colored
+by the 
 <code class="docutils literal notranslate">
 <span class="pre">colors
 </span>
-</code> property, and sized by the 
+</code> property (left out, see 
+<a class="reference internal" href="#metacellswidgets.graphs.GeneGene.default_colors" title="metacellswidgets.graphs.GeneGene.default_colors">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">default_colors()
+</span>
+</code>
+</a>), and sized by the 
 <code class="docutils literal notranslate">
 <span class="pre">sizes
 </span>
-</code> property. The
-
+</code> property (left
+out, see 
+<a class="reference internal" href="#metacellswidgets.graphs.GeneGene.default_sizes" title="metacellswidgets.graphs.GeneGene.default_sizes">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">default_sizes()
+</span>
+</code>
+</a>); either is 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> for none. The 
 <code class="docutils literal notranslate">
 <span class="pre">hovers
 </span>
-</code> properties add lines to the hover of each point (left out, there are none).
+</code> properties add lines to the hover
+of each point (left out, there are none).
 </p>
 
 <p>Some of the points may be selected, by the 
@@ -746,6 +782,10 @@ given.
 <em> | 
 </em>
 <em>None
+</em>
+<em> | 
+</em>
+<em>EllipsisType
 </em>)
 </p>
 </li>
@@ -761,6 +801,10 @@ given.
 <em> | 
 </em>
 <em>None
+</em>
+<em> | 
+</em>
+<em>EllipsisType
 </em>)
 </p>
 </li>
@@ -944,6 +988,188 @@ argument other than the selection changed since, and then it builds the graph ag
 <p>
 <em>List
 </em>[str]
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.graphs.GeneGene.default_colors">
+
+<span class="sig-name descname">
+<span class="pre">default_colors
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">Ellipsis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/graphs.html#GeneGene.default_colors">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.graphs.GeneGene.default_colors" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The colors of the points when 
+<code class="docutils literal notranslate">
+<span class="pre">colors
+</span>
+</code> is left out: the type of each entry, if the data has it. The entries
+are of the 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code> (by default, the form’s).
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>axis
+</strong> (
+<em>str
+</em>
+<em> | 
+</em>
+<em>EllipsisType
+</em>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
+<em>Property
+</em>
+</a> | None
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.graphs.GeneGene.default_sizes">
+
+<span class="sig-name descname">
+<span class="pre">default_sizes
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">axis
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">Ellipsis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/graphs.html#GeneGene.default_sizes">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.graphs.GeneGene.default_sizes" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The sizes of the points when 
+<code class="docutils literal notranslate">
+<span class="pre">sizes
+</span>
+</code> is left out: the number of cells of each entry, if the data has it. The
+entries are of the 
+<code class="docutils literal notranslate">
+<span class="pre">axis
+</span>
+</code> (by default, the form’s).
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<p>
+<strong>axis
+</strong> (
+<em>str
+</em>
+<em> | 
+</em>
+<em>EllipsisType
+</em>)
+</p>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<a class="reference internal" href="properties.html#metacellswidgets.properties.Property" title="metacellswidgets.properties.Property">
+<em>Property
+</em>
+</a> | None
 </p>
 
 </dd>

@@ -495,14 +495,16 @@
 <span class="sd">    right of the choice. The ``value`` is the object, or ``None`` while nothing is picked or its arguments are</span>
 <span class="sd">    incomplete.</span>
 
-<span class="sd">    A picker may have a ``default`` object. While it shows the ``default`` (picked, with its arguments), its ``value`` is</span>
-<span class="sd">    ``DEFAULT``. It shows the ``default`` while it was given ``DEFAULT`` and wasn't changed, and after any change which</span>
-<span class="sd">    lands on the ``default``. So changing it back to the ``default`` is how to return to it.</span>
+<span class="sd">    A picker may have a ``default`` object, which may be ``None`` (e.g. no colors where the data has no types). While it</span>
+<span class="sd">    shows the ``default`` (picked, with its arguments, or nothing picked for ``None``), its ``value`` is ``DEFAULT``. It</span>
+<span class="sd">    shows the ``default`` while it was given ``DEFAULT`` and wasn't changed, and after any change which lands on the</span>
+<span class="sd">    ``default``. So changing it back to the ``default`` is how to return to it. A picker without a ``default`` has no</span>
+<span class="sd">    ``DEFAULT``: nothing picked is ``None``.</span>
 
 <span class="sd">    The picker keeps the object it was given or changed to. An object isn't valid if it isn't one of the choices (e.g.,</span>
 <span class="sd">    after the axis changed), or if its arguments aren't valid. While the kept object isn't valid, the picker isn't</span>
-<span class="sd">    ``is_valid``: it shows the ``default`` (its ``value`` is then ``DEFAULT``), or nothing (its ``value`` is then</span>
-<span class="sd">    ``None``). Any change replaces the kept object.</span>
+<span class="sd">    ``is_valid``: it shows the ``default`` (its ``value`` is then ``DEFAULT``), or, without a ``default``, nothing (its</span>
+<span class="sd">    ``value`` is then ``None``). Any change replaces the kept object.</span>
 
 <span class="sd">    A picker may be for the entries of an ``axis``, which may be an :py:class:`AxisPicker` to follow. The ``default``</span>
 <span class="sd">    may then be a function giving the default object for an axis. When the followed axis changes, the choices change</span>
@@ -625,9 +627,9 @@
             <span class="n">current</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">choice</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">default</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_is_default</span> <span class="o">=</span> <span class="n">is_default_allowed</span> <span class="ow">and</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">default</span><span class="p">)</span> <span class="ow">in</span> <span class="n">choices</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_default</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">is_default_shown</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_given_default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">type</span><span class="p">(</span><span class="n">default</span><span class="p">)</span> <span class="ow">in</span> <span class="n">choices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_default</span> <span class="o">=</span> <span class="n">is_default_allowed</span> <span class="ow">and</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">is_default_shown</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_default</span> <span class="ow">and</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">current</span> <span class="o">=</span> <span class="n">default</span>
             <span class="n">choice</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_options</span><span class="p">(</span><span class="n">choices</span><span class="p">,</span> <span class="n">choice</span><span class="p">)</span>
@@ -666,8 +668,11 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># After a change, show the default if the change landed on it, so the ``value`` is ``DEFAULT``. An incomplete</span>
-        <span class="c1"># object (a ``value`` of ``None``) is never the default.</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_default</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span><span class="p">():</span>
+        <span class="c1"># object (a ``value`` of ``None`` with a class picked) is never the default.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_default</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_given_default</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">default</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default</span><span class="p">()</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">default</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">default</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dropdown</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_is_default</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 
