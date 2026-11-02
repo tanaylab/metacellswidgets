@@ -243,6 +243,15 @@
 </li>
 
 <li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.editors.Disclosure">
+<code class="docutils literal notranslate">
+<span class="pre">Disclosure
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l3">
 <a class="reference internal" href="#metacellswidgets.editors.GeneChoices">
 <code class="docutils literal notranslate">
 <span class="pre">GeneChoices
@@ -1839,6 +1848,134 @@ is picked.
 
 <dl class="py class">
 
+<dt class="sig sig-object py" id="metacellswidgets.editors.Disclosure">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.editors.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">Disclosure
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="o">
+<span class="pre">*
+</span>
+</span>
+<span class="n">
+<span class="pre">args
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="o">
+<span class="pre">**
+</span>
+</span>
+<span class="n">
+<span class="pre">kwargs
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/editors.html#Disclosure">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.editors.Disclosure" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>A toggle button named 
+<code class="docutils literal notranslate">
+<span class="pre">title
+</span>
+</code>, which shows the 
+<code class="docutils literal notranslate">
+<span class="pre">content
+</span>
+</code> while it is pressed and hides it otherwise. Its
+
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is whether the content is shown (
+<code class="docutils literal notranslate">
+<span class="pre">is_shown
+</span>
+</code> at first). Its icon points down while the content is shown,
+and right while it is hidden, as the triangles of collapsible sections do. The caller places the 
+<code class="docutils literal notranslate">
+<span class="pre">content
+</span>
+</code> (e.g.
+below the button, or in a row of its own).
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>title
+</strong> (
+<em>str
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>content
+</strong> (
+<em>Widget
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>is_shown
+</strong> (
+<em>bool
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
 <dt class="sig sig-object py" id="metacellswidgets.editors.GeneChoices">
 
 <span class="property">
@@ -2152,12 +2289,19 @@ any. The picked gene is always one of the choices, so the dropdown never drops i
 </dt>
 
 <dd>
-<p>Edit a list of objects (e.g., properties, tweaks, or names), a row per object, in a collapsible section named
+<p>Edit a list of objects (e.g., properties, tweaks, or names), a row per object. The rows are below a
 
+<a class="reference internal" href="#metacellswidgets.editors.Disclosure" title="metacellswidgets.editors.Disclosure">
+<code class="xref py py-class docutils literal notranslate">
+<span class="pre">Disclosure
+</span>
+</code>
+</a> named 
 <code class="docutils literal notranslate">
 <span class="pre">title
 </span>
-</code> (collapsed at first). Each row is a picker made by 
+</code>, which shows or hides them (hidden at first). Each row is a picker made by
+
 <code class="docutils literal notranslate">
 <span class="pre">make_row
 </span>
@@ -2165,9 +2309,9 @@ any. The picked gene is always one of the choices, so the dropdown never drops i
 <code class="docutils literal notranslate">
 <span class="pre">None
 </span>
-</code> for a
-blank row. The list always ends with a blank row; picking something in it makes it a row of the list, and appends a
-new blank row. Each row of the list has buttons to move it up or down, or to remove it.
+</code> for a blank row. The list always ends with a
+blank row; picking something in it makes it a row of the list, and appends a new blank row. Each row of the list
+has buttons to move it up or down, or to remove it.
 </p>
 
 <p>A row which isn’t 

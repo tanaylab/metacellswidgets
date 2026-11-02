@@ -23,12 +23,12 @@ from typing import TypeVar
 import traitlets  # type: ignore
 from dafpy.julia_import import DEFAULT
 from dafpy.julia_import import DefaultValue
-from ipywidgets import Accordion  # type: ignore
 from ipywidgets import Button  # type: ignore
 from ipywidgets import Combobox  # type: ignore
 from ipywidgets import Dropdown  # type: ignore
 from ipywidgets import HBox  # type: ignore
 from ipywidgets import Layout  # type: ignore
+from ipywidgets import ToggleButton  # type: ignore
 from ipywidgets import VBox  # type: ignore
 from ipywidgets import Widget  # type: ignore
 from somegraphspy import LogBase
@@ -45,6 +45,7 @@ __all__: List[str] = [
     "ChoicePicker",
     "ClassPicker",
     "ComboPicker",
+    "Disclosure",
     "GeneChoices",
     "GenePicker",
     "ListEditor",
@@ -693,6 +694,30 @@ class PropertyPicker(ClassPicker):  # pylint: disable=too-many-ancestors,abstrac
         return self._on_axis_change(old_axis, new_axis, current)
 
 
+class Disclosure(ToggleButton):  # pylint: disable=too-many-ancestors,abstract-method
+    """
+    A toggle button named ``title``, which shows the ``content`` while it is pressed and hides it otherwise. Its
+    ``value`` is whether the content is shown (``is_shown`` at first). Its icon points down while the content is shown,
+    and right while it is hidden, as the triangles of collapsible sections do. The caller places the ``content`` (e.g.
+    below the button, or in a row of its own).
+    """
+
+    def __init__(self, title: str, content: Widget, *, is_shown: bool = False) -> None:
+        super().__init__(description=title, value=is_shown, icon=_disclosure_icon(is_shown))
+        self._content = content
+        content.layout.display = None if is_shown else "none"
+        self.observe(self._on_value_change, names="value")
+
+    def _on_value_change(self, change: Dict) -> None:
+        self.icon = _disclosure_icon(change["new"])
+        self._content.layout.display = None if change["new"] else "none"
+
+
+def _disclosure_icon(is_shown: bool) -> str:
+    # The icon of a disclosure: pointing down while its content is shown, and right while it is hidden.
+    return "caret-down" if is_shown else "caret-right"
+
+
 # The layout of the small buttons of each row of a list editor.
 _ROW_BUTTON_LAYOUT = Layout(width="2.5em")
 
@@ -705,10 +730,11 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
     ArgumentsEditor, Generic[_Item]
 ):
     """
-    Edit a list of objects (e.g., properties, tweaks, or names), a row per object, in a collapsible section named
-    ``title`` (collapsed at first). Each row is a picker made by ``make_row``, which gets the object the row starts with, or ``None`` for a
-    blank row. The list always ends with a blank row; picking something in it makes it a row of the list, and appends a
-    new blank row. Each row of the list has buttons to move it up or down, or to remove it.
+    Edit a list of objects (e.g., properties, tweaks, or names), a row per object. The rows are below a
+    :py:class:`Disclosure` named ``title``, which shows or hides them (hidden at first). Each row is a picker made by
+    ``make_row``, which gets the object the row starts with, or ``None`` for a blank row. The list always ends with a
+    blank row; picking something in it makes it a row of the list, and appends a new blank row. Each row of the list
+    has buttons to move it up or down, or to remove it.
 
     A row which isn't ``is_valid`` (see :py:class:`ArgumentsEditor`) is hidden, and its object is left out of the
     ``value``. It is shown again in its place once it is valid. Moving a row up or down swaps it with the adjacent shown
@@ -745,7 +771,7 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
         self._row_boxes: List[HBox] = []
         self._blank_row: ArgumentsEditor | None = None
         self._rows_box = VBox()
-        self.children = [Accordion(children=[self._rows_box], titles=(title,), selected_index=None)]
+        self.children = [VBox([Disclosure(title, self._rows_box), self._rows_box])]
         # The list observes the axis before its rows do, so it replaces the rows of a shown default before they follow
         # the new axis (which would count as a change).
         if isinstance(axis, AxisPicker):

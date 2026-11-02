@@ -96,12 +96,12 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">traitlets</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dafpy.julia_import</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dafpy.julia_import</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultValue</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Accordion</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Button</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Combobox</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dropdown</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HBox</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToggleButton</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">VBox</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogBase</span>
@@ -118,6 +118,7 @@
     <span class="s2">"ChoicePicker"</span><span class="p">,</span>
     <span class="s2">"ClassPicker"</span><span class="p">,</span>
     <span class="s2">"ComboPicker"</span><span class="p">,</span>
+    <span class="s2">"Disclosure"</span><span class="p">,</span>
     <span class="s2">"GeneChoices"</span><span class="p">,</span>
     <span class="s2">"GenePicker"</span><span class="p">,</span>
     <span class="s2">"ListEditor"</span><span class="p">,</span>
@@ -832,6 +833,33 @@
 
 
 
+<div class="viewcode-block" id="Disclosure">
+<a class="viewcode-back" href="../../editors.html#metacellswidgets.editors.Disclosure">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Disclosure</span><span class="p">(</span><span class="n">ToggleButton</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    A toggle button named ``title``, which shows the ``content`` while it is pressed and hides it otherwise. Its</span>
+<span class="sd">    ``value`` is whether the content is shown (``is_shown`` at first). Its icon points down while the content is shown,</span>
+<span class="sd">    and right while it is hidden, as the triangles of collapsible sections do. The caller places the ``content`` (e.g.</span>
+<span class="sd">    below the button, or in a row of its own).</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="n">Widget</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">is_shown</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">is_shown</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">_disclosure_icon</span><span class="p">(</span><span class="n">is_shown</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_content</span> <span class="o">=</span> <span class="n">content</span>
+        <span class="n">content</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">display</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">is_shown</span> <span class="k">else</span> <span class="s2">"none"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_value_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_value_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">icon</span> <span class="o">=</span> <span class="n">_disclosure_icon</span><span class="p">(</span><span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_content</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">display</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">change</span><span class="p">[</span><span class="s2">"new"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">"none"</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_disclosure_icon</span><span class="p">(</span><span class="n">is_shown</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="c1"># The icon of a disclosure: pointing down while its content is shown, and right while it is hidden.</span>
+    <span class="k">return</span> <span class="s2">"caret-down"</span> <span class="k">if</span> <span class="n">is_shown</span> <span class="k">else</span> <span class="s2">"caret-right"</span>
+
+
 <span class="c1"># The layout of the small buttons of each row of a list editor.</span>
 <span class="n">_ROW_BUTTON_LAYOUT</span> <span class="o">=</span> <span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s2">"2.5em"</span><span class="p">)</span>
 
@@ -846,10 +874,11 @@
     <span class="n">ArgumentsEditor</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">_Item</span><span class="p">]</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Edit a list of objects (e.g., properties, tweaks, or names), a row per object, in a collapsible section named</span>
-<span class="sd">    ``title`` (collapsed at first). Each row is a picker made by ``make_row``, which gets the object the row starts with, or ``None`` for a</span>
-<span class="sd">    blank row. The list always ends with a blank row; picking something in it makes it a row of the list, and appends a</span>
-<span class="sd">    new blank row. Each row of the list has buttons to move it up or down, or to remove it.</span>
+<span class="sd">    Edit a list of objects (e.g., properties, tweaks, or names), a row per object. The rows are below a</span>
+<span class="sd">    :py:class:`Disclosure` named ``title``, which shows or hides them (hidden at first). Each row is a picker made by</span>
+<span class="sd">    ``make_row``, which gets the object the row starts with, or ``None`` for a blank row. The list always ends with a</span>
+<span class="sd">    blank row; picking something in it makes it a row of the list, and appends a new blank row. Each row of the list</span>
+<span class="sd">    has buttons to move it up or down, or to remove it.</span>
 
 <span class="sd">    A row which isn't ``is_valid`` (see :py:class:`ArgumentsEditor`) is hidden, and its object is left out of the</span>
 <span class="sd">    ``value``. It is shown again in its place once it is valid. Moving a row up or down swaps it with the adjacent shown</span>
@@ -886,7 +915,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_row_boxes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">HBox</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_blank_row</span><span class="p">:</span> <span class="n">ArgumentsEditor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rows_box</span> <span class="o">=</span> <span class="n">VBox</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="n">Accordion</span><span class="p">(</span><span class="n">children</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows_box</span><span class="p">],</span> <span class="n">titles</span><span class="o">=</span><span class="p">(</span><span class="n">title</span><span class="p">,),</span> <span class="n">selected_index</span><span class="o">=</span><span class="kc">None</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="n">VBox</span><span class="p">([</span><span class="n">Disclosure</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows_box</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows_box</span><span class="p">])]</span>
         <span class="c1"># The list observes the axis before its rows do, so it replaces the rows of a shown default before they follow</span>
         <span class="c1"># the new axis (which would count as a change).</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">AxisPicker</span><span class="p">):</span>

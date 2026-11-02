@@ -47,7 +47,6 @@ from ipywidgets import Dropdown  # type: ignore
 from ipywidgets import HBox  # type: ignore
 from ipywidgets import Layout  # type: ignore
 from ipywidgets import Output  # type: ignore
-from ipywidgets import ToggleButton  # type: ignore
 from ipywidgets import VBox  # type: ignore
 from ipywidgets import Widget  # type: ignore
 from plotly.graph_objects import Figure  # type: ignore
@@ -60,6 +59,7 @@ from somegraphspy import SvgImage
 from .common import Arguments
 from .common import _give_own_dispatchers
 from .editors import ArgumentsEditor
+from .editors import Disclosure
 from .editors import ListEditor
 from .kernel import _MainThreadJobs
 from .kernel import _on_main_thread
@@ -657,12 +657,6 @@ def _switched_form(
     return form
 
 
-def _disclosure_icon(is_shown: bool) -> str:
-    # The icon of a toggle which shows or hides a panel: pointing down while it is shown, and right while it is hidden,
-    # as the triangles of the headers of collapsible sections do.
-    return "caret-down" if is_shown else "caret-right"
-
-
 class _EditSession:  # pylint: disable=too-many-instance-attributes
     # The editor of a form (or, with no form, of a graph to choose), shown until "Done" is clicked, or "Cancel", which
     # discards the editing. With a ``tree``, it
@@ -722,14 +716,12 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         toolbar: List[Widget] = []
         rows: List[Widget] = []
         self._menu: GraphMenu | None = None
-        self._graphs: ToggleButton | None = None
+        self._graphs: Disclosure | None = None
         visible = None if tree is None else tree.visible(source)
         if tree is not None and visible is not None and (form is None or _path_to(visible, type(form))):
             self._menu = GraphMenu(source, tree, None if form is None else type(form))
             self._menu.observe(self._on_menu_change, names="value")
-            self._menu.layout.display = None if form is None else "none"
-            self._graphs = ToggleButton(description="Graphs", value=form is None, icon=_disclosure_icon(form is None))
-            self._graphs.observe(self._on_graphs_change, names="value")
+            self._graphs = Disclosure("Graphs", self._menu, is_shown=form is None)
             toolbar.append(self._graphs)
             rows.append(self._menu)
         toolbar += [self._revert_button, self._cancel, self._done, self._spinner]
@@ -895,11 +887,6 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
             if self._form is None:
                 self._graphs.value = True
             self._graphs.disabled = self._form is None
-
-    def _on_graphs_change(self, change: Dict) -> None:
-        assert self._graphs is not None and self._menu is not None
-        self._graphs.icon = _disclosure_icon(change["new"])
-        self._menu.layout.display = None if change["new"] else "none"
 
     def _on_menu_change(self, change: Dict) -> None:
         if not self._is_reverting:

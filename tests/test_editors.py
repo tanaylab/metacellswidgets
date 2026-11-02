@@ -12,6 +12,7 @@ import metacellswidgets as mw
 from metacellswidgets.common import Arguments
 from metacellswidgets.editors import ArgumentsEditor
 from metacellswidgets.editors import AxisPicker
+from metacellswidgets.editors import Disclosure
 from metacellswidgets.editors import GenePicker
 from metacellswidgets.editors import ListEditor
 from metacellswidgets.editors import NamePicker
@@ -43,21 +44,27 @@ def _rows_box(editor: ListEditor) -> Any:
     """
     The box of the rows of a list editor.
     """
-    return editor.children[0].children[0]
+    return editor.children[0].children[1]
 
 
 def test_list_editor() -> None:
     """
-    A list editor starts with a row per object, and ends with a blank row. Picking in the blank row adds it to the list,
-    and adds a new blank row. Rows move up and down (but not past either end), and are removed. Without a default,
-    removing all of them lands on the default, an empty list, so the value is ``None``.
+    A list editor starts with a row per object, and ends with a blank row. Its rows are hidden at first, below a
+    disclosure which shows them. Picking in the blank row adds it to the list, and adds a new blank row. Rows move up
+    and down (but not past either end), and are removed. Without a default, removing all of them lands on the default,
+    an empty list, so the value is ``None``.
     """
     first, second, third = mw.Title(text="A"), mw.Title(text="B"), mw.Title(text="C")
     editor = ListEditor(_Row, [first, second], title="Titles")
     assert editor.value == [first, second]
-    assert editor.children[0].titles == ("Titles",)
-    assert editor.children[0].selected_index is None
+    disclosure = editor.children[0].children[0]
+    assert isinstance(disclosure, Disclosure)
+    assert disclosure.description == "Titles"
     rows_box = _rows_box(editor)
+    assert rows_box.layout.display == "none"
+    disclosure.value = True
+    assert rows_box.layout.display is None
+    assert disclosure.icon == "caret-down"
     assert len(rows_box.children) == 3
 
     rows_box.children[2].pick(third)
