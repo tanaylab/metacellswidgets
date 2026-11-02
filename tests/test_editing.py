@@ -48,6 +48,34 @@ def test_figure_follows_its_width() -> None:
     assert not session._poll_width()
 
 
+def test_drag_bars() -> None:
+    """
+    Dragging a bar sets that dimension of the last ``Size`` tweak, adding one if there is none, and leaves the other
+    dimension as it was. The bars follow the figure's size: the drags start from it, and an explicit width makes the
+    figure's column (and so the height bar) that wide.
+    """
+    form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B")
+    session = _EditSession(form.source, form)
+    session._show_form()
+    form._poll_redraw(session._redraw)
+    session._width_watcher.width = 900
+    session._poll_width()
+    assert (session._width_bar.start, session._height_bar.start) == (900, 450)
+    assert session._figure_column.layout.flex == "1 1 auto"
+    assert session._width_bar.layout.height == "450px"
+    assert session._height_bar in session._figure_column.children
+
+    session._height_bar.dragged = 600
+    assert form.tweaks == [mw.Size(height=600)]
+    session._width_bar.dragged = 500
+    assert form.tweaks == [mw.Size(width=500, height=600)]
+
+    form._poll_redraw(session._redraw)
+    assert (session._width_bar.start, session._height_bar.start) == (500, 600)
+    assert session._figure_column.layout.width == "500px"
+    assert session._width_bar.layout.height == "600px"
+
+
 def test_redraw_keeps_the_full_width() -> None:
     """
     Redrawing the figure keeps it as wide as the cell: replacing its layout doesn't drop its ``autosize``.
@@ -57,6 +85,19 @@ def test_redraw_keeps_the_full_width() -> None:
     form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B")
     _replace_figure(widget, form.fig)
     assert widget.layout.autosize is True
+
+
+def test_redraw_without_height() -> None:
+    """
+    Redrawing a figure which sets no height after one which does gives it Plotly's default height, not the previous one.
+    """
+    widget = FigureWidget()
+    form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B", tweaks=[mw.Size(height=689)])
+    _replace_figure(widget, form.fig)
+    assert widget.layout.height == 689
+    form.tweaks = None
+    _replace_figure(widget, form.fig)
+    assert widget.layout.height == 450
 
 
 def _form_and_redraws() -> Any:

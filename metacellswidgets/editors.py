@@ -788,7 +788,7 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
         self._rows = []
         self._row_boxes = []
         for item in items or []:
-            self._append(self._make_row(item))
+            self._insert(self._make_row(item), len(self._rows))
         self._new_blank_row()
         self._update()
         for row in replaced_rows:
@@ -799,8 +799,25 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
         self._blank_row = self._make_row(None)
         self._blank_row.observe(self._on_blank_row_change, names="is_blank")
 
-    def _append(self, row: ArgumentsEditor) -> None:
-        # Append the ``row``, with its buttons.
+    def update_last(self, is_item: Callable[[_Item], bool], update: Callable[[_Item | None], _Item]) -> None:
+        """
+        Replace the last shown object for which ``is_item`` holds by ``update`` of it, or, if there is none, append
+        ``update`` of ``None``. The row of the new object shows it, as if the user had picked it.
+        """
+        for index in reversed(range(len(self._rows))):
+            row = self._rows[index]
+            if row.is_valid and row.value is not None and is_item(row.value):
+                updated = update(row.value)
+                self._remove(row)
+                self._insert(self._make_row(updated), index)
+                break
+        else:
+            self._insert(self._make_row(update(None)), len(self._rows))
+        self._normalize()
+        self._update()
+
+    def _insert(self, row: ArgumentsEditor, index: int) -> None:
+        # Insert the ``row`` at the ``index``, with its buttons.
         move_up = Button(description="\N{UPWARDS ARROW}", layout=_ROW_BUTTON_LAYOUT)  # NOT F-STRING
         move_down = Button(description="\N{DOWNWARDS ARROW}", layout=_ROW_BUTTON_LAYOUT)  # NOT F-STRING
         remove = Button(description="\N{MULTIPLICATION X}", layout=_ROW_BUTTON_LAYOUT)  # NOT F-STRING
@@ -809,8 +826,8 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
         remove.on_click(lambda _button: self._remove(row))
         row.observe(self._on_row_change, names="value")
         row.observe(self._on_row_is_valid_change, names="is_valid")
-        self._rows.append(row)
-        self._row_boxes.append(HBox([row, move_up, move_down, remove], layout=Layout(align_items="flex-start")))
+        self._rows.insert(index, row)
+        self._row_boxes.insert(index, HBox([row, move_up, move_down, remove], layout=Layout(align_items="flex-start")))
 
     def _unobserve_row(self, row: ArgumentsEditor) -> None:
         row.unobserve(self._on_row_change, names="value")
@@ -856,7 +873,7 @@ class ListEditor(  # pylint: disable=too-many-ancestors,abstract-method,too-many
         row = self._blank_row
         assert row is not None
         row.unobserve(self._on_blank_row_change, names="is_blank")
-        self._append(row)
+        self._insert(row, len(self._rows))
         self._new_blank_row()
         self._normalize()
         self._update()

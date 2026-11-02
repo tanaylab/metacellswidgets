@@ -11,6 +11,9 @@ widget changes the argument and asks for the graph to be redrawn. Requests only 
 once for all the requests pending, when the editor polls the form.
 """
 
+# The forms and their editor share their private helpers, so they are in one module.
+# pylint: disable=too-many-lines
+
 import copy
 import functools
 import inspect
@@ -74,6 +77,8 @@ from .rewrite import _rewritten_menu_cell
 from .selections import _points_key
 from .selections import _without_selection
 from .sources import SourceWidgets
+from .tweaks import _DEFAULT_HEIGHT
+from .tweaks import Size
 from .tweaks import Tweak
 from .tweaks import TweakPicker
 
@@ -371,6 +376,23 @@ class _WidthWatcher(anywidget.AnyWidget):  # pylint: disable=too-many-ancestors,
     _esm = Path(__file__).parent / "width_watcher.js"
 
     width = traitlets.Int(0).tag(sync=True)
+
+
+# The smallest size (in pixels) a drag bar may set the figure's width or height to.
+_SMALLEST_DRAGGED_SIZE = 100
+
+
+class _DragBar(anywidget.AnyWidget):  # pylint: disable=too-many-ancestors,abstract-method
+    # A bar under the figure (for its ``height``) or to its right (for its ``width``), which reports the size the figure
+    # is dragged to (in pixels) as ``dragged``, when the mouse is released. The drag starts from the ``start`` size. Its
+    # layout alone sets its size and margins (its browser code sets only its color and pointer).
+
+    _esm = Path(__file__).parent / "drag_bar.js"
+
+    dimension = traitlets.Unicode().tag(sync=True)
+    start = traitlets.Int(0).tag(sync=True)
+    smallest = traitlets.Int(_SMALLEST_DRAGGED_SIZE).tag(sync=True)
+    dragged = traitlets.Int(0).tag(sync=True)
 
 
 @dataclass(frozen=True)
@@ -685,9 +707,18 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         # Since when the figure is shown without a width from its watcher (while it is).
         self._unmeasured_since: float | None = None
         self._has_width_failed = False
-        # A figure widget's ``layout`` is the figure's, so it is hidden through a box around it. The box is a column, which
-        # stretches the figure (and its width watcher) to its full width.
-        self._figure_box = VBox([self._width_watcher], layout=Layout(display="none"))
+        # Dragging a bar sets the figure's height (or width) by a ``Size`` tweak. Each bar has a small margin beyond it.
+        self._height_bar = _DragBar(dimension="height", layout=Layout(width="100%", height="6px", margin="0 0 4px 0"))
+        self._width_bar = _DragBar(dimension="width", layout=Layout(width="6px", margin="0 4px 0 0"))
+        for drag_bar in (self._height_bar, self._width_bar):
+            drag_bar.observe(self._on_drag, names="dragged")
+        # A figure widget's ``layout`` is the figure's, so it is hidden through a box around it. The box is a row of a
+        # column (the figure, with its width watcher above it and its height bar below it) and the width bar. A column
+        # stretches the figure (and its width watcher) to its full width. The bars fit the figure (see
+        # ``_update_drag_bars``). The height bar is in the column from the start, so it is routed to the subshell with
+        # the editor when this is shown (see ``_route_to_subshell``); the figure is put above it when it is made.
+        self._figure_column = VBox([self._width_watcher, self._height_bar], layout=Layout(flex="1 1 auto"))
+        self._figure_box = HBox([self._figure_column, self._width_bar], layout=Layout(display="none"))
         toolbar: List[Widget] = []
         rows: List[Widget] = []
         self._menu: GraphMenu | None = None
@@ -773,6 +804,7 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
             self._is_resize_due = False
             self._figure.layout.autosize = False
             self._figure.layout.autosize = True
+            self._update_drag_bars()
         is_waiting = (
             self._figure_box.layout.display != "none" and self._width_watcher.width == 0 and not self._has_width_failed
         )
@@ -793,10 +825,49 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         return True
 
     def _redraw(self, graph: Graph) -> None:
-        # Show the redrawn ``graph``, and let the editors of the tweaks follow it.
+        # Show the redrawn ``graph``, and let the editors of the tweaks and the drag bars follow it.
         self._draw(graph.fig)
         if self._tweaks is not None:
             self._tweaks.update_graph(graph)
+        self._update_drag_bars()
+
+    def _update_drag_bars(self) -> None:
+        # Fit the drag bars to the figure's size: its explicit size (set by a ``Size`` tweak), or else its measured width
+        # and Plotly's default height. The figure's column is as wide as an explicit width (so the height bar under it is
+        # as long, and the width bar is next to it), or else takes all the width it can. The width bar is as tall as the
+        # figure. The drags start from the figure's size.
+        graph = None if self._form is None else self._form._kept_graph  # pylint: disable=protected-access
+        figure = None if graph is None else graph.configuration.figure
+        width = None if figure is None else figure.width
+        height = None if figure is None else figure.height
+        if width is None:
+            self._figure_column.layout.width = None
+            self._figure_column.layout.flex = "1 1 auto"
+        else:
+            self._figure_column.layout.width = f"{int(width)}px"
+            self._figure_column.layout.flex = "0 0 auto"
+        shown_height = _DEFAULT_HEIGHT if height is None else int(height)
+        self._width_bar.layout.height = f"{shown_height}px"
+        self._width_bar.start = self._width_watcher.width if width is None else int(width)
+        self._height_bar.start = shown_height
+
+    def _on_drag(self, change: Dict) -> None:
+        # A widget callback (on the subshell thread). Setting the size changes the editors, on the main thread.
+        dimension = change["owner"].dimension
+        _on_main_thread(lambda: self._set_dragged_size(dimension, change["new"]))
+
+    def _set_dragged_size(self, dimension: str, size: int) -> None:
+        # Set the ``dimension`` (``"width"`` or ``"height"``) of the last ``Size`` tweak to the dragged ``size``, adding a
+        # ``Size`` if there is none.
+        if self._tweaks is None:
+            return
+
+        def update(current: Tweak | None) -> Tweak:
+            arguments = {} if current is None else current.arguments()
+            arguments[dimension] = size
+            return Size(**arguments)
+
+        self._tweaks.update_last(lambda tweak: isinstance(tweak, Size), update)
 
     def _is_complete(self) -> bool:
         # Whether there is a form to rewrite the cell with: one is chosen, and its arguments are complete.
@@ -908,7 +979,7 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
         # figure widget is made when there is first a figure to show.
         if figure is not None and self._figure is None:
             self._figure = FigureWidget()
-            self._figure_box.children = [self._width_watcher, self._figure]
+            self._figure_column.children = [self._width_watcher, self._figure, self._height_bar]
         if self._figure is not None:
             _replace_figure(self._figure, Figure() if figure is None else figure)
         self._figure_box.layout.display = "none" if figure is None else None
@@ -935,9 +1006,12 @@ class _EditSession:  # pylint: disable=too-many-instance-attributes
 def _replace_figure(widget: FigureWidget, figure: Figure) -> None:
     # Show the ``figure`` in the interactive figure ``widget``, replacing its traces and its layout. Replacing the layout
     # drops its ``autosize``, without which the figure takes Plotly's fixed default width instead of the cell's, so it is
-    # set again. It only applies to a width or a height the figure doesn't set (e.g. by a ``Size`` tweak).
+    # set again. It only applies to a width or a height the figure doesn't set (e.g. by a ``Size`` tweak). It would keep
+    # the height the previous figure left, so a figure which sets no height gets Plotly's default height.
     with widget.batch_update():
         widget.data = []
         widget.add_traces(list(figure.data))
         widget.layout = figure.layout
         widget.layout.autosize = True
+        if figure.layout.height is None:
+            widget.layout.height = _DEFAULT_HEIGHT

@@ -75,6 +75,18 @@ def test_list_editor() -> None:
     assert editor.value is None
 
 
+def test_list_editor_update_last() -> None:
+    """
+    Updating the last object which matches replaces it in its place, and an update which matches none appends.
+    """
+    first, second, third = mw.Title(text="A"), mw.Title(text="B"), mw.Title(text="A")
+    editor = ListEditor(_Row, [first, second, third], title="Titles")
+    editor.update_last(lambda title: title.text == "A", lambda _title: mw.Title(text="C"))
+    assert editor.value == [first, second, mw.Title(text="C")]
+    editor.update_last(lambda title: title.text == "Z", lambda title: mw.Title(text="Z"))
+    assert editor.value == [first, second, mw.Title(text="C"), mw.Title(text="Z")]
+
+
 def test_list_editor_hidden_rows() -> None:
     """
     A row which isn't valid is hidden and left out of the value, until it is valid again. Moving a row swaps it with the
