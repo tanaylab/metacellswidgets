@@ -2,10 +2,10 @@
 Interactive figures of a metacells repository in Jupyter notebooks.
 
 A form holds the parameters of one of the figures of ``metacellsgraphspy``, and the points selected in it. Its figure is
-shown by naming a format: ``.fig``, ``.html``, ``.svg``, ``.png`` or ``.json``. Its ``edit()`` method shows an editor:
-controls for the parameters, the figure, and a "Done" button. When you click "Done", the form writes its parameters and
-selection back into the code of the cell, and the ``edit()`` call is removed. So running the notebook again gives the
-same figure and the same selection.
+shown by naming a format: ``.fig``, ``.html``, ``.standalone_html``, ``.svg``, ``.png`` or ``.json``. Its ``edit()``
+method shows an editor: controls for the parameters, the figure, and a "Done" button. When you click "Done", the form
+writes its parameters and selection back into the code of the cell, and the ``edit()`` call is removed. So running the
+notebook again gives the same figure and the same selection.
 """
 
 __author__ = "Oren Ben-Kiki"

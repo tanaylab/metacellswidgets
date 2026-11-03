@@ -245,6 +245,15 @@
 </li>
 
 <li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.standalone_html">
+<code class="docutils literal notranslate">
+<span class="pre">GraphForm.standalone_html
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
 <a class="reference internal" href="#metacellswidgets.forms.GraphForm.svg">
 <code class="docutils literal notranslate">
 <span class="pre">GraphForm.svg
@@ -1330,8 +1339,61 @@ button (see
 <span class="pre">graph()
 </span>
 </code>
-</a>) as a standalone HTML page, which shows the interactive Plotly figure. It is the
-HTML text, which a notebook shows as the page, with an “Edit” button (see 
+</a>) as an HTML page, which shows the interactive Plotly figure. The page loads
+plotly.js from the internet. It is the HTML text, which a notebook shows as the page, with an “Edit” button (see
+
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.edit" title="metacellswidgets.forms.GraphForm.edit">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">edit()
+</span>
+</code>
+</a>).
+</p>
+
+</dd>
+</dl>
+
+
+<dl class="py property">
+
+<dt class="sig sig-object py" id="metacellswidgets.forms.GraphForm.standalone_html">
+
+<span class="property">
+<span class="k">
+<span class="pre">property
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">standalone_html
+</span>
+</span>
+<span class="property">
+<span class="p">
+<span class="pre">:
+</span>
+</span>
+<span class="w"> 
+</span>
+<span class="pre">HtmlText
+</span>
+</span>
+<a class="headerlink" href="#metacellswidgets.forms.GraphForm.standalone_html" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>The graph (see 
+<a class="reference internal" href="#metacellswidgets.forms.GraphForm.graph" title="metacellswidgets.forms.GraphForm.graph">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">graph()
+</span>
+</code>
+</a>) as a standalone HTML page, which shows the interactive Plotly figure. The page
+includes plotly.js (a few megabytes), so it works offline. It is the HTML text, which a notebook shows as the
+page, with an “Edit” button (see 
 <a class="reference internal" href="#metacellswidgets.forms.GraphForm.edit" title="metacellswidgets.forms.GraphForm.edit">
 <code class="xref py py-meth docutils literal notranslate">
 <span class="pre">edit()

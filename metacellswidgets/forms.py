@@ -179,10 +179,20 @@ class GraphForm(Arguments):  # pylint: disable=too-many-instance-attributes
     @property
     def html(self) -> HtmlText:
         """
-        The graph (see :py:meth:`graph`) as a standalone HTML page, which shows the interactive Plotly figure. It is the
-        HTML text, which a notebook shows as the page, with an "Edit" button (see :py:meth:`edit`).
+        The graph (see :py:meth:`graph`) as an HTML page, which shows the interactive Plotly figure. The page loads
+        plotly.js from the internet. It is the HTML text, which a notebook shows as the page, with an "Edit" button (see
+        :py:meth:`edit`).
         """
         return _EditableHtmlText(self._shown_graph().html, self._edit_texts())
+
+    @property
+    def standalone_html(self) -> HtmlText:
+        """
+        The graph (see :py:meth:`graph`) as a standalone HTML page, which shows the interactive Plotly figure. The page
+        includes plotly.js (a few megabytes), so it works offline. It is the HTML text, which a notebook shows as the
+        page, with an "Edit" button (see :py:meth:`edit`).
+        """
+        return _EditableHtmlText(self._shown_graph().standalone_html, self._edit_texts())
 
     @property
     def svg(self) -> SvgImage:

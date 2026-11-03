@@ -263,10 +263,20 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">html</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HtmlText</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        The graph (see :py:meth:`graph`) as a standalone HTML page, which shows the interactive Plotly figure. It is the</span>
-<span class="sd">        HTML text, which a notebook shows as the page, with an "Edit" button (see :py:meth:`edit`).</span>
+<span class="sd">        The graph (see :py:meth:`graph`) as an HTML page, which shows the interactive Plotly figure. The page loads</span>
+<span class="sd">        plotly.js from the internet. It is the HTML text, which a notebook shows as the page, with an "Edit" button (see</span>
+<span class="sd">        :py:meth:`edit`).</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="n">_EditableHtmlText</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shown_graph</span><span class="p">()</span><span class="o">.</span><span class="n">html</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edit_texts</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">standalone_html</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HtmlText</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The graph (see :py:meth:`graph`) as a standalone HTML page, which shows the interactive Plotly figure. The page</span>
+<span class="sd">        includes plotly.js (a few megabytes), so it works offline. It is the HTML text, which a notebook shows as the</span>
+<span class="sd">        page, with an "Edit" button (see :py:meth:`edit`).</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">_EditableHtmlText</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shown_graph</span><span class="p">()</span><span class="o">.</span><span class="n">standalone_html</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edit_texts</span><span class="p">())</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">svg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SvgImage</span><span class="p">:</span>

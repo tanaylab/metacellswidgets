@@ -55,13 +55,14 @@ def test_gene_gene_repr() -> None:
 
 def test_form_formats() -> None:
     """
-    A form gives its graph as the JSON text of a Plotly figure, as a Plotly figure, as an HTML page, as an SVG image and
-    as a PNG image.
+    A form gives its graph as the JSON text of a Plotly figure, as a Plotly figure, as an HTML page, as a standalone HTML
+    page, as an SVG image and as a PNG image.
     """
     form = mw.DafWidgets(_full_daf()).gene_gene(x_gene="A", y_gene="B")
     assert form.json.startswith("{")  # NOT F-STRING
     assert isinstance(form.fig, Figure)
-    assert isinstance(form.html, HtmlText) and "<html" in form.html
+    assert isinstance(form.html, HtmlText) and '<script src="https://cdn.plot.ly' in form.html
+    assert isinstance(form.standalone_html, HtmlText) and "plotly.js v4.1.1" in form.standalone_html
     assert isinstance(form.svg, SvgImage) and form.svg.startswith("<svg")
     assert isinstance(form.png, PngImage) and form.png[:8] == b"\x89PNG\r\n\x1a\n"
 
