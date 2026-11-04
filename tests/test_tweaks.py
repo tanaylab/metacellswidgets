@@ -246,21 +246,23 @@ def test_title_editor() -> None:
 
 def test_legends() -> None:
     """
-    Hiding the legends hides all of them, including the legend of the lines of a lines graph. Showing them leaves them
-    as they are.
+    Hiding the legends hides all of them, including the legend of the lines of a lines graph, and clears their other
+    settings. Showing them leaves them as they are.
     """
     source = mw.DafWidgets(_full_daf())
     graph = _points_graph()
-    graph.configuration.points.colors.show_legend = True
+    graph.configuration.points.colors.legend = sg.LegendConfiguration(show=True, column=2)
     mw.Legends(is_shown=True).apply(graph, source)
-    assert graph.configuration.points.colors.show_legend
+    assert graph.configuration.points.colors.legend.show
+    assert graph.configuration.points.colors.legend.column == 2
     mw.Legends(is_shown=False).apply(graph, source)
-    assert not graph.configuration.points.colors.show_legend
+    assert not graph.configuration.points.colors.legend.show
+    assert graph.configuration.points.colors.legend.column is None
 
     lines = sg.lines_graph()
-    lines.configuration.show_legend = True
+    lines.configuration.legend.show = True
     mw.Legends(is_shown=False).apply(lines, source)
-    assert not lines.configuration.show_legend
+    assert not lines.configuration.legend.show
 
 
 def test_legends_editor() -> None:

@@ -51,7 +51,7 @@ def test_fill_passes_the_look_arguments() -> None:
         x_gene="A", y_gene="B", colors=mw.TotalUMIs(show_legend=False, log_base=mw.LogBase.Log2Base)
     )
     colors = form.graph().configuration.points.colors
-    assert not colors.show_legend
+    assert not colors.legend.show
     assert colors.scale.log_base == mw.LogBase.Log2Base
 
 

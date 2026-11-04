@@ -77,6 +77,7 @@ from ipywidgets import Layout  # type: ignore
 from ipywidgets import Text  # type: ignore
 from ipywidgets import Widget  # type: ignore
 from somegraphspy import Graph
+from somegraphspy import LegendConfiguration
 from somegraphspy import visit_graph_parts
 
 from .common import Arguments
@@ -418,9 +419,10 @@ class Legends(Tweak):
 
 
 def _hide_legend(part: Any) -> None:
-    # Hide the legend of a part of a graph, if it has one.
-    if hasattr(part, "show_legend"):
-        part.show_legend = False
+    # Hide the legend of a part of a graph, if it has one. This also clears the legend's width, height, column and order,
+    # which are only valid for a shown legend.
+    if isinstance(getattr(part, "legend", None), LegendConfiguration):
+        part.legend = LegendConfiguration()
 
 
 class _LegendsEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
