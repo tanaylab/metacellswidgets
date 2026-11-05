@@ -143,6 +143,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">dafpy.julia_import</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dafpy.julia_import</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultValue</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTML</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundedIntText</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Checkbox</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HBox</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntText</span>  <span class="c1"># type: ignore</span>
@@ -151,8 +152,10 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Text</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>  <span class="c1"># type: ignore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">HeatmapGraph</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">LegendConfiguration</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">MarginsConfiguration</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">PointsGraph</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">somegraphspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">visit_graph_parts</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">Arguments</span>
@@ -170,6 +173,7 @@
     <span class="s2">"Legends"</span><span class="p">,</span>
     <span class="s2">"Margins"</span><span class="p">,</span>
     <span class="s2">"Size"</span><span class="p">,</span>
+    <span class="s2">"TicksAngles"</span><span class="p">,</span>
     <span class="s2">"Title"</span><span class="p">,</span>
     <span class="s2">"Tweak"</span><span class="p">,</span>
     <span class="s2">"TweakPicker"</span><span class="p">,</span>
@@ -385,16 +389,35 @@
 
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">_Dimension</span><span class="p">:</span>
-    <span class="c1"># The checkbox and the field of one dimension of a ``Size``. The dimension is given while the checkbox is checked,</span>
-    <span class="c1"># and the field is then its number. While it isn't, the field is a disabled text marked as the default, which says</span>
-    <span class="c1"># "auto", and the hidden number follows the ``start``, from which it starts when the checkbox is checked.</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_OptionalNumber</span><span class="p">:</span>
+    <span class="c1"># The checkbox and the field of a number which may be left to its default (such as a dimension of a ``Size``). The</span>
+    <span class="c1"># number is given while the checkbox is checked, and the field is then the number, between the ``minimum`` and the</span>
+    <span class="c1"># ``maximum`` (if any). While it isn't, the field is a disabled text marked as the default, which says "auto", and</span>
+    <span class="c1"># the hidden number follows the ``start``, from which it starts when the checkbox is checked.</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">DefaultValue</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">DefaultValue</span><span class="p">,</span>
+        <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">minimum</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">maximum</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">is_given</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">checkbox</span> <span class="o">=</span> <span class="n">Checkbox</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">is_given</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">Label</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">number</span> <span class="o">=</span> <span class="n">IntText</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">value</span> <span class="k">if</span> <span class="n">is_given</span> <span class="k">else</span> <span class="n">start</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s2">"6em"</span><span class="p">))</span>
+        <span class="n">number_value</span> <span class="o">=</span> <span class="n">value</span> <span class="k">if</span> <span class="n">is_given</span> <span class="k">else</span> <span class="n">start</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">minimum</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">maximum</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">minimum</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">number</span> <span class="o">=</span> <span class="n">IntText</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">number_value</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s2">"6em"</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">number</span> <span class="o">=</span> <span class="n">BoundedIntText</span><span class="p">(</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">number_value</span><span class="p">,</span>
+                <span class="nb">min</span><span class="o">=</span><span class="n">minimum</span><span class="p">,</span>
+                <span class="nb">max</span><span class="o">=</span><span class="n">maximum</span><span class="p">,</span>
+                <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s2">"6em"</span><span class="p">),</span>
+            <span class="p">)</span>
         <span class="n">_mark_default</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_auto</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">placeholder</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s2">"6em"</span><span class="p">))</span>
         <span class="n">_mark_default</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_auto</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
@@ -435,8 +458,8 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">Size</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="n">start_width</span><span class="p">,</span> <span class="n">start_height</span> <span class="o">=</span> <span class="n">_start_size</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_width</span> <span class="o">=</span> <span class="n">_Dimension</span><span class="p">(</span><span class="s2">"Width"</span><span class="p">,</span> <span class="n">start_width</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">start_width</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_height</span> <span class="o">=</span> <span class="n">_Dimension</span><span class="p">(</span><span class="s2">"Height"</span><span class="p">,</span> <span class="n">start_height</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">start_height</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_width</span> <span class="o">=</span> <span class="n">_OptionalNumber</span><span class="p">(</span><span class="s2">"Width"</span><span class="p">,</span> <span class="n">start_width</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">start_width</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_height</span> <span class="o">=</span> <span class="n">_OptionalNumber</span><span class="p">(</span><span class="s2">"Height"</span><span class="p">,</span> <span class="n">start_height</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">start_height</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_width</span><span class="o">.</span><span class="n">checkbox</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_width</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
@@ -546,6 +569,128 @@
             <span class="n">_mark_default</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">is_default</span><span class="p">)</span>
             <span class="n">values</span><span class="p">[</span><span class="n">side</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT</span> <span class="k">if</span> <span class="n">is_default</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">number</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">Margins</span><span class="p">(</span><span class="o">**</span><span class="n">values</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TicksAngles">
+<a class="viewcode-back" href="../../tweaks.html#metacellswidgets.tweaks.TicksAngles">[docs]</a>
+<span class="nd">@tweak</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TicksAngles</span><span class="p">(</span><span class="n">Tweak</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Rotate the tick labels of the ``horizontal`` and the ``vertical`` axes of the graph, in degrees relative to the axis,</span>
+<span class="sd">    between -90 and 90: 0 keeps the labels parallel to the axis, and ±90 stands them perpendicular to it, positive being</span>
+<span class="sd">    clockwise. The titles of the annotations beside the tick labels are rotated with them. An angle which is ``DEFAULT``</span>
+<span class="sd">    is left as the graph has it.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">horizontal</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">DefaultValue</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">,</span> <span class="n">vertical</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">DefaultValue</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">horizontal</span> <span class="o">=</span> <span class="n">horizontal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vertical</span> <span class="o">=</span> <span class="n">vertical</span>
+
+<div class="viewcode-block" id="TicksAngles.editor">
+<a class="viewcode-back" href="../../tweaks.html#metacellswidgets.tweaks.TicksAngles.editor">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">editor</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">source</span><span class="p">:</span> <span class="s2">"SourceWidgets"</span><span class="p">,</span>  <span class="c1"># pylint: disable=unused-argument</span>
+        <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">current</span><span class="p">:</span> <span class="n">Tweak</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArgumentsEditor</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">TicksAngles</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_TicksAnglesEditor</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">current</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">TicksAngles</span><span class="o">.</span><span class="n">apply</span><span class="p">,</span> <span class="n">PointsGraph</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_points_ticks_angles</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">:</span> <span class="n">TicksAngles</span><span class="p">,</span>
+    <span class="n">graph</span><span class="p">:</span> <span class="n">PointsGraph</span><span class="p">,</span>
+    <span class="n">source</span><span class="p">:</span> <span class="s2">"SourceWidgets"</span><span class="p">,</span>  <span class="c1"># pylint: disable=unused-argument</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">_set_ticks_angle</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">x_axis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">horizontal</span><span class="p">)</span>
+    <span class="n">_set_ticks_angle</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">y_axis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertical</span><span class="p">)</span>
+
+
+<span class="nd">@implements</span><span class="p">(</span><span class="n">TicksAngles</span><span class="o">.</span><span class="n">apply</span><span class="p">,</span> <span class="n">HeatmapGraph</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_heatmap_ticks_angles</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">:</span> <span class="n">TicksAngles</span><span class="p">,</span>
+    <span class="n">graph</span><span class="p">:</span> <span class="n">HeatmapGraph</span><span class="p">,</span>
+    <span class="n">source</span><span class="p">:</span> <span class="s2">"SourceWidgets"</span><span class="p">,</span>  <span class="c1"># pylint: disable=unused-argument</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">_set_ticks_angle</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">horizontal</span><span class="p">)</span>
+    <span class="n">_set_ticks_angle</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertical</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_set_ticks_angle</span><span class="p">(</span><span class="n">configuration</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">angle</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">DefaultValue</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># Set the ``ticks_angle`` of the ``configuration`` of an axis or of a heatmap side, unless the angle is ``DEFAULT``.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="n">DefaultValue</span><span class="p">):</span>
+        <span class="n">configuration</span><span class="o">.</span><span class="n">ticks_angle</span> <span class="o">=</span> <span class="n">angle</span>
+
+
+<span class="c1"># The angles which show the tick labels horizontally, as an unset angle does: parallel to a horizontal axis, and</span>
+<span class="c1"># perpendicular to a vertical one.</span>
+<span class="n">_HORIZONTAL_LABELS_ANGLES</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">90</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_start_ticks_angles</span><span class="p">(</span><span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="c1"># The angles of the horizontal and vertical axes of the ``graph``, from which a ``TicksAngles`` starts. An angle the</span>
+    <span class="c1"># graph doesn't set is the one which looks the same.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">PointsGraph</span><span class="p">):</span>
+        <span class="n">angles</span> <span class="o">=</span> <span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">x_axis</span><span class="o">.</span><span class="n">ticks_angle</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">y_axis</span><span class="o">.</span><span class="n">ticks_angle</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">HeatmapGraph</span><span class="p">):</span>
+        <span class="n">angles</span> <span class="o">=</span> <span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">ticks_angle</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">ticks_angle</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">angles</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">horizontal</span><span class="p">,</span> <span class="n">vertical</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">default</span> <span class="k">if</span> <span class="n">angle</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="k">for</span> <span class="n">angle</span><span class="p">,</span> <span class="n">default</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">angles</span><span class="p">,</span> <span class="n">_HORIZONTAL_LABELS_ANGLES</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">horizontal</span><span class="p">,</span> <span class="n">vertical</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_TicksAnglesEditor</span><span class="p">(</span><span class="n">ArgumentsEditor</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-ancestors,abstract-method</span>
+    <span class="c1"># The editor of a ``TicksAngles``: a checkbox and a number for each of the horizontal and the vertical axes. An</span>
+    <span class="c1"># angle which isn't given follows the shown graph.</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span> <span class="n">TicksAngles</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">start_horizontal</span><span class="p">,</span> <span class="n">start_vertical</span> <span class="o">=</span> <span class="n">_start_ticks_angles</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_horizontal</span> <span class="o">=</span> <span class="n">_OptionalNumber</span><span class="p">(</span>
+            <span class="s2">"Horizontal"</span><span class="p">,</span>
+            <span class="n">DEFAULT</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">horizontal</span><span class="p">,</span>
+            <span class="n">start_horizontal</span><span class="p">,</span>
+            <span class="n">minimum</span><span class="o">=-</span><span class="mi">90</span><span class="p">,</span>
+            <span class="n">maximum</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vertical</span> <span class="o">=</span> <span class="n">_OptionalNumber</span><span class="p">(</span>
+            <span class="s2">"Vertical"</span><span class="p">,</span>
+            <span class="n">DEFAULT</span> <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">current</span><span class="o">.</span><span class="n">vertical</span><span class="p">,</span>
+            <span class="n">start_vertical</span><span class="p">,</span>
+            <span class="n">minimum</span><span class="o">=-</span><span class="mi">90</span><span class="p">,</span>
+            <span class="n">maximum</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_horizontal</span><span class="o">.</span><span class="n">checkbox</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_horizontal</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_horizontal</span><span class="o">.</span><span class="n">field</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_vertical</span><span class="o">.</span><span class="n">checkbox</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_vertical</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_vertical</span><span class="o">.</span><span class="n">field</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_value</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">angle</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_horizontal</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vertical</span><span class="p">):</span>
+            <span class="n">angle</span><span class="o">.</span><span class="n">checkbox</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+            <span class="n">angle</span><span class="o">.</span><span class="n">number</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_change</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">start_horizontal</span><span class="p">,</span> <span class="n">start_vertical</span> <span class="o">=</span> <span class="n">_start_ticks_angles</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_horizontal</span><span class="o">.</span><span class="n">set_start</span><span class="p">(</span><span class="n">start_horizontal</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vertical</span><span class="o">.</span><span class="n">set_start</span><span class="p">(</span><span class="n">start_vertical</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_change</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_value</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">TicksAngles</span><span class="p">(</span><span class="n">horizontal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_horizontal</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">vertical</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_vertical</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Title">

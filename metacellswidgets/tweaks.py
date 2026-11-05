@@ -70,6 +70,7 @@ from typing import overload
 from dafpy.julia_import import DEFAULT
 from dafpy.julia_import import DefaultValue
 from ipywidgets import HTML  # type: ignore
+from ipywidgets import BoundedIntText  # type: ignore
 from ipywidgets import Checkbox  # type: ignore
 from ipywidgets import HBox  # type: ignore
 from ipywidgets import IntText  # type: ignore
@@ -78,8 +79,10 @@ from ipywidgets import Layout  # type: ignore
 from ipywidgets import Text  # type: ignore
 from ipywidgets import Widget  # type: ignore
 from somegraphspy import Graph
+from somegraphspy import HeatmapGraph
 from somegraphspy import LegendConfiguration
 from somegraphspy import MarginsConfiguration
+from somegraphspy import PointsGraph
 from somegraphspy import visit_graph_parts
 
 from .common import Arguments
@@ -97,6 +100,7 @@ __all__: List[str] = [
     "Legends",
     "Margins",
     "Size",
+    "TicksAngles",
     "Title",
     "Tweak",
     "TweakPicker",
@@ -279,16 +283,35 @@ class Size(Tweak):
         return _SizeEditor(graph, current)
 
 
-class _Dimension:
-    # The checkbox and the field of one dimension of a ``Size``. The dimension is given while the checkbox is checked,
-    # and the field is then its number. While it isn't, the field is a disabled text marked as the default, which says
-    # "auto", and the hidden number follows the ``start``, from which it starts when the checkbox is checked.
+class _OptionalNumber:
+    # The checkbox and the field of a number which may be left to its default (such as a dimension of a ``Size``). The
+    # number is given while the checkbox is checked, and the field is then the number, between the ``minimum`` and the
+    # ``maximum`` (if any). While it isn't, the field is a disabled text marked as the default, which says "auto", and
+    # the hidden number follows the ``start``, from which it starts when the checkbox is checked.
 
-    def __init__(self, description: str, value: int | DefaultValue, start: int) -> None:
+    def __init__(
+        self,
+        description: str,
+        value: int | DefaultValue,
+        start: int,
+        *,
+        minimum: int | None = None,
+        maximum: int | None = None,
+    ) -> None:
         is_given = isinstance(value, int)
         self.checkbox = Checkbox(value=is_given, indent=False, layout=Layout(width="auto"))
         self.label = Label(description)
-        self.number = IntText(value=value if is_given else start, layout=Layout(width="6em"))
+        number_value = value if is_given else start
+        assert (minimum is None) == (maximum is None)
+        if minimum is None:
+            self.number = IntText(value=number_value, layout=Layout(width="6em"))
+        else:
+            self.number = BoundedIntText(
+                value=number_value,
+                min=minimum,
+                max=maximum,
+                layout=Layout(width="6em"),
+            )
         _mark_default(self.number, False)
         self._auto = Text(placeholder="auto", disabled=True, layout=Layout(width="6em"))
         _mark_default(self._auto, True)
@@ -329,8 +352,8 @@ class _SizeEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
     def __init__(self, graph: Graph | None, current: Size | None) -> None:
         super().__init__()
         start_width, start_height = _start_size(graph)
-        self._width = _Dimension("Width", start_width if current is None else current.width, start_width)
-        self._height = _Dimension("Height", start_height if current is None else current.height, start_height)
+        self._width = _OptionalNumber("Width", start_width if current is None else current.width, start_width)
+        self._height = _OptionalNumber("Height", start_height if current is None else current.height, start_height)
         self.children = [
             self._width.checkbox,
             self._width.label,
@@ -431,6 +454,122 @@ class _MarginsEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abs
             _mark_default(number, is_default)
             values[side] = DEFAULT if is_default else int(number.value)
         self.value = Margins(**values)
+
+
+@tweak
+class TicksAngles(Tweak):
+    """
+    Rotate the tick labels of the ``horizontal`` and the ``vertical`` axes of the graph, in degrees relative to the axis,
+    between -90 and 90: 0 keeps the labels parallel to the axis, and ±90 stands them perpendicular to it, positive being
+    clockwise. The titles of the annotations beside the tick labels are rotated with them. An angle which is ``DEFAULT``
+    is left as the graph has it.
+    """
+
+    def __init__(self, horizontal: int | DefaultValue = DEFAULT, vertical: int | DefaultValue = DEFAULT) -> None:
+        self.horizontal = horizontal
+        self.vertical = vertical
+
+    @classmethod
+    def editor(
+        cls,
+        source: "SourceWidgets",  # pylint: disable=unused-argument
+        graph: Graph | None,
+        current: Tweak | None,
+    ) -> ArgumentsEditor:
+        assert current is None or isinstance(current, TicksAngles)
+        return _TicksAnglesEditor(graph, current)
+
+
+@implements(TicksAngles.apply, PointsGraph)
+def _points_ticks_angles(
+    self: TicksAngles,
+    graph: PointsGraph,
+    source: "SourceWidgets",  # pylint: disable=unused-argument
+) -> None:
+    _set_ticks_angle(graph.configuration.x_axis, self.horizontal)
+    _set_ticks_angle(graph.configuration.y_axis, self.vertical)
+
+
+@implements(TicksAngles.apply, HeatmapGraph)
+def _heatmap_ticks_angles(
+    self: TicksAngles,
+    graph: HeatmapGraph,
+    source: "SourceWidgets",  # pylint: disable=unused-argument
+) -> None:
+    _set_ticks_angle(graph.configuration.columns, self.horizontal)
+    _set_ticks_angle(graph.configuration.rows, self.vertical)
+
+
+def _set_ticks_angle(configuration: Any, angle: int | DefaultValue) -> None:
+    # Set the ``ticks_angle`` of the ``configuration`` of an axis or of a heatmap side, unless the angle is ``DEFAULT``.
+    if not isinstance(angle, DefaultValue):
+        configuration.ticks_angle = angle
+
+
+# The angles which show the tick labels horizontally, as an unset angle does: parallel to a horizontal axis, and
+# perpendicular to a vertical one.
+_HORIZONTAL_LABELS_ANGLES = (0, 90)
+
+
+def _start_ticks_angles(graph: Graph | None) -> Tuple[int, int]:
+    # The angles of the horizontal and vertical axes of the ``graph``, from which a ``TicksAngles`` starts. An angle the
+    # graph doesn't set is the one which looks the same.
+    if isinstance(graph, PointsGraph):
+        angles = (graph.configuration.x_axis.ticks_angle, graph.configuration.y_axis.ticks_angle)
+    elif isinstance(graph, HeatmapGraph):
+        angles = (graph.configuration.columns.ticks_angle, graph.configuration.rows.ticks_angle)
+    else:
+        angles = (None, None)
+    horizontal, vertical = (
+        default if angle is None else int(angle) for angle, default in zip(angles, _HORIZONTAL_LABELS_ANGLES)
+    )
+    return horizontal, vertical
+
+
+class _TicksAnglesEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
+    # The editor of a ``TicksAngles``: a checkbox and a number for each of the horizontal and the vertical axes. An
+    # angle which isn't given follows the shown graph.
+
+    def __init__(self, graph: Graph | None, current: TicksAngles | None) -> None:
+        super().__init__()
+        start_horizontal, start_vertical = _start_ticks_angles(graph)
+        self._horizontal = _OptionalNumber(
+            "Horizontal",
+            DEFAULT if current is None else current.horizontal,
+            start_horizontal,
+            minimum=-90,
+            maximum=90,
+        )
+        self._vertical = _OptionalNumber(
+            "Vertical",
+            DEFAULT if current is None else current.vertical,
+            start_vertical,
+            minimum=-90,
+            maximum=90,
+        )
+        self.children = [
+            self._horizontal.checkbox,
+            self._horizontal.label,
+            self._horizontal.field,
+            self._vertical.checkbox,
+            self._vertical.label,
+            self._vertical.field,
+        ]
+        self._update_value()
+        for angle in (self._horizontal, self._vertical):
+            angle.checkbox.observe(self._on_change, names="value")
+            angle.number.observe(self._on_change, names="value")
+
+    def update_graph(self, graph: Any) -> None:
+        start_horizontal, start_vertical = _start_ticks_angles(graph)
+        self._horizontal.set_start(start_horizontal)
+        self._vertical.set_start(start_vertical)
+
+    def _on_change(self, _change: Dict) -> None:
+        self._update_value()
+
+    def _update_value(self) -> None:
+        self.value = TicksAngles(horizontal=self._horizontal.value, vertical=self._vertical.value)
 
 
 @tweak

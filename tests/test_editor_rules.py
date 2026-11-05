@@ -3,9 +3,10 @@ Test that every editor follows the rules of showing values and their defaults.
 
 Every value field (a dropdown, a combo box, a number or a text) has a dotted border while it shows its default, and a
 solid one otherwise. Its label is a widget of its own, so the field has no ``description``. A Boolean is a dropdown, so
-there is no checkbox, other than the one of each dimension of a ``Size`` tweak. There are no "Reset to default"
-buttons, since changing a value back to its default is how to return to it. A dropdown is as wide as its options, a
-combobox as its labels need (in ``ch``), and a text or number field has a fixed width, so none takes the default width.
+there is no checkbox, other than the one of each number of a ``Size`` or a ``TicksAngles`` tweak, whose default isn't a
+number. There are no "Reset to default" buttons, since changing a value back to its default is how to return to it. A
+dropdown is as wide as its options, a combobox as its labels need (in ``ch``), and a text or number field has a fixed
+width, so none takes the default width.
 """
 
 from pathlib import Path
@@ -13,6 +14,7 @@ from typing import Iterator
 from typing import List
 
 import somegraphspy as sg
+from ipywidgets import BoundedIntText  # type: ignore
 from ipywidgets import Button  # type: ignore
 from ipywidgets import Checkbox  # type: ignore
 from ipywidgets import Combobox  # type: ignore
@@ -26,6 +28,7 @@ from metacellswidgets.editors import ClassPicker
 from metacellswidgets.editors import PropertyPicker
 from metacellswidgets.properties import Slot
 from metacellswidgets.tweaks import _SizeEditor
+from metacellswidgets.tweaks import _TicksAnglesEditor
 
 from .test_anndata_widgets import _source
 from .test_entries import _daf
@@ -34,26 +37,26 @@ from .test_entries import _daf
 _BORDERS = ("1px dotted black", "1px solid black")
 
 
-def _check(widget: Widget, *, is_in_size: bool = False) -> None:
+def _check(widget: Widget, *, is_in_optional_numbers: bool = False) -> None:
     """
     Check the rules in the ``widget`` and in all the widgets inside it.
     """
-    is_in_size = is_in_size or isinstance(widget, _SizeEditor)
+    is_in_optional_numbers = is_in_optional_numbers or isinstance(widget, (_SizeEditor, _TicksAnglesEditor))
     if isinstance(widget, Button):
         assert widget.description != "Reset to default"
     if isinstance(widget, Checkbox):
-        assert is_in_size, f"a checkbox outside a Size tweak: {widget}"
-    if isinstance(widget, (Dropdown, Text, IntText)):
+        assert is_in_optional_numbers, f"a checkbox outside a Size or TicksAngles tweak: {widget}"
+    if isinstance(widget, (Dropdown, Text, IntText, BoundedIntText)):
         assert widget.layout.border in _BORDERS, f"a value field without the default's border: {widget}"
         assert not widget.description, f"a value field with its own label: {widget.description}"
     if isinstance(widget, Dropdown):
         assert widget.layout.width == "max-content", f"a dropdown not as wide as its options: {widget}"
     elif isinstance(widget, Combobox):
         assert widget.layout.width.endswith("ch"), f"a combobox not as wide as its options: {widget}"
-    elif isinstance(widget, (Text, IntText)):
+    elif isinstance(widget, (Text, IntText, BoundedIntText)):
         assert widget.layout.width, f"a text or number field of the default width: {widget}"
     for child in getattr(widget, "children", ()):
-        _check(child, is_in_size=is_in_size)
+        _check(child, is_in_optional_numbers=is_in_optional_numbers)
 
 
 def _with_each_choice(picker: ClassPicker) -> Iterator[ClassPicker]:

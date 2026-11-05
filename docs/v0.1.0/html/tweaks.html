@@ -236,6 +236,37 @@
 </li>
 
 <li class="toctree-l3">
+<a class="reference internal" href="#metacellswidgets.tweaks.TicksAngles">
+<code class="docutils literal notranslate">
+<span class="pre">TicksAngles
+</span>
+</code>
+</a>
+<ul>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.tweaks.TicksAngles.editor">
+<code class="docutils literal notranslate">
+<span class="pre">TicksAngles.editor()
+</span>
+</code>
+</a>
+</li>
+
+<li class="toctree-l4">
+<a class="reference internal" href="#metacellswidgets.tweaks.TicksAngles.apply">
+<code class="docutils literal notranslate">
+<span class="pre">TicksAngles.apply()
+</span>
+</code>
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<li class="toctree-l3">
 <a class="reference internal" href="#metacellswidgets.tweaks.Title">
 <code class="docutils literal notranslate">
 <span class="pre">Title
@@ -2164,6 +2195,446 @@ source with
 <em>ArgumentsEditor
 </em>
 </a>
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+
+
+<dl class="py class">
+
+<dt class="sig sig-object py" id="metacellswidgets.tweaks.TicksAngles">
+
+<span class="property">
+<span class="k">
+<span class="pre">class
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-prename descclassname">
+<span class="pre">metacellswidgets.tweaks.
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">TicksAngles
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">horizontal
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">Ellipsis
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">vertical
+</span>
+</span>
+<span class="o">
+<span class="pre">=
+</span>
+</span>
+<span class="default_value">
+<span class="pre">Ellipsis
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/tweaks.html#TicksAngles">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.tweaks.TicksAngles" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>Rotate the tick labels of the 
+<code class="docutils literal notranslate">
+<span class="pre">horizontal
+</span>
+</code> and the 
+<code class="docutils literal notranslate">
+<span class="pre">vertical
+</span>
+</code> axes of the graph, in degrees relative to the axis,
+between -90 and 90: 0 keeps the labels parallel to the axis, and ±90 stands them perpendicular to it, positive being
+clockwise. The titles of the annotations beside the tick labels are rotated with them. An angle which is 
+<code class="docutils literal notranslate">
+<span class="pre">DEFAULT
+</span>
+</code>
+is left as the graph has it.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>horizontal
+</strong> (
+<em>int
+</em>
+<em> | 
+</em>
+<em>EllipsisType
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>vertical
+</strong> (
+<em>int
+</em>
+<em> | 
+</em>
+<em>EllipsisType
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+</dl>
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.tweaks.TicksAngles.editor">
+
+<span class="property">
+<span class="k">
+<span class="pre">classmethod
+</span>
+</span>
+<span class="w"> 
+</span>
+</span>
+<span class="sig-name descname">
+<span class="pre">editor
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">graph
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">current
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="reference internal" href="_modules/metacellswidgets/tweaks.html#TicksAngles.editor">
+<span class="viewcode-link">
+<span class="pre">[source]
+</span>
+</span>
+</a>
+<a class="headerlink" href="#metacellswidgets.tweaks.TicksAngles.editor" title="Link to this definition">
+</a>
+</dt>
+
+<dd>
+<p>A widget for editing the tweak’s arguments for the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code>, starting from the 
+<code class="docutils literal notranslate">
+<span class="pre">current
+</span>
+</code> tweak (if any). The
+
+<code class="docutils literal notranslate">
+<span class="pre">graph
+</span>
+</code> is the form’s graph as last shown, e.g. for starting a new tweak from its title, or 
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> if no
+graph was shown yet (e.g. while the form is incomplete); the editor then starts from the tweak’s own defaults.
+When the shown graph changes, the editor’s 
+<code class="docutils literal notranslate">
+<span class="pre">update_graph
+</span>
+</code> is called with the new one (see
+
+<a class="reference internal" href="editors.html#metacellswidgets.editors.ArgumentsEditor.update_graph" title="metacellswidgets.editors.ArgumentsEditor.update_graph">
+<code class="xref py py-meth docutils literal notranslate">
+<span class="pre">update_graph()
+</span>
+</code>
+</a>). The widget’s 
+<code class="docutils literal notranslate">
+<span class="pre">value
+</span>
+</code> is the tweak, or
+
+<code class="docutils literal notranslate">
+<span class="pre">None
+</span>
+</code> while the arguments are incomplete. A tweak without arguments has no editor. A tweak whose editor
+doesn’t depend on the data defines this in its class. Otherwise, it implements this for each kind of data
+source with 
+<a class="reference internal" href="common.html#metacellswidgets.common.implements" title="metacellswidgets.common.implements">
+<code class="xref py py-func docutils literal notranslate">
+<span class="pre">implements()
+</span>
+</code>
+</a>.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>graph
+</strong> (
+<em>Graph
+</em>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>current
+</strong> (
+<a class="reference internal" href="#metacellswidgets.tweaks.Tweak" title="metacellswidgets.tweaks.Tweak">
+<em>Tweak
+</em>
+</a>
+<em> | 
+</em>
+<em>None
+</em>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>
+<a class="reference internal" href="editors.html#metacellswidgets.editors.ArgumentsEditor" title="metacellswidgets.editors.ArgumentsEditor">
+<em>ArgumentsEditor
+</em>
+</a>
+</p>
+
+</dd>
+
+</dl>
+
+</dd>
+</dl>
+
+
+<dl class="py method">
+
+<dt class="sig sig-object py" id="metacellswidgets.tweaks.TicksAngles.apply">
+
+<span class="sig-name descname">
+<span class="pre">apply
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">graph
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+<a class="headerlink" href="#metacellswidgets.tweaks.TicksAngles.apply" title="Link to this definition">
+</a>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="sig-name descname">
+<span class="pre">apply
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">graph
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dt class="sig sig-object py">
+
+<span class="sig-name descname">
+<span class="pre">apply
+</span>
+</span>
+<span class="sig-paren">(
+</span>
+<em class="sig-param">
+<span class="n">
+<span class="pre">graph
+</span>
+</span>
+</em>, 
+<em class="sig-param">
+<span class="n">
+<span class="pre">source
+</span>
+</span>
+</em>
+<span class="sig-paren">)
+</span>
+</dt>
+
+<dd>
+<p>Change the 
+<code class="docutils literal notranslate">
+<span class="pre">graph
+</span>
+</code>, which a form built from the 
+<code class="docutils literal notranslate">
+<span class="pre">source
+</span>
+</code>. A tweak defines this in its class, or implements
+it for each graph type it applies to; for any other graph type, this is an error.
+</p>
+
+<dl class="field-list simple">
+
+<dt class="field-odd">Parameters
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-odd">
+<ul class="simple">
+
+<li>
+<p>
+<strong>graph
+</strong> (
+<em>Graph
+</em>)
+</p>
+</li>
+
+<li>
+<p>
+<strong>source
+</strong> (
+<a class="reference internal" href="sources.html#metacellswidgets.sources.SourceWidgets" title="metacellswidgets.sources.SourceWidgets">
+<em>SourceWidgets
+</em>
+</a>)
+</p>
+</li>
+
+</ul>
+
+</dd>
+
+<dt class="field-even">Return type
+<span class="colon">:
+</span>
+</dt>
+
+<dd class="field-even">
+<p>None
 </p>
 
 </dd>

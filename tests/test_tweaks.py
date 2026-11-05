@@ -180,7 +180,7 @@ def test_built_in_tweaks() -> None:
     """
     The built-in tweaks are offered first, for every graph.
     """
-    assert mw.registered_tweaks(sg.PointsGraph)[:4] == [mw.Size, mw.Margins, mw.Title, mw.Legends]
+    assert mw.registered_tweaks(sg.PointsGraph)[:5] == [mw.Size, mw.Margins, mw.TicksAngles, mw.Title, mw.Legends]
 
 
 def test_size() -> None:
@@ -253,6 +253,48 @@ def test_margins_editor() -> None:
     assert mw.Margins.editor(source, _points_graph(), mw.Margins(right=40)).value == mw.Margins(right=40)
 
 
+def test_ticks_angles() -> None:
+    """
+    Ticks angles rotate the tick labels of the axis of each screen direction which they give: the x and y axes of
+    points, and the columns and rows of a heatmap.
+    """
+    source = mw.DafWidgets(_full_daf())
+    points = _points_graph()
+    mw.TicksAngles(horizontal=45).apply(points, source)
+    assert points.configuration.x_axis.ticks_angle == 45
+    assert points.configuration.y_axis.ticks_angle is None
+    heatmap = sg.heatmap_graph()
+    mw.TicksAngles(horizontal=-45, vertical=30).apply(heatmap, source)
+    assert heatmap.configuration.columns.ticks_angle == -45
+    assert heatmap.configuration.rows.ticks_angle == 30
+    assert mw.TicksAngles(vertical=30).code("mw.TicksAngles") == "mw.TicksAngles(vertical=30)"
+
+
+def test_ticks_angles_editor() -> None:
+    """
+    New ticks angles give neither angle. Checking one shows the angle which looks like the graph's labels, between -90
+    and 90.
+    """
+    source = mw.DafWidgets(_full_daf())
+    editor = mw.TicksAngles.editor(source, _points_graph(), None)
+    assert editor.value == mw.TicksAngles()
+    horizontal_checkbox, horizontal_label, horizontal_field, vertical_checkbox, vertical_label, vertical_field = (
+        editor.children
+    )
+    assert (horizontal_label.value, vertical_label.value) == ("Horizontal", "Vertical")
+    (auto,) = horizontal_field.children
+    assert auto.disabled and auto.placeholder == "auto" and auto.layout.border == "1px dotted black"
+    vertical_checkbox.value = True
+    (vertical_number,) = vertical_field.children
+    assert vertical_number.value == 90 and (vertical_number.min, vertical_number.max) == (-90, 90)
+    assert editor.value == mw.TicksAngles(vertical=90)
+    horizontal_checkbox.value = True
+    horizontal_field.children[0].value = 45
+    assert editor.value == mw.TicksAngles(horizontal=45, vertical=90)
+    angles = mw.TicksAngles(horizontal=-30)
+    assert mw.TicksAngles.editor(source, _points_graph(), angles).value == angles
+
+
 def test_title() -> None:
     """
     A title sets the title of the figure, or removes it.
@@ -323,7 +365,8 @@ def test_tweak_picker() -> None:
     picker = mw.TweakPicker(source, sg.PointsGraph, graph)
     assert picker.value is None
     dropdown = picker.children[0]
-    assert [label for label, _choice in dropdown.options][:5] == ["", "Size", "Margins", "Title", "Legends"]
+    labels = [label for label, _choice in dropdown.options]
+    assert labels[:6] == ["", "Size", "Margins", "TicksAngles", "Title", "Legends"]
     dropdown.value = mw.Size
     assert picker.value == mw.Size(width=600, height=450)
     assert mw.TweakPicker(source, sg.PointsGraph, graph, mw.Title(text="Genes")).value == mw.Title(text="Genes")
