@@ -69,6 +69,7 @@ from typing import overload
 
 from dafpy.julia_import import DEFAULT
 from dafpy.julia_import import DefaultValue
+from ipywidgets import HTML  # type: ignore
 from ipywidgets import Checkbox  # type: ignore
 from ipywidgets import HBox  # type: ignore
 from ipywidgets import IntText  # type: ignore
@@ -78,6 +79,7 @@ from ipywidgets import Text  # type: ignore
 from ipywidgets import Widget  # type: ignore
 from somegraphspy import Graph
 from somegraphspy import LegendConfiguration
+from somegraphspy import MarginsConfiguration
 from somegraphspy import visit_graph_parts
 
 from .common import Arguments
@@ -93,6 +95,7 @@ if TYPE_CHECKING:
 
 __all__: List[str] = [
     "Legends",
+    "Margins",
     "Size",
     "Title",
     "Tweak",
@@ -351,6 +354,83 @@ class _SizeEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstra
 
     def _update_value(self) -> None:
         self.value = Size(width=self._width.value, height=self._height.value)
+
+
+@tweak
+class Margins(Tweak):
+    """
+    Set the margins of the figure, in pixels. Each is the space beyond what lies on its side of the plot's area (the tick
+    labels, the titles and the side panel). A margin which is ``DEFAULT`` is left as the graph has it.
+    """
+
+    def __init__(
+        self,
+        left: int | DefaultValue = DEFAULT,
+        bottom: int | DefaultValue = DEFAULT,
+        right: int | DefaultValue = DEFAULT,
+        top: int | DefaultValue = DEFAULT,
+    ) -> None:
+        self.left = left
+        self.bottom = bottom
+        self.right = right
+        self.top = top
+
+    def apply(self, graph: Graph, source: "SourceWidgets") -> None:  # pylint: disable=unused-argument
+        margins = graph.configuration.figure.margins
+        for side in _MARGINS_SIDES:
+            value = getattr(self, side)
+            if not isinstance(value, DefaultValue):
+                setattr(margins, side, value)
+
+    @classmethod
+    def editor(
+        cls,
+        source: "SourceWidgets",  # pylint: disable=unused-argument
+        graph: Graph | None,  # pylint: disable=unused-argument
+        current: Tweak | None,
+    ) -> ArgumentsEditor:
+        assert current is None or isinstance(current, Margins)
+        return _MarginsEditor(Margins() if current is None else current)
+
+
+# The sides of the margins, in the order of their fields.
+_MARGINS_SIDES = ("left", "bottom", "right", "top")
+
+
+class _MarginsEditor(ArgumentsEditor):  # pylint: disable=too-many-ancestors,abstract-method
+    # The editor of a ``Margins``: a number for each side, which shows the default margin while the side is ``DEFAULT``.
+    # A number which is the default is ``DEFAULT``. The tooltips give the default.
+
+    def __init__(self, current: Margins) -> None:
+        super().__init__()
+        default_margins = MarginsConfiguration()
+        self._default_per_side = {side: getattr(default_margins, side) for side in _MARGINS_SIDES}
+        self._number_per_side: Dict[str, IntText] = {}
+        children: List[Widget] = []
+        for side in _MARGINS_SIDES:
+            value = getattr(current, side)
+            default = self._default_per_side[side]
+            number = IntText(value=default if isinstance(value, DefaultValue) else value, layout=Layout(width="6em"))
+            number.observe(self._on_change, names="value")
+            self._number_per_side[side] = number
+            # The frontend shows no tooltip of a ``Label`` or of an ``IntText``, only an HTML ``title``, so the label
+            # has it.
+            children.append(HTML(f'<span title="default: {default}">{side.capitalize()}</span>'))  # NOT F-STRING
+            children.append(number)
+        self.children = children
+        self._update_value()
+
+    def _on_change(self, _change: Dict) -> None:
+        self._update_value()
+
+    def _update_value(self) -> None:
+        values: Dict[str, int | DefaultValue] = {}
+        for side in _MARGINS_SIDES:
+            number = self._number_per_side[side]
+            is_default = int(number.value) == self._default_per_side[side]
+            _mark_default(number, is_default)
+            values[side] = DEFAULT if is_default else int(number.value)
+        self.value = Margins(**values)
 
 
 @tweak

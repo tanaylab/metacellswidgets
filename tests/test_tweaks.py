@@ -180,7 +180,7 @@ def test_built_in_tweaks() -> None:
     """
     The built-in tweaks are offered first, for every graph.
     """
-    assert mw.registered_tweaks(sg.PointsGraph)[:3] == [mw.Size, mw.Title, mw.Legends]
+    assert mw.registered_tweaks(sg.PointsGraph)[:4] == [mw.Size, mw.Margins, mw.Title, mw.Legends]
 
 
 def test_size() -> None:
@@ -218,6 +218,39 @@ def test_size_editor() -> None:
     width_checkbox.value = True
     assert width_field.children == (width_number,)
     assert mw.Size.editor(source, _points_graph(), mw.Size(height=200)).value == mw.Size(height=200)
+
+
+def test_margins() -> None:
+    """
+    Margins set the sides they give, and leave the others as the graph has them.
+    """
+    graph = _points_graph()
+    mw.Margins(left=30, top=5).apply(graph, mw.DafWidgets(_full_daf()))
+    margins = graph.configuration.figure.margins
+    assert (margins.left, margins.bottom, margins.right, margins.top) == (30, 10, 10, 5)
+    assert mw.Margins(left=30).code("mw.Margins") == "mw.Margins(left=30)"
+
+
+def test_margins_editor() -> None:
+    """
+    A new margins shows the default of each side, marked as the default, and the tooltips give it. A side changed to
+    another number is given; changed back to the default, it is the default again.
+    """
+    source = mw.DafWidgets(_full_daf())
+    editor = mw.Margins.editor(source, _points_graph(), None)
+    assert editor.value == mw.Margins()
+    left_label, left_number, _bottom_label, _bottom_number, _right_label, _right_number, top_label, _top_number = (
+        editor.children
+    )
+    assert left_label.value == '<span title="default: 10">Left</span>'
+    assert top_label.value == '<span title="default: 10">Top</span>'
+    assert left_number.value == 10 and left_number.layout.border == "1px dotted black"
+    left_number.value = 25
+    assert editor.value == mw.Margins(left=25)
+    assert left_number.layout.border == "1px solid black"
+    left_number.value = 10
+    assert editor.value == mw.Margins()
+    assert mw.Margins.editor(source, _points_graph(), mw.Margins(right=40)).value == mw.Margins(right=40)
 
 
 def test_title() -> None:
@@ -290,7 +323,7 @@ def test_tweak_picker() -> None:
     picker = mw.TweakPicker(source, sg.PointsGraph, graph)
     assert picker.value is None
     dropdown = picker.children[0]
-    assert [label for label, _choice in dropdown.options][:4] == ["", "Size", "Title", "Legends"]
+    assert [label for label, _choice in dropdown.options][:5] == ["", "Size", "Margins", "Title", "Legends"]
     dropdown.value = mw.Size
     assert picker.value == mw.Size(width=600, height=450)
     assert mw.TweakPicker(source, sg.PointsGraph, graph, mw.Title(text="Genes")).value == mw.Title(text="Genes")

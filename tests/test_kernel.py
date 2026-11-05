@@ -223,6 +223,22 @@ def _is_class_choice(state: Dict[str, Any]) -> bool:
     return state.get("_model_name") == "DropdownModel" and not state.get("_options_labels")
 
 
+# The latest state of each widget the kernel opened, by its comm id, as the browser knows it.
+_STATE_PER_COMM_ID: Dict[str, Dict[str, Any]] = {}
+
+# The messages ``_choose`` read while it waited for options, kept (in order) for ``_opened_widgets``.
+_KEPT_MESSAGES: List[Dict[str, Any]] = []
+
+
+def _track(message: Dict[str, Any]) -> None:
+    # Keep the state of a widget the ``message`` opens, or the changes of a widget's state it sends.
+    content = message["content"]
+    if message["msg_type"] == "comm_open":
+        _STATE_PER_COMM_ID[content["comm_id"]] = dict(content["data"].get("state", {}))
+    elif message["msg_type"] == "comm_msg" and content["data"].get("method") == "update":
+        _STATE_PER_COMM_ID.setdefault(content["comm_id"], {}).update(content["data"].get("state", {}))
+
+
 def _opened_widgets(
     client: Any, is_wanted: Callable[[Dict[str, Any]], bool], count: int, timeout: float = 300
 ) -> List[Dict[str, Any]]:
@@ -232,7 +248,11 @@ def _opened_widgets(
     widgets: List[Dict[str, Any]] = []
     deadline = time.time() + timeout
     while len(widgets) < count:
-        message = client.get_iopub_msg(timeout=max(deadline - time.time(), 0.1))
+        if _KEPT_MESSAGES:
+            message = _KEPT_MESSAGES.pop(0)
+        else:
+            message = client.get_iopub_msg(timeout=max(deadline - time.time(), 0.1))
+            _track(message)
         if message["msg_type"] == "error":
             raise AssertionError(message["content"]["ename"] + ": " + message["content"]["evalue"])
         if message["msg_type"] == "comm_open":
@@ -247,6 +267,20 @@ def _send_state(client: Any, widget: Dict[str, Any], state: Dict[str, Any]) -> N
     message = {"comm_id": widget["comm_id"], "data": {"method": "update", "state": state, "buffer_paths": []}}
     client.shell_channel.send(client.session.msg("comm_msg", message))
     time.sleep(1)
+
+
+def _choose(client: Any, widget: Dict[str, Any], label: str, timeout: float = 300) -> None:
+    # Pick the option of a dropdown with the ``label``, as the browser does (by sending its index). A dropdown may be
+    # opened without its options, which are set right after, so this waits until it has the option.
+    deadline = time.time() + timeout
+    while True:
+        labels = list(_STATE_PER_COMM_ID.get(widget["comm_id"], {}).get("_options_labels") or [])
+        if label in labels:
+            break
+        message = client.get_iopub_msg(timeout=max(deadline - time.time(), 0.1))
+        _track(message)
+        _KEPT_MESSAGES.append(message)
+    _send_state(client, widget, {"index": labels.index(label)})
 
 
 # Makes a small ``daf`` of the expression of three genes in two metacells, for the interactive forms to show. The marker
@@ -305,8 +339,7 @@ def test_edit_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
 
     time.sleep(1)
     _send_state(client, y_gene, {"value": "D"})
-    # The only property of the metacells which may color them is the gene expression, after the empty choice.
-    _send_state(client, colors, {"index": 1})
+    _choose(client, colors, "GeneExpression")
     colors_gene = _opened_widgets(client, _is_gene_picker, 1)[0]
     _send_state(client, colors_gene, {"value": "D"})
     _click(client, done)
@@ -425,7 +458,7 @@ def test_menu_rewrites_the_cell(kernel: Tuple[Any, Any]) -> None:
     menu = next(widget for widget in widgets if _is_graph_menu(widget))
 
     time.sleep(1)
-    _send_state(client, menu, {"index": menu["_options_labels"].index("GeneGene")})
+    _choose(client, menu, "GeneGene")
     genes = _opened_widgets(client, _is_gene_picker, 2)
     x_gene, y_gene = genes[0], genes[1]
     _send_state(client, x_gene, {"value": "A"})
@@ -504,7 +537,7 @@ def test_menu_switches_the_graph(kernel: Tuple[Any, Any]) -> None:
     menu = next(widget for widget in widgets if _is_graph_menu(widget))
 
     time.sleep(1)
-    _send_state(client, menu, {"index": menu["_options_labels"].index("GenesHeatmap")})
+    _choose(client, menu, "GenesHeatmap")
     time.sleep(2)
     _click(client, done)
     assert _rewritten_text(client, message_id) == ("form = mw.DafWidgets(daf).genes_heatmap()\nform")
@@ -533,10 +566,9 @@ def test_edited_tweaks_rewrite_the_cell(kernel: Tuple[Any, Any]) -> None:
     tweak_choice = [widget for widget in widgets if _is_class_choice(widget)][3]
 
     time.sleep(1)
-    # The choices of the blank row are: "", Size, Title, Legends, ...
-    _send_state(client, tweak_choice, {"index": 3})
+    _choose(client, tweak_choice, "Legends")
     show_legends = _opened_widgets(client, _is_show_legends, 1)[0]
-    _send_state(client, show_legends, {"index": 1})
+    _choose(client, show_legends, "Hide legends")
     _click(client, done)
     assert _rewritten_text(client, message_id) == (
         "form = mw.DafWidgets(daf).gene_gene(x_gene='A', y_gene='B', " "tweaks=[mw.Legends(is_shown=False)])\n" "form"
